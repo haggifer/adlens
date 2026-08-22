@@ -25,7 +25,6 @@ interface ProvidersProps extends IProps {
 
 const ThemedShell = ({ children }: IProps) => {
     const { scheme } = useTheme()
-    // Harness override; falls back to the locked brand primary in production.
     const { primaryColor } = useHarness()
 
     const theme = useMemo(() => buildAntdTheme(primaryColor), [primaryColor])

@@ -10,7 +10,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => {
     // the raw primary is too dark to read over the near-black base, so lift the accent toward white first.
     const accent = isDarkMode ? `color-mix(in srgb, ${primary}, #fff 35%)` : primary
     const tint = (pct: number) => `color-mix(in srgb, ${accent} ${pct}%, transparent)`
-    // Fades a repeating pattern toward the edges so it reads as ambient, not a full tiled sheet.
     const edgeFade = 'radial-gradient(ellipse 92% 82% at 50% 38%, #000 34%, transparent 80%)'
     const gridAlpha = isDarkMode ? 11 : 8
     const dotAlpha = isDarkMode ? 18 : 12

@@ -1,10 +1,7 @@
 import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/lib/fonts'
 
-// Upload-frame elevation. Light is a designed multi-layer stack: one soft key drop, three tiny
-// low-opacity black contact shadows for realistic grounding, a 1px brand keyline, and a brand glow.
-// Dark drops all that (invisible on the near-black backdrop) for a single neutral-grey drop — dim at
-// rest, brighter while a file is dragged over. The border follows the same idea (neutral grey in dark).
+// Dark uses one neutral drop shadow — the layered light stack is invisible on the near-black backdrop.
 const buildFrameShadow = (primary: string, isDark: boolean) =>
     isDark
         ? `0 6px 29px -2px #404040`
@@ -15,7 +12,6 @@ const buildFrameShadow = (primary: string, isDark: boolean) =>
            0 0 0 1px ${primary},
            0 0 16px -12px ${primary}`
 
-// Drag-over elevation: a brighter grey drop in dark, the brand glow in light.
 const buildFrameDragShadow = (primaryHover: string, isDark: boolean) =>
     isDark ? `0 6px 29px -2px #777` : `0 0 0 1px ${primaryHover}, 0 0 44px -2px ${primaryHover}`
 
@@ -23,8 +19,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`
         display: flex;
         flex-direction: column;
-        /* Lock the home view to exactly one screen so it never scrolls: the workspace (flex: 1) takes the
-           height left below the hero, and its children are capped to that height rather than the viewport. */
         height: calc(100dvh - var(--header-h) - var(--footer-h));
         padding: 1.5rem 0;
 
@@ -86,9 +80,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         min-height: 0;
         align-items: stretch;
         gap: 2.5rem;
-        /* The workspace fills the height left below the hero (flex: 1). Both columns stretch to it, and the
-           frame/video/panel size against that height via % — no hard-coded viewport height anywhere.
-           --col-w caps the columns' width. */
         --col-w: min(35rem, 100%);
 
         @media (max-width: 991.98px) {
@@ -99,8 +90,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     `,
 
     left: css`
-        /* Input column: right-align the frame so its right edge stays put; a narrower video keeps that edge
-           and only its left edge moves. The frame is capped at --col-w, so it never overflows this column. */
         display: flex;
         flex: 1;
         min-width: 0;
@@ -130,8 +119,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
     frame: css`
         position: relative;
-        /* Square drop zone: fills the column height (100% of the stretched column), width follows from the
-           1:1 aspect ratio and is capped at --col-w so it never exceeds the column's width. */
         height: 100%;
         aspect-ratio: 1 / 1;
         width: auto;
@@ -163,9 +150,8 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             max-width: var(--col-w);
             max-height: 100%;
             aspect-ratio: auto;
-            /* No border on the video player — only the empty drop zone is bordered. Removed entirely (not
-               just transparent): a transparent border still reserves 1.5px that, with background-clip:
-               border-box, shows the frame's background as a hairline around the video. */
+            /* border: none, not transparent: a transparent 1.5px border with background-clip: border-box
+               shows the frame background as a hairline around the video. */
             border: none;
             background: #000000;
         }
@@ -195,27 +181,14 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         height: 100%;
     `,
 
-    /* antd <Tag variant="outlined">. Keep the default border radius; match the border to the text via
-       currentColor so it recolours with the text on hover. Only margin, padding and colour differ. */
     reqTag: css`
-        /* display: inline-flex;
-        align-items: center;
-        gap: 0.4rem; */
-        /* margin: 0.7rem 0 0; */
         margin-top: 0.7rem;
         padding: 0.2rem 0.5rem;
-        /* background: transparent;
-        /* color: ${token.colorBorder}; */
         border-color: currentColor;
         font-size: 0.78rem;
         line-height: 1;
         cursor: help;
         transition: color 0.2s ease;
-        */
-
-        /* &:hover {
-            color: ${token.colorPrimary};
-        } */
 
         .anticon {
             margin: 0;
@@ -245,11 +218,8 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         font-size: 0.85rem;
     `,
 
-    /* Vidstack <MediaPlayer>. The player is the full stage height (width follows Vidstack's default 16/9,
-       capped at --col-w). Vidstack also forces the inner <video> to 16/9, which shrinks portrait/other-ratio
-       clips into a small contained area — so override the media to fill the player's height (object-fit
-       contain still pillar/letterboxes as needed) and use the space. --stage-h mirrors the flex column
-       height (set by AdWorkspace); the fallback covers first paint. */
+    /* Vidstack forces the inner <video> to 16/9, shrinking non-16/9 clips; the override below makes the
+       media fill the player instead. --stage-h mirrors the flex column height (set by AdWorkspace). */
     player: css`
         height: var(--stage-h, 60vh);
         max-height: var(--stage-h, 60vh);
@@ -282,9 +252,8 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         opacity: 0;
         transition: opacity 0.2s ease;
 
-        /* The video stage is always black regardless of app theme, so use fixed light values (theme tokens
-           would be dark-on-black in light mode). White icon, no border; only the background changes on
-           hover to a translucent white. */
+        /* The video stage is always black regardless of app theme, so these use fixed white values —
+           theme tokens would render dark-on-black in light mode. */
         .ant-btn {
             color: #ffffff;
             background: transparent;
@@ -305,7 +274,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     panel: css`
         width: var(--col-w);
         max-width: 100%;
-        /* Capped to the column height; the title and Run button stay fixed while the settings scroll. */
         max-height: 100%;
         display: flex;
         flex-direction: column;
@@ -320,8 +288,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             border-color 0.3s ease;
     `,
 
-    /* Settings variant: fills the column height (100% of the stretched column) so the panel stays a
-       consistent height — matching the input column — instead of growing/shrinking as advanced expands. */
     settingsPanel: css`
         height: 100%;
     `,
@@ -336,8 +302,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         letter-spacing: -0.01em;
     `,
 
-    /* Scrollable settings region between the fixed title and the fixed Run button. Only scrolls when the
-       content (e.g. expanded advanced settings) is taller than the space the stage leaves it. */
     settingsScroll: css`
         flex: 1 1 auto;
         min-height: 0;
@@ -345,8 +309,8 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        /* overflow-y:auto also clips horizontally, cutting input focus rings/shadows at the sides. The
-           negative-margin + equal-padding pair gives them room back — a standard, well-supported technique. */
+        /* overflow-y: auto also clips horizontally, cutting input focus rings at the sides; the
+           negative-margin + equal-padding pair gives them room back. */
         margin-inline: -0.5rem;
         padding-inline: 0.5rem;
     `,
@@ -367,8 +331,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             box-shadow 0.2s ease,
             background 0.2s ease;
 
-        /* Gradient: brand primary blended toward a brighter analogous hue; the shadow deepens on hover
-           (no vertical movement — the button stays put). */
         &[data-accent='gradient'] {
             border: none;
             background: linear-gradient(
@@ -382,7 +344,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             box-shadow: 0 12px 28px -6px ${token.colorPrimary};
         }
 
-        /* Glow: solid primary with a soft, gently pulsing halo. */
         &[data-accent='glow'] {
             box-shadow:
                 0 0 0 1px ${token.colorPrimary},
@@ -396,7 +357,6 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
                 0 0 30px 0 ${token.colorPrimary};
         }
 
-        /* Shine: the gradient plus a sheen that sweeps across on a loop. */
         &[data-accent='shine'] {
             position: relative;
             overflow: hidden;

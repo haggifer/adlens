@@ -1,5 +1,4 @@
-// Curated primary-color candidates for the harness preset select. The primary seeds antd's whole
-// palette, so switching here recolors the entire app (and the primary-derived ambient backdrop).
+// TEMPORARY — design harness only. Primary-color presets for the DevBar picker.
 export interface PrimaryPreset {
     name: string
     value: string

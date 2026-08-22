@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 
 const HOVER_QUERY = '(hover: hover) and (pointer: fine)'
 
-// True on devices with a precise hover-capable pointer (mouse/trackpad), false on touch.
 export default function useHoverCapable(): boolean {
     const [hoverCapable, setHoverCapable] = useState<boolean>(() => {
         if (typeof window === 'undefined') {

@@ -11,7 +11,6 @@ interface AuthUiContextValue {
     // onAuthStateChanged callback — private routes render a loading UI while it's true.
     initializing: boolean
     isSignedIn: boolean
-    // Auth modal (UI shell) state.
     view: AuthView | null
     openAuth: (view: AuthView) => void
     closeAuth: () => void

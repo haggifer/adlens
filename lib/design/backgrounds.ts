@@ -1,5 +1,4 @@
-// Ambient page backdrops, rendered behind the app content and derived from the primary color + scheme.
-// The visual for each id lives in components/background/styles.ts, keyed by the `data-ambient` attribute.
+// Each id's visual lives in components/background/styles.ts, keyed by the data-ambient attribute.
 export enum AmbientId {
     Solid = 'solid',
     Aurora = 'aurora',

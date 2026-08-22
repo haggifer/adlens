@@ -37,7 +37,7 @@ export default function AnalysisSettings() {
     const { control, handleSubmit } = useForm<AnalysisFormValues>({ defaultValues: DEFAULT_VALUES })
 
     const onSubmit = (values: AnalysisFormValues) => {
-        // Backend isn't wired yet — confirm the form captured the settings.
+        // TODO: wire up to the analysis backend.
         message.info(`Captured your settings (objective: ${values.objective}) — analysis isn’t wired up yet.`)
     }
 

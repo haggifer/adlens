@@ -9,9 +9,7 @@ interface IProps {
     children: ReactNode
 }
 
-// Client gate for private routes: shows a loading UI until Firebase reports auth status, then the
-// content (signed in) or a sign-in prompt (signed out). Pair with `robots: { index: false }` on the
-// page so the route stays uncrawlable.
+// Pair with `robots: { index: false }` on the page so a private route stays uncrawlable.
 export default function PrivateRoute({ children }: IProps) {
     const { styles } = useStyles()
     const { initializing, isSignedIn, openAuth } = useAuthUi()
