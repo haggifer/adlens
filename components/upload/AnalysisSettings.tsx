@@ -1,55 +1,139 @@
 'use client'
 
-import { ThunderboltOutlined } from '@ant-design/icons'
+import { useState } from 'react'
+import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
 import { App, Button, Input, Select } from 'antd'
+import { Controller, useForm } from 'react-hook-form'
+import { useHarness } from '@/lib/design/harness/HarnessContext'
 import useStyles from './styles'
 
-const PLATFORM_OPTIONS = ['Meta', 'TikTok', 'YouTube', 'Instagram', 'Snapchat'].map((v) => ({ value: v, label: v }))
+const PLATFORM_OPTIONS = ['Meta', 'TikTok', 'YouTube'].map((v) => ({ value: v, label: v }))
 
-const OBJECTIVE_OPTIONS = ['Awareness', 'Consideration', 'Conversion'].map((v) => ({ value: v, label: v }))
+const OBJECTIVE_OPTIONS = ['Conversion', 'Awareness', 'Consideration'].map((v) => ({ value: v, label: v }))
 
 const FOCUS_OPTIONS = ['Hook', 'Pacing', 'Messaging', 'CTA', 'Branding', 'Audio'].map((v) => ({ value: v, label: v }))
 
-const LANGUAGE_OPTIONS = ['English', 'Spanish', 'French', 'German', 'Ukrainian'].map((v) => ({ value: v, label: v }))
+interface AnalysisFormValues {
+    platform: string[]
+    objective: string
+    focus: string[]
+    audience: string
+    brand: string
+}
+
+const DEFAULT_VALUES: AnalysisFormValues = {
+    platform: [],
+    objective: 'Conversion',
+    focus: [],
+    audience: '',
+    brand: '',
+}
 
 export default function AnalysisSettings() {
-    const { styles } = useStyles()
+    const { styles, cx } = useStyles()
     const { message } = App.useApp()
+    const { runAccent } = useHarness()
+    const [advancedOpen, setAdvancedOpen] = useState(false)
+    const { control, handleSubmit } = useForm<AnalysisFormValues>({ defaultValues: DEFAULT_VALUES })
 
-    const runAnalysis = () => {
-        message.info('Analysis isn’t wired up yet.')
+    const onSubmit = (values: AnalysisFormValues) => {
+        // Backend isn't wired yet — confirm the form captured the settings.
+        message.info(`Captured your settings (objective: ${values.objective}) — analysis isn’t wired up yet.`)
     }
 
     return (
-        <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>Analysis settings</h2>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Platform</label>
-                <Select placeholder="Where will it run?" options={PLATFORM_OPTIONS} allowClear />
+        <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
+            <h2 className={styles.panelTitle}>Tell us about your ad</h2>
+            <div className={styles.settingsScroll}>
+                <div className={styles.field}>
+                    <label className={styles.fieldLabel}>Platform</label>
+                    <Controller
+                        name="platform"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                {...field}
+                                mode="multiple"
+                                placeholder="Where will it run?"
+                                options={PLATFORM_OPTIONS}
+                                allowClear
+                            />
+                        )}
+                    />
+                </div>
+                <div className={styles.field}>
+                    <label className={styles.fieldLabel}>Objective</label>
+                    <Controller
+                        name="objective"
+                        control={control}
+                        render={({ field }) => (
+                            <Select {...field} placeholder="Campaign goal" options={OBJECTIVE_OPTIONS} allowClear />
+                        )}
+                    />
+                </div>
+                <div className={styles.field}>
+                    <label className={styles.fieldLabel}>Analysis focus</label>
+                    <Controller
+                        name="focus"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                {...field}
+                                mode="multiple"
+                                placeholder="Leave blank to analyze everything"
+                                options={FOCUS_OPTIONS}
+                                allowClear
+                            />
+                        )}
+                    />
+                </div>
+                <Button
+                    block
+                    htmlType="button"
+                    className={styles.advancedToggle}
+                    icon={advancedOpen ? <UpOutlined /> : <DownOutlined />}
+                    onClick={() => setAdvancedOpen((open) => !open)}
+                >
+                    Advanced settings
+                </Button>
+                {advancedOpen && (
+                    <>
+                        <div className={styles.field}>
+                            <label className={styles.fieldLabel}>Target audience</label>
+                            <Controller
+                                name="audience"
+                                control={control}
+                                render={({ field }) => <Input {...field} placeholder="e.g. Gen-Z gamers in the US" />}
+                            />
+                        </div>
+                        <div className={styles.field}>
+                            <label className={styles.fieldLabel}>Brand context</label>
+                            <Controller
+                                name="brand"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input.TextArea
+                                        {...field}
+                                        placeholder="Anything AdLens should know about the brand or product"
+                                        rows={3}
+                                    />
+                                )}
+                            />
+                        </div>
+                    </>
+                )}
             </div>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Objective</label>
-                <Select placeholder="Campaign goal" options={OBJECTIVE_OPTIONS} allowClear />
-            </div>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Target audience</label>
-                <Input placeholder="e.g. Gen-Z gamers in the US" />
-            </div>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Brand context</label>
-                <Input.TextArea placeholder="Anything AdLens should know about the brand or product" rows={3} />
-            </div>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Analysis focus</label>
-                <Select mode="multiple" placeholder="What to look at" options={FOCUS_OPTIONS} allowClear />
-            </div>
-            <div className={styles.field}>
-                <label className={styles.fieldLabel}>Output language</label>
-                <Select placeholder="Report language" options={LANGUAGE_OPTIONS} defaultValue="English" />
-            </div>
-            <Button type="primary" size="large" block icon={<ThunderboltOutlined />} onClick={runAnalysis}>
+            <Button
+                type="primary"
+                size="large"
+                block
+                htmlType="submit"
+                className={styles.runButton}
+                data-accent={runAccent}
+                icon={<ThunderboltOutlined />}
+            >
                 Run Analysis
             </Button>
-        </div>
+        </form>
     )
 }
