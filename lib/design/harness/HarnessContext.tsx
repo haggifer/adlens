@@ -1,37 +1,51 @@
 'use client'
 
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
-import { writeHarnessPrimary } from '@/lib/design/harness/harness-cookie'
+import { AmbientId, DEFAULT_AMBIENT_ID } from '@/lib/design/backgrounds'
+import { HarnessSettings, writeHarness } from '@/lib/design/harness/harness-cookie'
+import { DEFAULT_RUN_ACCENT, RunAccentId } from '@/lib/design/run-accents'
 import { PRIMARY_COLOR } from '@/lib/design/theme'
 
-// TEMPORARY — design harness only. Lets the DevBar override the locked brand primary while exploring.
-// useHarness() falls back to the constant PRIMARY_COLOR when no provider is mounted, so stripping the
-// harness is just: remove <HarnessProvider> and <DevBar/> — the app keeps rendering with the real brand.
+// TEMPORARY — design harness only. Holds the exploration knobs (ambient backdrop + primary override +
+// Run-button accent). useHarness() falls back to defaults when no provider is mounted, so stripping the
+// harness is just: remove <HarnessProvider> and <DevBar/> — the app keeps rendering the defaults.
 interface HarnessContextValue {
     primaryColor: string
     setPrimaryColor: (color: string) => void
+    ambientId: AmbientId
+    setAmbientId: (id: AmbientId) => void
+    runAccent: RunAccentId
+    setRunAccent: (id: RunAccentId) => void
 }
 
 const HarnessContext = createContext<HarnessContextValue | null>(null)
 
 interface IProps {
     children: ReactNode
-    initialPrimaryColor: string
+    initialSettings: HarnessSettings
 }
 
-export default function HarnessProvider({ children, initialPrimaryColor }: IProps) {
-    const [primaryColor, setPrimaryColorState] = useState(initialPrimaryColor)
+export default function HarnessProvider({ children, initialSettings }: IProps) {
+    const [settings, setSettings] = useState<HarnessSettings>(initialSettings)
 
-    const value = useMemo<HarnessContextValue>(
-        () => ({
-            primaryColor,
-            setPrimaryColor: (color) => {
-                writeHarnessPrimary(color)
-                setPrimaryColorState(color)
-            },
-        }),
-        [primaryColor],
-    )
+    const value = useMemo<HarnessContextValue>(() => {
+        const update = (patch: Partial<HarnessSettings>) => {
+            setSettings((prev) => {
+                const next = { ...prev, ...patch }
+                writeHarness(next)
+                return next
+            })
+        }
+
+        return {
+            primaryColor: settings.primaryColor,
+            setPrimaryColor: (color) => update({ primaryColor: color }),
+            ambientId: settings.ambientId,
+            setAmbientId: (id) => update({ ambientId: id }),
+            runAccent: settings.runAccent,
+            setRunAccent: (id) => update({ runAccent: id }),
+        }
+    }, [settings])
 
     return <HarnessContext.Provider value={value}>{children}</HarnessContext.Provider>
 }
@@ -39,6 +53,10 @@ export default function HarnessProvider({ children, initialPrimaryColor }: IProp
 const FALLBACK: HarnessContextValue = {
     primaryColor: PRIMARY_COLOR,
     setPrimaryColor: () => {},
+    ambientId: DEFAULT_AMBIENT_ID,
+    setAmbientId: () => {},
+    runAccent: DEFAULT_RUN_ACCENT,
+    setRunAccent: () => {},
 }
 
 export const useHarness = (): HarnessContextValue => useContext(HarnessContext) ?? FALLBACK

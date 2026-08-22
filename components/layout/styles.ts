@@ -15,11 +15,11 @@ const useStyles = createStyles(({ token, css }) => ({
     appShell: css`
         --header-h: 4rem;
         --footer-h: 3.5rem;
+        position: relative;
+        z-index: 1;
         flex: 1;
         min-width: 0;
         min-height: 100vh;
-        background: ${token.colorBgLayout};
-        transition: background 0.3s ease;
 
         @media (max-width: 991.98px) {
             --header-h: 3.5rem;
@@ -40,7 +40,9 @@ const useStyles = createStyles(({ token, css }) => ({
         position: sticky;
         top: 0;
         z-index: 10;
-        background: ${token.colorBgLayout};
+        background: color-mix(in srgb, ${token.colorBgLayout} 72%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         transition: background 0.3s ease;
     `,
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { cookies } from 'next/headers'
 import { FONT_VARIABLE_CLASSES } from '@/lib/fonts'
-import { HARNESS_COOKIE, parseHarnessPrimary } from '@/lib/design/harness/harness-cookie'
+import { HARNESS_COOKIE, parseHarness } from '@/lib/design/harness/harness-cookie'
 import { parseScheme, SCHEME_COOKIE } from '@/lib/design/scheme-cookie'
 import Providers from './providers'
 import 'bootstrap/dist/css/bootstrap-utilities.min.css'
@@ -44,13 +44,13 @@ interface IProps {
 export default async function RootLayout({ children }: IProps) {
     const cookieStore = await cookies()
     const scheme = parseScheme(cookieStore.get(SCHEME_COOKIE)?.value)
-    // TEMPORARY: design-harness primary-color override, seeded so the accent doesn't flash on load.
-    const primaryColor = parseHarnessPrimary(cookieStore.get(HARNESS_COOKIE)?.value)
+    // TEMPORARY: design-harness state, seeded so neither the scheme nor the backdrop flash on load.
+    const settings = parseHarness(cookieStore.get(HARNESS_COOKIE)?.value)
 
     return (
         <html lang="en" data-scheme={scheme} style={{ colorScheme: scheme }} className={FONT_VARIABLE_CLASSES}>
             <body>
-                <Providers initialScheme={scheme} initialPrimaryColor={primaryColor}>
+                <Providers initialScheme={scheme} initialSettings={settings}>
                     {children}
                 </Providers>
             </body>

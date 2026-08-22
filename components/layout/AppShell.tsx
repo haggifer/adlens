@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
+import AmbientBackground from '@/components/background/AmbientBackground'
 import AuthModal from '@/components/auth/AuthModal'
 import DevBar from '@/components/dev-bar/DevBar'
 import Footer from '@/components/layout/Footer'
@@ -16,6 +17,7 @@ export default function AppShell({ children }: IProps) {
 
     return (
         <div className={styles.harness}>
+            <AmbientBackground />
             <DevBar />
             <div className={styles.appShell}>
                 <Header />
