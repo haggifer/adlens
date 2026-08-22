@@ -43,7 +43,7 @@ export default function Header() {
                 </div>
                 <div className={styles.headerRight}>
                     <AccountMenu />
-                    <Divider type="vertical" className={styles.headerDivider} />
+                    <Divider orientation="vertical" className={styles.headerDivider} />
                     <ThemeSwitch />
                 </div>
             </div>
