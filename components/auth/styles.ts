@@ -32,9 +32,13 @@ const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 0.5rem;
         margin-top: 1rem;
         font-size: 0.9rem;
+    `,
+
+    switchAction: css`
+        flex-grow: 1;
     `,
 
     gate: css`

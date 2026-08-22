@@ -5,13 +5,13 @@ import { AuthView, useAuthUi } from '@/lib/auth/AuthUiContext'
 import useStyles from './styles'
 
 const TITLES: Record<AuthView, string> = {
-    signin: 'Welcome back',
+    signin: 'Sign In',
     signup: 'Create your account',
     forgot: 'Reset your password',
 }
 
 const SUBTITLES: Record<AuthView, string> = {
-    signin: 'Sign in to analyze your video ads.',
+    signin: '',
     signup: 'Start diagnosing your video ads in minutes.',
     forgot: 'Enter your email and we’ll send you a reset link.',
 }
@@ -139,7 +139,7 @@ export default function AuthModal() {
                 </Button>
                 <div className={styles.switcher}>
                     <span>Don’t have an account?</span>
-                    <Button type="link" onClick={() => openAuth('signup')}>
+                    <Button className={styles.switchAction} onClick={() => openAuth('signup')}>
                         Sign up
                     </Button>
                 </div>
@@ -159,7 +159,7 @@ export default function AuthModal() {
                 view ? (
                     <div className={styles.head}>
                         <span className={styles.title}>{TITLES[view]}</span>
-                        <span className={styles.subtitle}>{SUBTITLES[view]}</span>
+                        {SUBTITLES[view] && <span className={styles.subtitle}>{SUBTITLES[view]}</span>}
                     </div>
                 ) : null
             }
