@@ -20,7 +20,7 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         display: flex;
         flex-direction: column;
         height: calc(100dvh - var(--header-h) - var(--footer-h));
-        padding: 1.5rem 0;
+        padding: 2.5rem 0 0.5rem;
 
         @media (max-width: 991.98px) {
             height: auto;
