@@ -1,6 +1,6 @@
 'use client'
 
-import { useHarness } from '@/lib/design/harness/HarnessContext'
+import { useHarness } from '@/design/harness/HarnessContext'
 import useStyles from './styles'
 
 export default function AmbientBackground() {

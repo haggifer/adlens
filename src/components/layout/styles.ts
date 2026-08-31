@@ -1,5 +1,5 @@
 import { createStyles } from 'antd-style'
-import { HEADING_FONT_STACK } from '@/lib/fonts'
+import { HEADING_FONT_STACK } from '@/fonts'
 
 const useStyles = createStyles(({ token, css }) => ({
     harness: css`

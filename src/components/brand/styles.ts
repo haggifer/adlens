@@ -1,5 +1,5 @@
 import { createStyles } from 'antd-style'
-import { LOGO_FONT_STACK } from '@/lib/fonts'
+import { LOGO_FONT_STACK } from '@/fonts'
 
 const useStyles = createStyles(({ token, css }) => ({
     logo: css`

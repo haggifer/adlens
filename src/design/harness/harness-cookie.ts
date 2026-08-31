@@ -1,6 +1,6 @@
-import { AmbientId, DEFAULT_AMBIENT_ID } from '@/lib/design/backgrounds'
-import { DEFAULT_RUN_ACCENT, RunAccentId } from '@/lib/design/run-accents'
-import { PRIMARY_COLOR } from '@/lib/design/theme'
+import { AmbientId, DEFAULT_AMBIENT_ID } from '@/design/backgrounds'
+import { DEFAULT_RUN_ACCENT, RunAccentId } from '@/design/run-accents'
+import { PRIMARY_COLOR } from '@/design/theme'
 
 // TEMPORARY — design harness only. Persists the exploration knobs (ambient backdrop + primary override +
 // Run-button accent) so they survive a reload, and are SSR-seeded to avoid a flash. Delete this file when

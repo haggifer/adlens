@@ -1,4 +1,4 @@
-import { ColorScheme } from '@/lib/design/types'
+import { ColorScheme } from '@/design/types'
 
 export const SCHEME_COOKIE = 'adlens_scheme'
 

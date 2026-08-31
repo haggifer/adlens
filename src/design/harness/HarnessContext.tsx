@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
-import { AmbientId, DEFAULT_AMBIENT_ID } from '@/lib/design/backgrounds'
-import { HarnessSettings, writeHarness } from '@/lib/design/harness/harness-cookie'
-import { DEFAULT_RUN_ACCENT, RunAccentId } from '@/lib/design/run-accents'
-import { PRIMARY_COLOR } from '@/lib/design/theme'
+import { AmbientId, DEFAULT_AMBIENT_ID } from '@/design/backgrounds'
+import { HarnessSettings, writeHarness } from '@/design/harness/harness-cookie'
+import { DEFAULT_RUN_ACCENT, RunAccentId } from '@/design/run-accents'
+import { PRIMARY_COLOR } from '@/design/theme'
 
 // TEMPORARY — design harness only. Holds the exploration knobs (ambient backdrop + primary override +
 // Run-button accent). useHarness() falls back to defaults when no provider is mounted, so stripping the

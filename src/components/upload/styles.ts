@@ -1,5 +1,5 @@
 import { createStyles } from 'antd-style'
-import { HEADING_FONT_STACK } from '@/lib/fonts'
+import { HEADING_FONT_STACK } from '@/fonts'
 
 // Dark uses one neutral drop shadow — the layered light stack is invisible on the near-black backdrop.
 const buildFrameShadow = (primary: string, isDark: boolean) =>
