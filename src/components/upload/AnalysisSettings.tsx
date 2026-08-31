@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, App, Button, Input, Select } from 'antd'
-import type { Job } from 'adlens-types'
+import type { AnalysisSettings, Job } from 'adlens-types'
 import { Controller, useForm } from 'react-hook-form'
 import useDocClean from '@/hooks/swr-firestore/useDocClean'
 import { createJob, startAnalysis } from '@/api/jobs'
@@ -63,7 +63,7 @@ export default function AnalysisSettings({ file }: IProps) {
     const run = useMutation({
         mutationFn: async (values: AnalysisFormValues) => {
             const created = await createJob({
-                settings: values,
+                settings: values as AnalysisSettings,
                 file: { name: file.name, contentType: file.type, size: file.size },
             })
 
