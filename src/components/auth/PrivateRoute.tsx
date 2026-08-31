@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import { Button, Spin } from 'antd'
-import { useAuthUi } from '@/lib/auth/AuthUiContext'
+import { useAuth } from '@/auth/AuthContext'
 import useStyles from './styles'
 
 interface IProps {
@@ -12,7 +12,7 @@ interface IProps {
 // Pair with `robots: { index: false }` on the page so a private route stays uncrawlable.
 export default function PrivateRoute({ children }: IProps) {
     const { styles } = useStyles()
-    const { initializing, isSignedIn, openAuth } = useAuthUi()
+    const { initializing, isSignedIn, openAuth } = useAuth()
 
     if (initializing) {
         return (

@@ -6,13 +6,13 @@ import { App as AntdApp } from 'antd'
 import { ThemeProvider as StyleThemeProvider } from 'antd-style'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import AuthUiProvider from '@/lib/auth/AuthUiContext'
-import HarnessProvider, { useHarness } from '@/lib/design/harness/HarnessContext'
-import { HarnessSettings } from '@/lib/design/harness/harness-cookie'
-import { buildAntdTheme } from '@/lib/design/theme'
-import ThemeProvider, { useTheme } from '@/lib/design/ThemeContext'
-import { ColorScheme } from '@/lib/design/types'
-import { getFirebaseAnalytics } from '@/lib/firebase/config'
+import AuthProvider from '@/auth/AuthContext'
+import HarnessProvider, { useHarness } from '@/design/harness/HarnessContext'
+import { HarnessSettings } from '@/design/harness/harness-cookie'
+import { buildAntdTheme } from '@/design/theme'
+import ThemeProvider, { useTheme } from '@/design/ThemeContext'
+import { ColorScheme } from '@/design/types'
+import { getFirebaseAnalytics } from '@/firebase/config'
 
 interface IProps {
     children: ReactNode
@@ -34,9 +34,9 @@ const ThemedShell = ({ children }: IProps) => {
     return (
         <StyleThemeProvider appearance={scheme} theme={theme}>
             <AntdApp>
-                <AuthUiProvider>
+                <AuthProvider>
                     <AppShell>{children}</AppShell>
-                </AuthUiProvider>
+                </AuthProvider>
             </AntdApp>
         </StyleThemeProvider>
     )

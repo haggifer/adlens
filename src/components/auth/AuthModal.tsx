@@ -1,7 +1,7 @@
 'use client'
 
 import { App, Button, Form, Input, Modal } from 'antd'
-import { AuthView, useAuthUi } from '@/lib/auth/AuthUiContext'
+import { AuthView, useAuth } from '@/auth/AuthContext'
 import useStyles from './styles'
 
 const TITLES: Record<AuthView, string> = {
@@ -33,7 +33,7 @@ interface ForgotValues {
 
 export default function AuthModal() {
     const { styles } = useStyles()
-    const { view, openAuth, closeAuth } = useAuthUi()
+    const { view, openAuth, closeAuth } = useAuth()
     const { message } = App.useApp()
 
     const notWired = () => {

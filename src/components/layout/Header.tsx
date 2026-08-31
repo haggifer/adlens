@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import Logo from '@/components/brand/Logo'
 import AccountMenu from '@/components/layout/AccountMenu'
 import ThemeSwitch from '@/components/layout/ThemeSwitch'
-import { useAuthUi } from '@/lib/auth/AuthUiContext'
+import { useAuth } from '@/auth/AuthContext'
 import useStyles from './styles'
 
 const NAV_LINKS = [
@@ -17,7 +17,7 @@ const NAV_LINKS = [
 export default function Header() {
     const { styles } = useStyles()
     const pathname = usePathname()
-    const { isSignedIn } = useAuthUi()
+    const { isSignedIn } = useAuth()
 
     return (
         <header className={styles.header}>

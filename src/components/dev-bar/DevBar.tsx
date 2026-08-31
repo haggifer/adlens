@@ -1,15 +1,14 @@
 'use client'
 
-import { ColorPicker, Select, Switch } from 'antd'
-import { useAuthUi } from '@/lib/auth/AuthUiContext'
-import { AMBIENT_BACKGROUNDS, AmbientId } from '@/lib/design/backgrounds'
-import { useHarness } from '@/lib/design/harness/HarnessContext'
-import { PRIMARY_PRESETS } from '@/lib/design/primary-presets'
-import { RUN_ACCENTS, RunAccentId } from '@/lib/design/run-accents'
+import { ColorPicker, Select } from 'antd'
+import { AMBIENT_BACKGROUNDS, AmbientId } from '@/design/backgrounds'
+import { useHarness } from '@/design/harness/HarnessContext'
+import { PRIMARY_PRESETS } from '@/design/primary-presets'
+import { RUN_ACCENTS, RunAccentId } from '@/design/run-accents'
 import useStyles from './styles'
 
 // TEMPORARY design harness. Switches the ambient backdrop, picks the brand primary (preset or custom),
-// picks the Run-button accent, and simulates the signed-in state — none of which ship in production.
+// picks the Run-button accent — none of which ship in production.
 const AMBIENT_OPTIONS = AMBIENT_BACKGROUNDS.map((option) => ({ value: option.id, label: option.name }))
 
 const RUN_ACCENT_OPTIONS = RUN_ACCENTS.map((option) => ({ value: option.id, label: option.name }))
@@ -35,7 +34,6 @@ const PRIMARY_OPTIONS = PRIMARY_PRESETS.map((preset) => ({
 export default function DevBar() {
     const { styles } = useStyles()
     const { primaryColor, setPrimaryColor, ambientId, setAmbientId, runAccent, setRunAccent } = useHarness()
-    const { isSignedIn, setSignedIn } = useAuthUi()
 
     const activePreset = PRIMARY_PRESETS.find(
         (preset) => preset.value.toLowerCase() === primaryColor.toLowerCase(),
@@ -81,10 +79,6 @@ export default function DevBar() {
                     options={RUN_ACCENT_OPTIONS}
                     onChange={(value: RunAccentId) => setRunAccent(value)}
                 />
-            </label>
-            <label className={styles.controlPush}>
-                <span className={styles.label}>Signed in</span>
-                <Switch size="small" checked={isSignedIn} onChange={setSignedIn} />
             </label>
         </div>
     )

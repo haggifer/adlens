@@ -2,13 +2,15 @@
 
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
 import { App, Avatar, Button, Dropdown, MenuProps } from 'antd'
-import { useAuthUi } from '@/lib/auth/AuthUiContext'
+import { signOut } from 'firebase/auth'
+import { useAuth } from '@/auth/AuthContext'
+import { auth } from '@/firebase/config'
 import useHoverCapable from '@/hooks/useHoverCapable'
 import useStyles from './styles'
 
 export default function AccountMenu() {
     const { styles } = useStyles()
-    const { isSignedIn, setSignedIn, openAuth } = useAuthUi()
+    const { isSignedIn, openAuth } = useAuth()
     const { message } = App.useApp()
     const hoverCapable = useHoverCapable()
 
@@ -33,7 +35,7 @@ export default function AccountMenu() {
         }
 
         if (key === 'signout') {
-            setSignedIn(false)
+            void signOut(auth)
         }
     }
 
