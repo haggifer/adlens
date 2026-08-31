@@ -2,7 +2,7 @@
 
 import { DragEvent, useMemo, useState } from 'react'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, SwapOutlined } from '@ant-design/icons'
-import { Button, Tag, Tooltip, Upload } from 'antd'
+import { App, Button, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { DefaultVideoLayout, defaultLayoutIcons } from '@vidstack/react/player/layouts/default'
@@ -33,14 +33,33 @@ type VidstackVideoType = (typeof VIDSTACK_VIDEO_TYPES)[number]
 const toVidstackType = (mime: string): VidstackVideoType =>
     (VIDSTACK_VIDEO_TYPES as readonly string[]).includes(mime) ? (mime as VidstackVideoType) : 'video/mp4'
 
+const MAX_UPLOAD_MB = 200
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1000 * 1000
+
 export default function UploadPanel({ video, onSelect, onClear }: IProps) {
     const theme = useTheme()
     const { styles } = useStyles()
+    const { message } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
 
     // Stable Vidstack source (memoised — Vidstack watches `src` by identity) with an explicit, recognised
     // MIME type so a blob object URL actually loads instead of spinning.
     const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
+
+    // Client-side gate only — the Storage rule is the real boundary; this just avoids a doomed upload.
+    const acceptFile = (file: File) => {
+        if (!file.type.startsWith('video/')) {
+            message.error('Please upload a video file.')
+            return false
+        }
+
+        if (file.size > MAX_UPLOAD_BYTES) {
+            message.error(`Video must be under ${MAX_UPLOAD_MB} MB.`)
+            return false
+        }
+
+        return true
+    }
 
     const handleDragEnter = () => setIsDragging(true)
     const handleDragOver = (event: DragEvent<HTMLDivElement>) => event.preventDefault()
@@ -49,13 +68,12 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
             setIsDragging(false)
         }
     }
-    // Native drop for the video state (antd's Dragger owns the empty state). A dropped video replaces
-    // the current one; anything that isn't a video is ignored.
+    // antd's Dragger owns the empty state, so the video state gets its own drop handler.
     const handleDropReplace = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault()
         setIsDragging(false)
         const file = event.dataTransfer.files?.[0]
-        if (file && file.type.startsWith('video/')) {
+        if (file && acceptFile(file)) {
             onSelect(file)
         }
     }
@@ -66,7 +84,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                 <span className={styles.reqKey}>Formats:</span> MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP
             </div>
             <div>
-                <span className={styles.reqKey}>Size:</span> up to 200 MB
+                <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
             </div>
         </div>
     )
@@ -106,7 +124,9 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         maxCount={1}
                         showUploadList={false}
                         beforeUpload={(incoming) => {
-                            onSelect(incoming)
+                            if (acceptFile(incoming)) {
+                                onSelect(incoming)
+                            }
                             return false
                         }}
                     >
@@ -139,7 +159,9 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                 maxCount={1}
                 showUploadList={false}
                 beforeUpload={(incoming) => {
-                    onSelect(incoming)
+                    if (acceptFile(incoming)) {
+                        onSelect(incoming)
+                    }
                     return false
                 }}
             >
@@ -154,7 +176,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         icon={<InfoCircleOutlined />}
                         className={styles.reqTag}
                         color={theme.colorTextTertiary}
-                        aria-label="Accepted files: MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP · up to 200 MB"
+                        aria-label={`Accepted files: MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP · up to ${MAX_UPLOAD_MB} MB`}
                         onClick={(event) => event.stopPropagation()}
                     >
                         Requirements

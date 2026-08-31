@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import AnalysisSettings from './AnalysisSettings'
 import UploadIntro from './UploadIntro'
-import UploadPanel, { SelectedVideo } from './UploadPanel'
+import UploadPanel from './UploadPanel'
 import useStyles from './styles'
 
 export default function AdWorkspace() {
     const { styles } = useStyles()
-    const [video, setVideo] = useState<SelectedVideo | null>(null)
+    const [selected, setSelected] = useState<{ file: File; url: string } | null>(null)
     const workspaceRef = useRef<HTMLDivElement>(null)
 
     // The square and panel size off the flex column height directly (100%). A hugged (fit-content) video
@@ -31,17 +31,17 @@ export default function AdWorkspace() {
     }, [])
 
     const selectFile = (file: File) => {
-        setVideo((prev) => {
+        setSelected((prev) => {
             if (prev) {
                 URL.revokeObjectURL(prev.url)
             }
 
-            return { url: URL.createObjectURL(file), type: file.type }
+            return { file, url: URL.createObjectURL(file) }
         })
     }
 
     const clearVideo = () => {
-        setVideo((prev) => {
+        setSelected((prev) => {
             if (prev) {
                 URL.revokeObjectURL(prev.url)
             }
@@ -63,9 +63,15 @@ export default function AdWorkspace() {
             </header>
             <div className={styles.workspace} ref={workspaceRef}>
                 <div className={styles.left}>
-                    <UploadPanel video={video} onSelect={selectFile} onClear={clearVideo} />
+                    <UploadPanel
+                        video={selected ? { url: selected.url, type: selected.file.type } : null}
+                        onSelect={selectFile}
+                        onClear={clearVideo}
+                    />
                 </div>
-                <div className={styles.right}>{video ? <AnalysisSettings /> : <UploadIntro />}</div>
+                <div className={styles.right}>
+                    {selected ? <AnalysisSettings file={selected.file} /> : <UploadIntro />}
+                </div>
             </div>
         </div>
     )

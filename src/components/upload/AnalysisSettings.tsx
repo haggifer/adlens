@@ -2,9 +2,15 @@
 
 import { useState } from 'react'
 import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
-import { App, Button, Input, Select } from 'antd'
+import { useMutation } from '@tanstack/react-query'
+import { Alert, App, Button, Input, Select } from 'antd'
+import type { Job } from 'adlens-types'
 import { Controller, useForm } from 'react-hook-form'
-import { useHarness } from '@/lib/design/harness/HarnessContext'
+import useDocClean from '@/hooks/swr-firestore/useDocClean'
+import { createJob, startAnalysis } from '@/api/jobs'
+import { useAuth } from '@/auth/AuthContext'
+import { useHarness } from '@/design/harness/HarnessContext'
+import { uploadJobVideo } from '@/storage/upload'
 import useStyles from './styles'
 
 const PLATFORM_OPTIONS = ['Meta', 'TikTok', 'YouTube'].map((v) => ({ value: v, label: v }))
@@ -29,16 +35,75 @@ const DEFAULT_VALUES: AnalysisFormValues = {
     brand: '',
 }
 
-export default function AnalysisSettings() {
+interface Quota {
+    used: number
+    limit: number
+}
+
+interface IProps {
+    file: File
+}
+
+export default function AnalysisSettings({ file }: IProps) {
     const { styles, cx } = useStyles()
     const { message } = App.useApp()
     const { runAccent } = useHarness()
+    const { uid, hasFirebaseAuth, openAuth } = useAuth()
     const [advancedOpen, setAdvancedOpen] = useState(false)
+    const [jobId, setJobId] = useState<string | null>(null)
     const { control, handleSubmit } = useForm<AnalysisFormValues>({ defaultValues: DEFAULT_VALUES })
 
+    const { data: job } = useDocClean<Job>(uid && jobId ? { path: `users/${uid}/jobs/${jobId}` } : null)
+    const { data: quota } = useDocClean<Quota>(uid ? { path: `users/${uid}/private/quota` } : null)
+
+    const usedRuns = quota?.used ?? 0
+    const runLimit = quota?.limit ?? 3
+    const hasQuotaLeft = usedRuns < runLimit
+
+    const run = useMutation({
+        mutationFn: async (values: AnalysisFormValues) => {
+            const created = await createJob({
+                settings: values,
+                file: { name: file.name, contentType: file.type, size: file.size },
+            })
+
+            if (!created.file) {
+                throw new Error('Server did not return an upload target')
+            }
+
+            await uploadJobVideo({ path: created.file.path, file })
+            await startAnalysis(created.id)
+            return created.id
+        },
+        onSuccess: setJobId,
+    })
+
+    const isRunning = run.isPending || (job != null && job.status !== 'transcribed' && job.status !== 'error')
+
     const onSubmit = (values: AnalysisFormValues) => {
-        // TODO: wire up to the analysis backend.
-        message.info(`Captured your settings (objective: ${values.objective}) — analysis isn’t wired up yet.`)
+        if (!hasFirebaseAuth) {
+            openAuth('signin')
+            return
+        }
+
+        if (!hasQuotaLeft) {
+            message.warning(`You've used all ${runLimit} analyses this week.`)
+            return
+        }
+
+        run.mutate(values)
+    }
+
+    const describeStatus = (): string => {
+        if (run.isPending) {
+            return 'Uploading and starting analysis…'
+        }
+
+        if (job?.status === 'pending' || job?.status === 'queued' || job?.status === 'transcribing') {
+            return 'Analyzing…'
+        }
+
+        return ''
     }
 
     return (
@@ -123,6 +188,11 @@ export default function AnalysisSettings() {
                     </>
                 )}
             </div>
+            {quota != null && (
+                <p className={styles.hint}>
+                    {usedRuns} of {runLimit} analyses used this week
+                </p>
+            )}
             <Button
                 type="primary"
                 size="large"
@@ -131,9 +201,24 @@ export default function AnalysisSettings() {
                 className={styles.runButton}
                 data-accent={runAccent}
                 icon={<ThunderboltOutlined />}
+                loading={isRunning}
+                disabled={isRunning || !hasQuotaLeft}
             >
                 Run Analysis
             </Button>
+            {(isRunning || job || run.error) && (
+                <div className="d-flex flex-column gap-2">
+                    {run.error ? (
+                        <Alert type="error" showIcon message={run.error.message} />
+                    ) : job?.status === 'error' ? (
+                        <Alert type="error" showIcon message={job.error ?? 'Something went wrong'} />
+                    ) : job?.status === 'transcribed' ? (
+                        <Alert type="success" showIcon message="Analysis complete" />
+                    ) : (
+                        <p className={styles.hint}>{describeStatus()}</p>
+                    )}
+                </div>
+            )}
         </form>
     )
 }
