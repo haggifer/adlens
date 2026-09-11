@@ -1,4 +1,4 @@
-import type { CreateJobInput, Job } from 'adlens-types'
+import type { CreateJobInput, Job } from 'adlens-shared'
 import api from '@/api/client'
 
 export const createJob = async (input: CreateJobInput): Promise<Job> => {

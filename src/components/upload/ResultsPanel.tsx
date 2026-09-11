@@ -2,7 +2,7 @@
 
 import { ReloadOutlined } from '@ant-design/icons'
 import { Alert, Button, Collapse, Empty, Tag } from 'antd'
-import type { Advisory, Analysis, Finding, MetadataCheck } from 'adlens-types'
+import type { Advisory, Analysis, Finding, MetadataCheck } from 'adlens-shared'
 import useStyles from './styles'
 
 const SEVERITY_ORDER: Record<Finding['severity'], number> = { blocker: 0, warning: 1, info: 2 }
