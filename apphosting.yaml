@@ -45,3 +45,9 @@ env:
       availability:
           - BUILD
           - RUNTIME
+    # Deployed backend API. Adjust to the actual deployed URL of the `api` function if it differs.
+    - variable: NEXT_PUBLIC_API_BASE_URL
+      value: https://us-central1-adlens-ca57f.cloudfunctions.net/api
+      availability:
+          - BUILD
+          - RUNTIME
