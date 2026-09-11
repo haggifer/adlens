@@ -434,6 +434,77 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         font-size: 0.85rem;
         font-weight: 500;
     `,
+
+    resultsScroll: css`
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-inline: -0.5rem;
+        padding-inline: 0.5rem;
+    `,
+
+    summaryRow: css`
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    `,
+
+    sectionLabel: css`
+        margin: 0.25rem 0 0;
+        color: ${token.colorTextHeading};
+        font-size: 1rem;
+        font-weight: 600;
+    `,
+
+    findingCard: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        padding: 0.75rem;
+        border: 1px solid ${token.colorBorderSecondary};
+        border-radius: ${token.borderRadius}px;
+        background: ${token.colorFillQuaternary};
+    `,
+
+    findingHead: css`
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+    `,
+
+    findingTopic: css`
+        font-weight: 600;
+        color: ${token.colorText};
+        font-size: 0.9rem;
+    `,
+
+    findingEvidence: css`
+        margin: 0;
+        color: ${token.colorText};
+        font-size: 0.9rem;
+    `,
+
+    findingMeta: css`
+        color: ${token.colorTextSecondary};
+        font-size: 0.8rem;
+    `,
+
+    sourceLink: css`
+        color: ${token.colorPrimary};
+        font-size: 0.8rem;
+    `,
+
+    transcriptText: css`
+        margin: 0;
+        white-space: pre-wrap;
+        color: ${token.colorTextSecondary};
+        font-size: 0.85rem;
+        line-height: 1.5;
+    `,
 }))
 
 export default useStyles

@@ -11,6 +11,7 @@ import { createJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useHarness } from '@/design/harness/HarnessContext'
 import { uploadJobVideo } from '@/storage/upload'
+import ResultsPanel from './ResultsPanel'
 import useStyles from './styles'
 
 const PLATFORM_OPTIONS = ['Meta', 'TikTok', 'YouTube'].map((v) => ({ value: v, label: v }))
@@ -78,7 +79,7 @@ export default function AnalysisSettings({ file }: IProps) {
         onSuccess: setJobId,
     })
 
-    const isRunning = run.isPending || (job != null && job.status !== 'transcribed' && job.status !== 'error')
+    const isRunning = run.isPending || (job != null && job.status !== 'analyzed' && job.status !== 'error')
 
     const onSubmit = (values: AnalysisFormValues) => {
         if (!hasFirebaseAuth) {
@@ -99,11 +100,15 @@ export default function AnalysisSettings({ file }: IProps) {
             return 'Uploading and starting analysis…'
         }
 
-        if (job?.status === 'pending' || job?.status === 'queued' || job?.status === 'transcribing') {
+        if (job?.status === 'pending' || job?.status === 'queued' || job?.status === 'analyzing') {
             return 'Analyzing…'
         }
 
         return ''
+    }
+
+    if (job?.status === 'analyzed' && job.analysis) {
+        return <ResultsPanel analysis={job.analysis} onReset={() => setJobId(null)} />
     }
 
     return (
@@ -212,8 +217,6 @@ export default function AnalysisSettings({ file }: IProps) {
                         <Alert type="error" showIcon message={run.error.message} />
                     ) : job?.status === 'error' ? (
                         <Alert type="error" showIcon message={job.error ?? 'Something went wrong'} />
-                    ) : job?.status === 'transcribed' ? (
-                        <Alert type="success" showIcon message="Analysis complete" />
                     ) : (
                         <p className={styles.hint}>{describeStatus()}</p>
                     )}
