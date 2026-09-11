@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { FirebaseError } from 'firebase/app'
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth'
 import { App, Button, Form, Input, Modal } from 'antd'
+import { signIn, signUp } from '@/auth/authClient'
 import { AuthView, useAuth } from '@/auth/AuthContext'
-import { auth } from '@/firebase/config'
 import useStyles from './styles'
 
 const TITLES: Record<AuthView, string> = {
@@ -20,17 +18,8 @@ const SUBTITLES: Record<AuthView, string> = {
     forgot: 'Enter your email and we’ll send you a reset link.',
 }
 
-const AUTH_ERRORS: Record<string, string> = {
-    'auth/invalid-credential': 'Incorrect email or password.',
-    'auth/invalid-email': 'Enter a valid email address.',
-    'auth/email-already-in-use': 'That email is already registered.',
-    'auth/weak-password': 'Choose a stronger password (at least 8 characters).',
-    'auth/too-many-requests': 'Too many attempts — please try again later.',
-    'auth/user-not-found': 'No account found for that email.',
-}
-
-const describeAuthError = (err: unknown): string =>
-    err instanceof FirebaseError ? (AUTH_ERRORS[err.code] ?? 'Something went wrong. Please try again.') : 'Something went wrong. Please try again.'
+const describeError = (error: { message?: string } | null): string =>
+    error?.message || 'Something went wrong. Please try again.'
 
 interface SignInValues {
     email: string
@@ -43,10 +32,6 @@ interface SignUpValues {
     confirm: string
 }
 
-interface ForgotValues {
-    email: string
-}
-
 export default function AuthModal() {
     const { styles } = useStyles()
     const { view, openAuth, closeAuth } = useAuth()
@@ -54,42 +39,36 @@ export default function AuthModal() {
     const [submitting, setSubmitting] = useState(false)
 
     const handleSignIn = async ({ email, password }: SignInValues) => {
-        try {
-            setSubmitting(true)
-            await signInWithEmailAndPassword(auth, email, password)
-            message.success('Signed in')
-            closeAuth()
-        } catch (err) {
-            message.error(describeAuthError(err))
-        } finally {
-            setSubmitting(false)
+        setSubmitting(true)
+        const { error } = await signIn.email({ email, password })
+        setSubmitting(false)
+
+        if (error) {
+            message.error(describeError(error))
+            return
         }
+
+        message.success('Signed in')
+        closeAuth()
     }
 
     const handleSignUp = async ({ email, password }: SignUpValues) => {
-        try {
-            setSubmitting(true)
-            await createUserWithEmailAndPassword(auth, email, password)
-            message.success('Account created')
-            closeAuth()
-        } catch (err) {
-            message.error(describeAuthError(err))
-        } finally {
-            setSubmitting(false)
+        setSubmitting(true)
+        const { error } = await signUp.email({ email, password, name: email.split('@')[0] })
+        setSubmitting(false)
+
+        if (error) {
+            message.error(describeError(error))
+            return
         }
+
+        message.success('Account created')
+        closeAuth()
     }
 
-    const handleForgot = async ({ email }: ForgotValues) => {
-        try {
-            setSubmitting(true)
-            await sendPasswordResetEmail(auth, email)
-            message.success('Password reset link sent')
-            openAuth('signin')
-        } catch (err) {
-            message.error(describeAuthError(err))
-        } finally {
-            setSubmitting(false)
-        }
+    const handleForgot = () => {
+        message.info('Password reset isn’t available yet — email delivery is configured in a later phase.')
+        openAuth('signin')
     }
 
     const renderBody = () => {
@@ -144,7 +123,7 @@ export default function AuthModal() {
 
         if (view === 'forgot') {
             return (
-                <Form<ForgotValues> layout="vertical" requiredMark={false} onFinish={handleForgot}>
+                <Form layout="vertical" requiredMark={false} onFinish={handleForgot}>
                     <Form.Item
                         name="email"
                         label="Email"
@@ -152,7 +131,7 @@ export default function AuthModal() {
                     >
                         <Input size="large" placeholder="you@company.com" autoComplete="email" />
                     </Form.Item>
-                    <Button type="primary" htmlType="submit" size="large" block loading={submitting}>
+                    <Button type="primary" htmlType="submit" size="large" block>
                         Send reset link
                     </Button>
                     <div className={styles.switcher}>

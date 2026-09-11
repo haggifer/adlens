@@ -4,7 +4,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntdApp } from 'antd'
 import { ThemeProvider as StyleThemeProvider } from 'antd-style'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import AuthProvider from '@/auth/AuthContext'
 import HarnessProvider, { useHarness } from '@/design/harness/HarnessContext'
@@ -12,7 +12,6 @@ import { HarnessSettings } from '@/design/harness/harness-cookie'
 import { buildAntdTheme } from '@/design/theme'
 import ThemeProvider, { useTheme } from '@/design/ThemeContext'
 import { ColorScheme } from '@/design/types'
-import { getFirebaseAnalytics } from '@/firebase/config'
 
 interface IProps {
     children: ReactNode
@@ -44,10 +43,6 @@ const ThemedShell = ({ children }: IProps) => {
 
 export default function Providers({ children, initialScheme, initialSettings }: ProvidersProps) {
     const [queryClient] = useState(() => new QueryClient())
-
-    useEffect(() => {
-        void getFirebaseAnalytics()
-    }, [])
 
     return (
         <AntdRegistry>

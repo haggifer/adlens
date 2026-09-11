@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, App, Button, Input, Select } from 'antd'
-import type { AnalysisSettings, Job } from 'adlens-shared'
+import type { AnalysisSettings } from 'adlens-shared'
 import { Controller, useForm } from 'react-hook-form'
-import useDocClean from '@/hooks/swr-firestore/useDocClean'
 import { createJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useHarness } from '@/design/harness/HarnessContext'
-import { uploadJobVideo } from '@/storage/upload'
+import { useJob } from '@/hooks/useJob'
+import { useQuota } from '@/hooks/useQuota'
+import { uploadToSignedUrl } from '@/storage/upload'
 import ResultsPanel from './ResultsPanel'
 import useStyles from './styles'
 
@@ -36,11 +37,6 @@ const DEFAULT_VALUES: AnalysisFormValues = {
     brand: '',
 }
 
-interface Quota {
-    used: number
-    limit: number
-}
-
 interface IProps {
     file: File
 }
@@ -49,13 +45,13 @@ export default function AnalysisSettings({ file }: IProps) {
     const { styles, cx } = useStyles()
     const { message } = App.useApp()
     const { runAccent } = useHarness()
-    const { uid, hasFirebaseAuth, openAuth } = useAuth()
+    const { isSignedIn, openAuth } = useAuth()
     const [advancedOpen, setAdvancedOpen] = useState(false)
     const [jobId, setJobId] = useState<string | null>(null)
     const { control, handleSubmit } = useForm<AnalysisFormValues>({ defaultValues: DEFAULT_VALUES })
 
-    const { data: job } = useDocClean<Job>(uid && jobId ? { path: `users/${uid}/jobs/${jobId}` } : null)
-    const { data: quota } = useDocClean<Quota>(uid ? { path: `users/${uid}/private/quota` } : null)
+    const { job } = useJob(jobId)
+    const { quota } = useQuota(isSignedIn)
 
     const usedRuns = quota?.used ?? 0
     const runLimit = quota?.limit ?? 3
@@ -68,13 +64,10 @@ export default function AnalysisSettings({ file }: IProps) {
                 file: { name: file.name, contentType: file.type, size: file.size },
             })
 
-            if (!created.file) {
-                throw new Error('Server did not return an upload target')
-            }
+            await uploadToSignedUrl({ url: created.uploadUrl, file })
+            await startAnalysis(created.job.id)
 
-            await uploadJobVideo({ path: created.file.path, file })
-            await startAnalysis(created.id)
-            return created.id
+            return created.job.id
         },
         onSuccess: setJobId,
     })
@@ -82,7 +75,7 @@ export default function AnalysisSettings({ file }: IProps) {
     const isRunning = run.isPending || (job != null && job.status !== 'analyzed' && job.status !== 'error')
 
     const onSubmit = (values: AnalysisFormValues) => {
-        if (!hasFirebaseAuth) {
+        if (!isSignedIn) {
             openAuth('signin')
             return
         }
