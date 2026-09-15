@@ -2,11 +2,10 @@
 
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
 import { App, Avatar, Button, Dropdown, MenuProps } from 'antd'
-import { signOut } from 'firebase/auth'
+import { logout } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
-import { auth } from '@/firebase/config'
 import useHoverCapable from '@/hooks/useHoverCapable'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 export default function AccountMenu() {
     const { styles } = useStyles()
@@ -35,7 +34,7 @@ export default function AccountMenu() {
         }
 
         if (key === 'signout') {
-            void signOut(auth)
+            void logout()
         }
     }
 

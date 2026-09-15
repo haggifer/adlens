@@ -1,26 +1,22 @@
 'use client'
 
-import { onAuthStateChanged, User } from 'firebase/auth'
-import { useDoc } from '@tatsuokaniwa/swr-firestore'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
-import { getCleanData } from '@/hooks/swr-firestore/utils'
-import { auth } from '@/firebase/config'
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
+import { useSession } from '@/auth/authClient'
 
 export type AuthView = 'signin' | 'signup' | 'forgot'
 
-export interface DbUser {
-    displayName?: string
-    photoURL?: string
-    email?: string
+export interface AuthUser {
+    id: string
+    email: string
+    name?: string
+    image?: string | null
 }
 
-interface AuthContextValue {
+export interface AuthContextValue {
     initializing: boolean
     isSignedIn: boolean
-    hasFirebaseAuth: boolean
     uid: string | null
-    authUser: User | null
-    dbUser: DbUser | null
+    user: AuthUser | null
     view: AuthView | null
     openAuth: (view: AuthView) => void
     closeAuth: () => void
@@ -34,37 +30,21 @@ interface IProps {
 
 export default function AuthProvider({ children }: IProps) {
     const [view, setView] = useState<AuthView | null>(null)
-    const [initializing, setInitializing] = useState(true)
-    const [authUser, setAuthUser] = useState<User | null>(null)
+    const { data: session, isPending } = useSession()
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
-            setAuthUser(user)
-            setInitializing(false)
-        })
+    const value = useMemo<AuthContextValue>(() => {
+        const u = session?.user
 
-        return unsubscribe
-    }, [])
-
-    // Raw useDoc, not useDocClean: the Clean wrapper reads this very context for its auth guard, so the
-    // provider can't use it without a cycle. The local authUser guard does the same job here.
-    const { data: dbUserDoc } = useDoc<DbUser>(authUser ? { path: `users/${authUser.uid}` } : null)
-    const dbUser = useMemo(() => (getCleanData<DbUser>(dbUserDoc) as DbUser | undefined) ?? null, [dbUserDoc])
-
-    const value = useMemo<AuthContextValue>(
-        () => ({
-            initializing,
-            isSignedIn: Boolean(authUser),
-            hasFirebaseAuth: Boolean(authUser),
-            uid: authUser?.uid ?? null,
-            authUser,
-            dbUser,
+        return {
+            initializing: isPending,
+            isSignedIn: Boolean(u),
+            uid: u?.id ?? null,
+            user: u ? { id: u.id, email: u.email, name: u.name ?? undefined, image: u.image ?? null } : null,
             view,
             openAuth: (next) => setView(next),
             closeAuth: () => setView(null),
-        }),
-        [initializing, authUser, dbUser, view],
-    )
+        }
+    }, [session, isPending, view])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import AnalysisSettings from './AnalysisSettings'
 import UploadIntro from './UploadIntro'
 import UploadPanel from './UploadPanel'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 export default function AdWorkspace() {
     const { styles } = useStyles()
