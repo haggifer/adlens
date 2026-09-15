@@ -1,7 +1,7 @@
 import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
 
-const useStyles = createStyles(({ token, css }) => ({
+export const useStyles = createStyles(({ token, css }) => ({
     harness: css`
         display: flex;
         align-items: stretch;
@@ -162,5 +162,3 @@ const useStyles = createStyles(({ token, css }) => ({
         color: ${token.colorTextTertiary};
     `,
 }))
-
-export default useStyles

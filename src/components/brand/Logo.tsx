@@ -1,6 +1,6 @@
 'use client'
 
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 export default function Logo() {
     const { styles } = useStyles()

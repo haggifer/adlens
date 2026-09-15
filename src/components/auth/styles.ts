@@ -1,7 +1,7 @@
 import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
 
-const useStyles = createStyles(({ token, css }) => ({
+export const useStyles = createStyles(({ token, css }) => ({
     head: css`
         display: flex;
         flex-direction: column;
@@ -66,5 +66,3 @@ const useStyles = createStyles(({ token, css }) => ({
         font-size: 1rem;
     `,
 }))
-
-export default useStyles

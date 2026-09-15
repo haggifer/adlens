@@ -6,7 +6,7 @@ import AuthModal from '@/components/auth/AuthModal'
 import DevBar from '@/components/dev-bar/DevBar'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 interface IProps {
     children: ReactNode

@@ -1,7 +1,7 @@
 import { createStyles } from 'antd-style'
 import { LOGO_FONT_STACK } from '@/fonts'
 
-const useStyles = createStyles(({ token, css }) => ({
+export const useStyles = createStyles(({ token, css }) => ({
     logo: css`
         display: inline-flex;
         align-items: flex-start;
@@ -28,5 +28,3 @@ const useStyles = createStyles(({ token, css }) => ({
         margin-top: 2px;
     `,
 }))
-
-export default useStyles

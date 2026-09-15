@@ -2,7 +2,7 @@ import { createStyles } from 'antd-style'
 
 // The dev panel is deliberately theme-independent (neutral chrome that sits apart from the
 // previewed design), so its colors are fixed here rather than pulled from the theme tokens.
-const useStyles = createStyles(({ css }) => ({
+export const useStyles = createStyles(({ css }) => ({
     devBar: css`
         position: sticky;
         top: 0;
@@ -78,5 +78,3 @@ const useStyles = createStyles(({ css }) => ({
         color: #9aa0aa;
     `,
 }))
-
-export default useStyles

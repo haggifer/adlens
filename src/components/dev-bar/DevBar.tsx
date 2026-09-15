@@ -5,7 +5,7 @@ import { AMBIENT_BACKGROUNDS, AmbientId } from '@/design/backgrounds'
 import { useHarness } from '@/design/harness/HarnessContext'
 import { PRIMARY_PRESETS } from '@/design/primary-presets'
 import { RUN_ACCENTS, RunAccentId } from '@/design/run-accents'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 // TEMPORARY design harness. Switches the ambient backdrop, picks the brand primary (preset or custom),
 // picks the Run-button accent — none of which ship in production.

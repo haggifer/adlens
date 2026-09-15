@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { App, Button, Form, Input, Modal } from 'antd'
 import { signIn, signUp } from '@/auth/authClient'
 import { AuthView, useAuth } from '@/auth/AuthContext'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 const TITLES: Record<AuthView, string> = {
     signin: 'Sign In',

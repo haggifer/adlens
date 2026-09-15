@@ -13,7 +13,7 @@ import { useJob } from '@/hooks/useJob'
 import { useQuota } from '@/hooks/useQuota'
 import { uploadToSignedUrl } from '@/storage/upload'
 import ResultsPanel from './ResultsPanel'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 const PLATFORM_OPTIONS = ['Meta', 'TikTok', 'YouTube'].map((v) => ({ value: v, label: v }))
 

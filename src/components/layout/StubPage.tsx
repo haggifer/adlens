@@ -1,6 +1,6 @@
 'use client'
 
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 interface IProps {
     title: string

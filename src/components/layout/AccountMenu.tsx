@@ -5,7 +5,7 @@ import { App, Avatar, Button, Dropdown, MenuProps } from 'antd'
 import { logout } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import useHoverCapable from '@/hooks/useHoverCapable'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 export default function AccountMenu() {
     const { styles } = useStyles()

@@ -15,7 +15,7 @@ const buildFrameShadow = (primary: string, isDark: boolean) =>
 const buildFrameDragShadow = (primaryHover: string, isDark: boolean) =>
     isDark ? `0 6px 29px -2px #777` : `0 0 0 1px ${primaryHover}, 0 0 44px -2px ${primaryHover}`
 
-const useStyles = createStyles(({ token, css, isDarkMode }) => ({
+export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`
         display: flex;
         flex-direction: column;
@@ -506,5 +506,3 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         line-height: 1.5;
     `,
 }))
-
-export default useStyles

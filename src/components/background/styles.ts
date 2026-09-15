@@ -3,7 +3,7 @@ import { createStyles } from 'antd-style'
 const NOISE_SVG =
     "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"
 
-const useStyles = createStyles(({ token, css, isDarkMode }) => {
+export const useStyles = createStyles(({ token, css, isDarkMode }) => {
     const primary = token.colorPrimary
     const base = token.colorBgLayout
     // All accents are derived from the primary so every backdrop recolors with the picker. In dark mode
@@ -106,5 +106,3 @@ const useStyles = createStyles(({ token, css, isDarkMode }) => {
         `,
     }
 })
-
-export default useStyles

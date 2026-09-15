@@ -3,11 +3,11 @@
 import { Divider } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/auth/AuthContext'
 import Logo from '@/components/brand/Logo'
 import AccountMenu from '@/components/layout/AccountMenu'
 import ThemeSwitch from '@/components/layout/ThemeSwitch'
-import { useAuth } from '@/auth/AuthContext'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 const NAV_LINKS = [
     { href: '/', label: 'Analyze' },

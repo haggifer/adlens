@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckCircleFilled } from '@ant-design/icons'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 const FEATURES = [
     'An instant transcript of your ad',

@@ -6,7 +6,7 @@ import { App, Button, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { DefaultVideoLayout, defaultLayoutIcons } from '@vidstack/react/player/layouts/default'
-import useStyles from './styles'
+import { useStyles } from './styles'
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
 

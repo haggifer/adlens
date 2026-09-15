@@ -2,8 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Job } from 'adlens-shared'
 import { useEffect } from 'react'
 import { io } from 'socket.io-client'
-import { getBearerToken } from '@/auth/authClient'
 import { getJob } from '@/api/jobs'
+import { getBearerToken } from '@/auth/authClient'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080'
 

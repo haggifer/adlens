@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import { Button, Spin } from 'antd'
 import { useAuth } from '@/auth/AuthContext'
-import useStyles from './styles'
+import { useStyles } from './styles'
 
 interface IProps {
     children: ReactNode
