@@ -7,7 +7,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "eslint",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "check:deps": "node scripts/check-no-file-deps.mjs"
     },
     "dependencies": {
         "@ant-design/icons": "^6.3.2",
@@ -15,6 +16,7 @@
         "@hookform/resolvers": "^5.9.1",
         "@tanstack/react-query": "^5.101.2",
         "@vidstack/react": "^1.15.6",
+        "adlens-shared": "0.2.0",
         "antd": "^6.5.1",
         "antd-style": "^4.1.0",
         "axios": "^1.19.0",
@@ -32,7 +34,6 @@
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
-        "adlens-shared": "file:../adlens-shared",
         "eslint": "^9",
         "eslint-config-next": "16.2.10",
         "prettier": "^3.9.5",
