@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, App, Button, Input, Select } from 'antd'
 import type { AnalysisSettings } from 'adlens-shared'
 import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { createJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useHarness } from '@/design/harness/HarnessContext'
@@ -21,13 +23,15 @@ const OBJECTIVE_OPTIONS = ['Conversion', 'Awareness', 'Consideration'].map((v) =
 
 const FOCUS_OPTIONS = ['Hook', 'Pacing', 'Messaging', 'CTA', 'Branding', 'Audio'].map((v) => ({ value: v, label: v }))
 
-interface AnalysisFormValues {
-    platform: string[]
-    objective: string
-    focus: string[]
-    audience: string
-    brand: string
-}
+const analysisFormSchema = z.object({
+    platform: z.array(z.string()),
+    objective: z.string(),
+    focus: z.array(z.string()),
+    audience: z.string(),
+    brand: z.string(),
+})
+
+type AnalysisFormValues = z.infer<typeof analysisFormSchema>
 
 const DEFAULT_VALUES: AnalysisFormValues = {
     platform: [],
@@ -48,7 +52,10 @@ export default function AnalysisSettings({ file }: IProps) {
     const { isSignedIn, openAuth } = useAuth()
     const [advancedOpen, setAdvancedOpen] = useState(false)
     const [jobId, setJobId] = useState<string | null>(null)
-    const { control, handleSubmit } = useForm<AnalysisFormValues>({ defaultValues: DEFAULT_VALUES })
+    const { control, handleSubmit } = useForm<AnalysisFormValues>({
+        resolver: zodResolver(analysisFormSchema),
+        defaultValues: DEFAULT_VALUES,
+    })
 
     const { job } = useJob(jobId)
     const { quota } = useQuota(isSignedIn)
