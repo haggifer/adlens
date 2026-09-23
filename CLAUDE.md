@@ -6,40 +6,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-AdLens — AI-powered video ad diagnostic tool. Upload a short video ad, get a transcript and structural
-analysis (Gemini), and eventually grounded explanations of likely performance issues. Currently an early
-scaffold: the only route is the home page placeholder in [app/page.tsx](app/page.tsx).
+AdLens web client (Next.js 16 on Vercel). Users upload a video ad of up to 60 s, pick platforms, placements and
+markets, and get policy and best-practice findings from the AdLens API (`../adlens-api`). The API contract lives in
+the `adlens-shared` npm package (`../adlens-shared`). See [README.md](README.md) for routes and structure.
 
 ## Commands
 
 ```bash
-npm run dev      # start dev server (Turbopack)
+npm run dev      # dev server (Turbopack)
 npm run build    # production build
-npm run start    # serve production build
-npm run lint     # ESLint (eslint-config-next core-web-vitals + typescript)
-npm run format   # Prettier --write
+npm run lint     # ESLint
+npx tsc --noEmit # type-check
+npm test         # Jest + React Testing Library
 ```
-
-There is no test setup in this repo yet.
 
 ## Architecture
 
-- **Next.js 16 App Router**, single top-level layout. [app/layout.tsx](app/layout.tsx) wraps everything in
-  [app/providers.tsx](app/providers.tsx), which is the one place client-side providers are composed:
-  `AntdRegistry` (SSR style extraction) → antd `ConfigProvider`/`App` → React Query's `QueryClientProvider`.
-  New global providers belong here, in that nesting order.
-- **Firebase** client SDK is initialized once in [lib/firebase/config.ts](lib/firebase/config.ts), guarded
-  against double-init via `getApps().length`. It exports ready-to-use `auth`, `db`, `storage` singletons.
-  Analytics is special-cased: it's browser-only and feature-detected (`isSupported()`), so it's fetched
-  lazily through `getFirebaseAnalytics()` (called from a `useEffect` in `providers.tsx`) rather than
-  exported as a singleton like the others.
-- **Config split**: client Firebase config (`NEXT_PUBLIC_FIREBASE_*`) lives in `.env.local` for local dev
-  and is duplicated in [apphosting.yaml](apphosting.yaml) for Firebase App Hosting builds/runtime (App
-  Hosting does not read `.env.local`). These are public client identifiers, not secrets. Server-only
-  secrets (Gemini key, Meta/TikTok app secrets) are intended to go in Secret Manager, referenced from
-  `apphosting.yaml` via `secret:` rather than `value:` — none exist yet.
-- Deployment target is **Firebase App Hosting** (`apphosting.yaml`), currently configured for
-  `minInstances: 0`, `maxInstances: 1`.
-- Path alias `@/*` maps to the project root (e.g. `@/lib/firebase/config`).
-- Formatting: 4-space indent, no semicolons, single quotes, 120 print width, trailing commas (see
-  `.prettierrc`) — run `npm run format` rather than hand-matching style.
+- [src/app/Providers.tsx](src/app/Providers.tsx) composes the client providers: `AntdRegistry` → antd-style SSR
+  registry → `ThemeProvider` (light/dark from a cookie) → React Query → antd theme + `App` → `AuthProvider` →
+  `AppShell`. The QueryClient opens the sign-in modal on any `UNAUTHENTICATED` API error.
+- Auth is Better Auth with an httpOnly session cookie shared by `www.` and `api.useadlens.com`; every request goes
+  with credentials ([src/api/client.ts](src/api/client.ts), [src/auth/authClient.ts](src/auth/authClient.ts)).
+  `AuthContext` only exposes the session; the auth modal's view is Zustand state
+  ([src/contexts/stores/authModalStore.ts](src/contexts/stores/authModalStore.ts)).
+- API failures become `ApiRequestError` with a stable code; user-facing copy lives in
+  [src/api/errors.ts](src/api/errors.ts). Never show raw server or axios messages.
+- Query keys are scoped by user id, and sign-out clears the cache.
+- Public env is parsed once in [src/config.ts](src/config.ts); don't read `process.env` elsewhere.
+- Labels for shared enums live in [src/labels.ts](src/labels.ts); option lists come from the shared enums.
+
+## Gotchas
+
+- `NEXT_PUBLIC_*` values are inlined at build time.
+- Until `adlens-shared@0.4.0` is published, `node_modules/adlens-shared` holds a locally packed 0.4.0 installed with
+  `npm install --no-save ../adlens-shared/adlens-shared-0.4.0.tgz`; any `npm install`/`npm ci` reverts it to the
+  pinned 0.2.0 and breaks the build.
+- Vercel deploys the `init-setup` branch to production, so every push goes live.
+- Formatting: 4-space indent, no semicolons, single quotes, 120 print width (see `.prettierrc`). Run Prettier on
+  touched files only.
