@@ -1,0 +1,71 @@
+import { JobStatus, Market, type Objective, Placement, Platform, RulePlatform } from 'adlens-shared'
+
+export const VIDEO_FORMATS_LABEL = 'MP4, MOV, WebM, MPEG, 3GP, FLV'
+
+export const PLATFORM_LABELS: Record<Platform, string> = {
+    [Platform.Meta]: 'Meta (Facebook, Instagram)',
+    [Platform.TikTok]: 'TikTok',
+    [Platform.YouTube]: 'YouTube',
+    [Platform.Snapchat]: 'Snapchat',
+    [Platform.Pinterest]: 'Pinterest',
+    [Platform.LinkedIn]: 'LinkedIn',
+    [Platform.Amazon]: 'Amazon Ads',
+}
+
+export const RULE_PLATFORM_LABELS: Record<RulePlatform, string> = {
+    [RulePlatform.Meta]: 'Meta',
+    [RulePlatform.TikTok]: 'TikTok',
+    [RulePlatform.YouTube]: 'YouTube',
+    [RulePlatform.Snapchat]: 'Snapchat',
+    [RulePlatform.Pinterest]: 'Pinterest',
+    [RulePlatform.LinkedIn]: 'LinkedIn',
+    [RulePlatform.Amazon]: 'Amazon Ads',
+    [RulePlatform.Google]: 'Google Ads',
+    [RulePlatform.All]: 'All platforms',
+}
+
+export const PLACEMENT_LABELS: Record<Placement, string> = {
+    [Placement.MetaFeed]: 'Feed',
+    [Placement.MetaReels]: 'Reels',
+    [Placement.MetaStories]: 'Stories',
+    [Placement.TikTokInFeed]: 'In-feed',
+    [Placement.YouTubeSkippableInStream]: 'Skippable in-stream',
+    [Placement.YouTubeNonSkippableInStream]: 'Non-skippable in-stream',
+    [Placement.YouTubeBumper]: 'Bumper (6 s)',
+    [Placement.YouTubeShorts]: 'Shorts',
+    [Placement.SnapchatSingleVideo]: 'Single video',
+    [Placement.PinterestStandardVideo]: 'Standard video',
+    [Placement.LinkedInSingleVideo]: 'Single video',
+    [Placement.AmazonSponsoredBrandsVideo]: 'Sponsored Brands video',
+}
+
+export const MARKET_LABELS: Record<Market, string> = {
+    [Market.US]: 'United States',
+    [Market.UK]: 'United Kingdom',
+    [Market.EU]: 'European Union',
+    [Market.Other]: 'Other markets',
+}
+
+export const OBJECTIVE_LABELS: Record<Objective, string> = {
+    Conversion: 'Conversion',
+    Awareness: 'Awareness',
+    Consideration: 'Consideration',
+}
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+    [JobStatus.Pending]: 'Not started',
+    [JobStatus.Verifying]: 'Checking video',
+    [JobStatus.Queued]: 'Queued',
+    [JobStatus.Analyzing]: 'Analyzing',
+    [JobStatus.Analyzed]: 'Done',
+    [JobStatus.Error]: 'Failed',
+}
+
+export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
+    [JobStatus.Pending]: 'default',
+    [JobStatus.Verifying]: 'processing',
+    [JobStatus.Queued]: 'processing',
+    [JobStatus.Analyzing]: 'processing',
+    [JobStatus.Analyzed]: 'success',
+    [JobStatus.Error]: 'error',
+}

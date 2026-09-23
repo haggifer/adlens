@@ -3,41 +3,50 @@ import type { Job } from 'adlens-shared'
 import { useEffect } from 'react'
 import { io } from 'socket.io-client'
 import { getJob } from '@/api/jobs'
-import { getBearerToken } from '@/auth/authClient'
+import type { ApiRequestError } from '@/api/errors'
+import { useAuth } from '@/auth/AuthContext'
+import { config } from '@/config'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080'
+export const jobKey = (userId: string | undefined, jobId: string) => ['job', userId, jobId]
 
 export interface UseJobResult {
     job: Job | undefined
+    isLoading: boolean
+    error: ApiRequestError | null
 }
 
-// Reads the job once via the API, then keeps it live over Socket.IO (fed by the API's Mongo change
-// stream) by writing pushed updates straight into the TanStack Query cache. Replaces the old Firestore
-// onSnapshot subscription.
-export const useJob = (jobId: string | null): UseJobResult => {
+// Reads the job once, then keeps it live over Socket.IO (fed by the API's Mongo change stream) by writing pushed
+// updates into the query cache. Every (re)connect refetches, because updates emitted while disconnected are lost.
+export default function useJob(jobId: string): UseJobResult {
+    const { user } = useAuth()
     const queryClient = useQueryClient()
-    const { data } = useQuery({
-        queryKey: ['job', jobId],
-        queryFn: () => getJob(jobId as string),
-        enabled: Boolean(jobId),
+    const userId = user?.id
+    const { data, isLoading, error } = useQuery<Job, ApiRequestError>({
+        queryKey: jobKey(userId, jobId),
+        queryFn: () => getJob(jobId),
+        enabled: Boolean(userId),
     })
 
     useEffect(() => {
-        if (!jobId) {
+        if (!userId) {
             return
         }
 
-        const socket = io(API_BASE, { auth: { token: getBearerToken() ?? '' }, transports: ['websocket'] })
+        const socket = io(config.apiBaseUrl, { withCredentials: true, transports: ['websocket'] })
+
+        socket.on('connect', () => {
+            void queryClient.invalidateQueries({ queryKey: jobKey(userId, jobId) })
+        })
         socket.on('job:updated', (job: Job) => {
             if (job.id === jobId) {
-                queryClient.setQueryData(['job', jobId], job)
+                queryClient.setQueryData(jobKey(userId, jobId), job)
             }
         })
 
         return () => {
             socket.disconnect()
         }
-    }, [jobId, queryClient])
+    }, [jobId, userId, queryClient])
 
-    return { job: data }
+    return { job: data, isLoading, error }
 }

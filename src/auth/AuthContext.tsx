@@ -1,25 +1,20 @@
 'use client'
 
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
-import { useSession } from '@/auth/authClient'
-
-export type AuthView = 'signin' | 'signup' | 'forgot'
+import { useQueryClient } from '@tanstack/react-query'
+import { createContext, ReactNode, useContext, useMemo } from 'react'
+import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 
 export interface AuthUser {
     id: string
     email: string
-    name?: string
-    image?: string | null
+    name: string
 }
 
 export interface AuthContextValue {
-    initializing: boolean
+    isInitializing: boolean
     isSignedIn: boolean
-    uid: string | null
     user: AuthUser | null
-    view: AuthView | null
-    openAuth: (view: AuthView) => void
-    closeAuth: () => void
+    signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -29,22 +24,23 @@ interface IProps {
 }
 
 export default function AuthProvider({ children }: IProps) {
-    const [view, setView] = useState<AuthView | null>(null)
+    const queryClient = useQueryClient()
     const { data: session, isPending } = useSession()
 
     const value = useMemo<AuthContextValue>(() => {
-        const u = session?.user
+        const user = session?.user
 
         return {
-            initializing: isPending,
-            isSignedIn: Boolean(u),
-            uid: u?.id ?? null,
-            user: u ? { id: u.id, email: u.email, name: u.name ?? undefined, image: u.image ?? null } : null,
-            view,
-            openAuth: (next) => setView(next),
-            closeAuth: () => setView(null),
+            isInitializing: isPending,
+            isSignedIn: Boolean(user),
+            user: user ? { id: user.id, email: user.email, name: user.name } : null,
+            // Cached server data belongs to the signed-in user, so it goes with the session.
+            signOut: async () => {
+                await signOutRequest()
+                queryClient.clear()
+            },
         }
-    }, [session, isPending, view])
+    }, [session, isPending, queryClient])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

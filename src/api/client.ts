@@ -1,18 +1,10 @@
 import axios from 'axios'
-import { getBearerToken } from '@/auth/authClient'
+import { toApiRequestError } from '@/api/errors'
+import { config } from '@/config'
 
-// Every request carries the Better Auth bearer token so the API can verify the session and apply the
-// field allowlist. All record writes go through the API — the client never writes the database directly.
-const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_BASE_URL })
+// The session travels as an httpOnly cookie shared by www. and api. (same site), so requests only need credentials.
+const api = axios.create({ baseURL: config.apiBaseUrl, withCredentials: true })
 
-api.interceptors.request.use((config) => {
-    const token = getBearerToken()
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-
-    return config
-})
+api.interceptors.response.use(undefined, (error) => Promise.reject(toApiRequestError(error)))
 
 export default api

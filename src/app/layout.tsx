@@ -1,38 +1,38 @@
 import type { Metadata } from 'next'
-import type { ReactNode } from 'react'
 import { cookies } from 'next/headers'
-import { FONT_VARIABLE_CLASSES } from '@/fonts'
-import { HARNESS_COOKIE, parseHarness } from '@/design/harness/harness-cookie'
+import type { ReactNode } from 'react'
+import { config } from '@/config'
 import { parseScheme, SCHEME_COOKIE } from '@/design/scheme-cookie'
-import Providers from './providers'
+import { FONT_VARIABLE_CLASSES } from '@/fonts'
+import Providers from './Providers'
 import 'bootstrap/dist/css/bootstrap-utilities.min.css'
 import './globals.css'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const TITLE = 'AdLens — Find out why your video ads underperform'
+const DESCRIPTION =
+    'Upload a video ad and AdLens checks it against the ad policies and creative best practices of the platforms you target, with timestamps and cited sources for every finding.'
 
 export const metadata: Metadata = {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: new URL(config.siteUrl),
     title: {
-        default: 'AdLens — Diagnose why your video ads underperform',
+        default: TITLE,
         template: '%s · AdLens',
     },
-    description:
-        'AdLens is an AI-powered video ad diagnostic tool. Upload a video ad and get a transcript, a structural breakdown, and grounded explanations of what’s holding its performance back.',
+    description: DESCRIPTION,
     applicationName: 'AdLens',
-    keywords: ['video ads', 'ad analysis', 'creative diagnostics', 'ad performance', 'AI video analysis'],
+    keywords: ['video ads', 'ad policy check', 'ad approval', 'creative best practices', 'AI video analysis'],
     openGraph: {
         type: 'website',
         siteName: 'AdLens',
         url: '/',
-        title: 'AdLens — Diagnose why your video ads underperform',
-        description:
-            'Upload a video ad and AdLens diagnoses what’s holding it back — transcript, structural breakdown, and grounded explanations.',
+        title: TITLE,
+        description: DESCRIPTION,
         locale: 'en_US',
     },
     twitter: {
-        card: 'summary_large_image',
-        title: 'AdLens — Diagnose why your video ads underperform',
-        description: 'Upload a video ad and AdLens diagnoses what’s holding it back — no guesswork.',
+        card: 'summary',
+        title: TITLE,
+        description: DESCRIPTION,
     },
     robots: { index: true, follow: true },
 }
@@ -41,18 +41,15 @@ interface IProps {
     children: ReactNode
 }
 
+// Reading the scheme cookie makes every route dynamic; accepted so the first paint already has the right scheme.
 export default async function RootLayout({ children }: IProps) {
     const cookieStore = await cookies()
     const scheme = parseScheme(cookieStore.get(SCHEME_COOKIE)?.value)
-    // TEMPORARY: design-harness state, seeded so neither the scheme nor the backdrop flash on load.
-    const settings = parseHarness(cookieStore.get(HARNESS_COOKIE)?.value)
 
     return (
         <html lang="en" data-scheme={scheme} style={{ colorScheme: scheme }} className={FONT_VARIABLE_CLASSES}>
             <body>
-                <Providers initialScheme={scheme} initialSettings={settings}>
-                    {children}
-                </Providers>
+                <Providers initialScheme={scheme}>{children}</Providers>
             </body>
         </html>
     )
