@@ -2,6 +2,9 @@
     "name": "adlens",
     "version": "0.1.0",
     "private": true,
+    "engines": {
+        "node": "22.x"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
@@ -31,7 +34,7 @@
         "zod": "^4.5.4"
     },
     "devDependencies": {
-        "@types/node": "^20",
+        "@types/node": "^22.20.4",
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "eslint": "^9",
