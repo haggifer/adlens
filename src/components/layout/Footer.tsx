@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useStyles } from './styles'
 
 export default function Footer() {
@@ -7,13 +8,13 @@ export default function Footer() {
 
     return (
         <footer className={styles.footer}>
-            <a href="#" className={styles.footerLink}>
+            <Link href="/privacy" className={styles.footerLink}>
                 Privacy
-            </a>
+            </Link>
             <span className={styles.footerSep}>/</span>
-            <a href="#" className={styles.footerLink}>
+            <Link href="/terms" className={styles.footerLink}>
                 Terms of Use
-            </a>
+            </Link>
             <span className={styles.footerSep}>/</span>
             <span className={styles.footerCopy}>AdLens 2026</span>
         </footer>
