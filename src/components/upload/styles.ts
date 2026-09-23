@@ -330,74 +330,21 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             transform 0.15s ease,
             box-shadow 0.2s ease,
             background 0.2s ease;
+        border: none;
+        background: linear-gradient(
+            135deg,
+            ${token.colorPrimary},
+            color-mix(in srgb, ${token.colorPrimary} 55%, #38bdf8)
+        );
+        box-shadow: 0 8px 20px -8px ${token.colorPrimary};
 
-        &[data-accent='gradient'] {
-            border: none;
-            background: linear-gradient(
-                135deg,
-                ${token.colorPrimary},
-                color-mix(in srgb, ${token.colorPrimary} 55%, #38bdf8)
-            );
-            box-shadow: 0 8px 20px -8px ${token.colorPrimary};
-        }
-        &[data-accent='gradient']:hover {
+        &:hover {
             box-shadow: 0 12px 28px -6px ${token.colorPrimary};
         }
 
-        &[data-accent='glow'] {
-            box-shadow:
-                0 0 0 1px ${token.colorPrimary},
-                0 0 20px -4px ${token.colorPrimary};
-            animation: runPulse 2.6s ease-in-out infinite;
-        }
-        &[data-accent='glow']:hover {
-            animation: none;
-            box-shadow:
-                0 0 0 1px ${token.colorPrimary},
-                0 0 30px 0 ${token.colorPrimary};
-        }
-
-        &[data-accent='shine'] {
-            position: relative;
-            overflow: hidden;
-            border: none;
-            background: linear-gradient(
-                135deg,
-                ${token.colorPrimary},
-                color-mix(in srgb, ${token.colorPrimary} 55%, #38bdf8)
-            );
-            box-shadow: 0 8px 20px -8px ${token.colorPrimary};
-        }
-        &[data-accent='shine']::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.38) 50%, transparent 65%);
-            transform: translateX(-130%);
-            animation: runShine 3.2s ease-in-out infinite;
-        }
-
-        @keyframes runPulse {
-            0%,
-            100% {
-                box-shadow:
-                    0 0 0 1px ${token.colorPrimary},
-                    0 0 14px -4px ${token.colorPrimary};
-            }
-            50% {
-                box-shadow:
-                    0 0 0 1px ${token.colorPrimary},
-                    0 0 26px 0 ${token.colorPrimary};
-            }
-        }
-        @keyframes runShine {
-            0% {
-                transform: translateX(-130%);
-            }
-            55%,
-            100% {
-                transform: translateX(130%);
-            }
+        &:disabled {
+            background: ${token.colorBgContainerDisabled};
+            box-shadow: none;
         }
     `,
 
@@ -433,76 +380,5 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         color: ${token.colorText};
         font-size: 0.85rem;
         font-weight: 500;
-    `,
-
-    resultsScroll: css`
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-inline: -0.5rem;
-        padding-inline: 0.5rem;
-    `,
-
-    summaryRow: css`
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    `,
-
-    sectionLabel: css`
-        margin: 0.25rem 0 0;
-        color: ${token.colorTextHeading};
-        font-size: 1rem;
-        font-weight: 600;
-    `,
-
-    findingCard: css`
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-        padding: 0.75rem;
-        border: 1px solid ${token.colorBorderSecondary};
-        border-radius: ${token.borderRadius}px;
-        background: ${token.colorFillQuaternary};
-    `,
-
-    findingHead: css`
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.4rem;
-    `,
-
-    findingTopic: css`
-        font-weight: 600;
-        color: ${token.colorText};
-        font-size: 0.9rem;
-    `,
-
-    findingEvidence: css`
-        margin: 0;
-        color: ${token.colorText};
-        font-size: 0.9rem;
-    `,
-
-    findingMeta: css`
-        color: ${token.colorTextSecondary};
-        font-size: 0.8rem;
-    `,
-
-    sourceLink: css`
-        color: ${token.colorPrimary};
-        font-size: 0.8rem;
-    `,
-
-    transcriptText: css`
-        margin: 0;
-        white-space: pre-wrap;
-        color: ${token.colorTextSecondary};
-        font-size: 0.85rem;
-        line-height: 1.5;
     `,
 }))

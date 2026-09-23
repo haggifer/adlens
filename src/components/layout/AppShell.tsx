@@ -1,9 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
-import AmbientBackground from '@/components/background/AmbientBackground'
 import AuthModal from '@/components/auth/AuthModal'
-import DevBar from '@/components/dev-bar/DevBar'
+import AmbientBackground from '@/components/background/AmbientBackground'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import { useStyles } from './styles'
@@ -16,15 +15,14 @@ export default function AppShell({ children }: IProps) {
     const { styles } = useStyles()
 
     return (
-        <div className={styles.harness}>
+        <>
             <AmbientBackground />
-            <DevBar />
             <div className={styles.appShell}>
                 <Header />
                 <main className={styles.appMain}>{children}</main>
                 <Footer />
                 <AuthModal />
             </div>
-        </div>
+        </>
     )
 }

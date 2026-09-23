@@ -2,16 +2,6 @@ import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
 
 export const useStyles = createStyles(({ token, css }) => ({
-    harness: css`
-        display: flex;
-        align-items: stretch;
-        min-height: 100vh;
-
-        @media (max-width: 991.98px) {
-            flex-direction: column;
-        }
-    `,
-
     appShell: css`
         --header-h: 4rem;
         --footer-h: 3.5rem;
