@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import PrivateRoute from '@/components/auth/PrivateRoute'
-import StubPage from '@/components/layout/StubPage'
+import HistoryTable from '@/components/history/HistoryTable'
 
 export const metadata: Metadata = {
     title: 'History',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function HistoryPage() {
     return (
         <PrivateRoute>
-            <StubPage title="History" subtitle="Your previous analyses will show up here." />
+            <HistoryTable />
         </PrivateRoute>
     )
 }
