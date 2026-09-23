@@ -35,6 +35,25 @@ const toVidstackType = (mime: string): VidstackVideoType =>
 
 const MAX_UPLOAD_MB = 200
 const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1000 * 1000
+const MAX_DURATION_S = 60
+
+// Read the video's duration by loading only its metadata into a throwaway element. Rejected reads (a file
+// the browser can't decode) surface as an error so a doomed upload is stopped client-side.
+const getVideoDuration = (file: File): Promise<number> =>
+    new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file)
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.onloadedmetadata = () => {
+            URL.revokeObjectURL(url)
+            resolve(video.duration)
+        }
+        video.onerror = () => {
+            URL.revokeObjectURL(url)
+            reject(new Error('Could not read video metadata'))
+        }
+        video.src = url
+    })
 
 export default function UploadPanel({ video, onSelect, onClear }: IProps) {
     const theme = useTheme()
@@ -46,8 +65,8 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
     // MIME type so a blob object URL actually loads instead of spinning.
     const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
 
-    // Client-side gate only — the Storage rule is the real boundary; this just avoids a doomed upload.
-    const acceptFile = (file: File) => {
+    // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
+    const acceptFile = async (file: File) => {
         if (!file.type.startsWith('video/')) {
             message.error('Please upload a video file.')
             return false
@@ -55,6 +74,20 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
 
         if (file.size > MAX_UPLOAD_BYTES) {
             message.error(`Video must be under ${MAX_UPLOAD_MB} MB.`)
+            return false
+        }
+
+        let duration: number
+
+        try {
+            duration = await getVideoDuration(file)
+        } catch {
+            message.error('Could not read the video. Please try a different file.')
+            return false
+        }
+
+        if (duration > MAX_DURATION_S) {
+            message.error(`Video must be ${MAX_DURATION_S} seconds or shorter.`)
             return false
         }
 
@@ -69,11 +102,18 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
         }
     }
     // antd's Dragger owns the empty state, so the video state gets its own drop handler.
-    const handleDropReplace = (event: DragEvent<HTMLDivElement>) => {
+    const handleDropReplace = async (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault()
         setIsDragging(false)
         const file = event.dataTransfer.files?.[0]
-        if (file && acceptFile(file)) {
+
+        if (!file) {
+            return
+        }
+
+        const accepted = await acceptFile(file)
+
+        if (accepted) {
             onSelect(file)
         }
     }
@@ -85,6 +125,9 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
             </div>
             <div>
                 <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
+            </div>
+            <div>
+                <span className={styles.reqKey}>Length:</span> up to {MAX_DURATION_S} seconds
             </div>
         </div>
     )
@@ -123,10 +166,13 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         accept="video/*"
                         maxCount={1}
                         showUploadList={false}
-                        beforeUpload={(incoming) => {
-                            if (acceptFile(incoming)) {
+                        beforeUpload={async (incoming) => {
+                            const accepted = await acceptFile(incoming)
+
+                            if (accepted) {
                                 onSelect(incoming)
                             }
+
                             return false
                         }}
                     >
@@ -158,10 +204,13 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                 accept="video/*"
                 maxCount={1}
                 showUploadList={false}
-                beforeUpload={(incoming) => {
-                    if (acceptFile(incoming)) {
+                beforeUpload={async (incoming) => {
+                    const accepted = await acceptFile(incoming)
+
+                    if (accepted) {
                         onSelect(incoming)
                     }
+
                     return false
                 }}
             >
@@ -176,7 +225,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         icon={<InfoCircleOutlined />}
                         className={styles.reqTag}
                         color={theme.colorTextTertiary}
-                        aria-label={`Accepted files: MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP · up to ${MAX_UPLOAD_MB} MB`}
+                        aria-label={`Accepted files: MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
                         onClick={(event) => event.stopPropagation()}
                     >
                         Requirements
