@@ -1,11 +1,16 @@
 'use client'
 
+import { MailOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { App, Button, Input } from 'antd'
+import { Alert, Button, Input, Result } from 'antd'
+import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useAuth } from '@/auth/AuthContext'
+import { requestPasswordReset } from '@/auth/authClient'
+import { describeError, runAuthRequest } from '@/auth/errors'
 import Field from '@/components/utils/Field'
+import { config } from '@/config'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
 const forgotSchema = z.object({
@@ -16,21 +21,49 @@ type ForgotValues = z.infer<typeof forgotSchema>
 
 export default function ForgotForm() {
     const { styles } = useStyles()
-    const { openAuth } = useAuth()
-    const { message } = App.useApp()
+    const setView = useAuthModalStore((s) => s.setView)
+    const [formError, setFormError] = useState<string | null>(null)
+    const [isSent, setIsSent] = useState(false)
     const {
         control,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isSubmitting },
     } = useForm<ForgotValues>({ resolver: zodResolver(forgotSchema), defaultValues: { email: '' } })
 
-    const onSubmit = () => {
-        message.info('Password reset isn’t available yet — email delivery is configured in a later phase.')
-        openAuth('signin')
+    const onSubmit = async ({ email }: ForgotValues) => {
+        setFormError(null)
+
+        const error = await runAuthRequest(() =>
+            requestPasswordReset({ email, redirectTo: `${config.siteUrl}/reset-password` }),
+        )
+
+        if (error) {
+            setFormError(describeError(error))
+            return
+        }
+
+        setIsSent(true)
+    }
+
+    // The same message whether or not the address has an account, so the form can't be used to probe for users.
+    if (isSent) {
+        return (
+            <Result
+                icon={<MailOutlined />}
+                title="Check your inbox"
+                subTitle="If an account exists for that email, we’ve sent a link to reset the password. It expires in 1 hour."
+                extra={
+                    <Button type="primary" onClick={() => setView('signin')}>
+                        Back to sign in
+                    </Button>
+                }
+            />
+        )
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
+            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
             <Field label="Email" error={errors.email?.message}>
                 <Controller
                     name="email"
@@ -46,11 +79,11 @@ export default function ForgotForm() {
                     )}
                 />
             </Field>
-            <Button type="primary" htmlType="submit" size="large" block>
+            <Button type="primary" htmlType="submit" size="large" block loading={isSubmitting}>
                 Send reset link
             </Button>
             <div className={styles.switcher}>
-                <Button type="link" onClick={() => openAuth('signin')}>
+                <Button type="link" onClick={() => setView('signin')}>
                     Back to sign in
                 </Button>
             </div>

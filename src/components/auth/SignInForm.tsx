@@ -1,13 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { App, Button, Input } from 'antd'
+import { Alert, App, Button, Input } from 'antd'
+import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { signIn } from '@/auth/authClient'
-import { useAuth } from '@/auth/AuthContext'
+import { describeError, runAuthRequest } from '@/auth/errors'
 import Field from '@/components/utils/Field'
-import { describeError } from './describeError'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
 const signInSchema = z.object({
@@ -19,8 +20,9 @@ type SignInValues = z.infer<typeof signInSchema>
 
 export default function SignInForm() {
     const { styles } = useStyles()
-    const { closeAuth, openAuth } = useAuth()
-    const { message } = App.useApp()
+    const setView = useAuthModalStore((s) => s.setView)
+    const { notification } = App.useApp()
+    const [formError, setFormError] = useState<string | null>(null)
     const {
         control,
         handleSubmit,
@@ -28,19 +30,22 @@ export default function SignInForm() {
     } = useForm<SignInValues>({ resolver: zodResolver(signInSchema), defaultValues: { email: '', password: '' } })
 
     const onSubmit = async (values: SignInValues) => {
-        const { error } = await signIn.email(values)
+        setFormError(null)
+
+        const error = await runAuthRequest(() => signIn.email(values))
 
         if (error) {
-            message.error(describeError(error))
+            setFormError(describeError(error))
             return
         }
 
-        message.success('Signed in')
-        closeAuth()
+        notification.success({ message: 'Signed in', placement: 'bottomRight' })
+        setView(null)
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
+            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
             <Field label="Email" error={errors.email?.message}>
                 <Controller
                     name="email"
@@ -72,7 +77,7 @@ export default function SignInForm() {
                 />
             </Field>
             <div className={styles.forgot}>
-                <Button type="link" size="small" onClick={() => openAuth('forgot')}>
+                <Button type="link" size="small" onClick={() => setView('forgot')}>
                     Forgot password?
                 </Button>
             </div>
@@ -81,7 +86,7 @@ export default function SignInForm() {
             </Button>
             <div className={styles.switcher}>
                 <span>Don’t have an account?</span>
-                <Button className={styles.switchAction} onClick={() => openAuth('signup')}>
+                <Button className={styles.switchAction} onClick={() => setView('signup')}>
                     Sign up
                 </Button>
             </div>

@@ -1,59 +1,90 @@
 'use client'
 
+import { MailOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { App, Button, Input } from 'antd'
+import { Alert, Button, Input, Result } from 'antd'
+import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { signUp } from '@/auth/authClient'
-import { useAuth } from '@/auth/AuthContext'
+import { describeError, runAuthRequest } from '@/auth/errors'
+import { newPasswordFieldsSchema } from '@/auth/schemas'
 import Field from '@/components/utils/Field'
-import { describeError } from './describeError'
+import { config } from '@/config'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
 const signUpSchema = z
     .object({
+        name: z.string().trim().min(1, 'Enter your name').max(100),
         email: z.email('Enter a valid email'),
-        password: z.string().min(8, 'At least 8 characters'),
-        confirm: z.string(),
     })
-    .refine((values) => values.password === values.confirm, {
-        message: 'Passwords do not match',
-        path: ['confirm'],
-    })
+    .and(newPasswordFieldsSchema)
 
 type SignUpValues = z.infer<typeof signUpSchema>
 
 export default function SignUpForm() {
     const { styles } = useStyles()
-    const { closeAuth, openAuth } = useAuth()
-    const { message } = App.useApp()
+    const setView = useAuthModalStore((s) => s.setView)
+    const [formError, setFormError] = useState<string | null>(null)
+    const [sentTo, setSentTo] = useState<string | null>(null)
     const {
         control,
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<SignUpValues>({
         resolver: zodResolver(signUpSchema),
-        defaultValues: { email: '', password: '', confirm: '' },
+        defaultValues: { name: '', email: '', password: '', confirm: '' },
     })
 
-    const onSubmit = async (values: SignUpValues) => {
-        const { error } = await signUp.email({
-            email: values.email,
-            password: values.password,
-            name: values.email.split('@')[0],
-        })
+    const onSubmit = async ({ name, email, password }: SignUpValues) => {
+        setFormError(null)
+
+        const error = await runAuthRequest(() =>
+            signUp.email({ name, email, password, callbackURL: `${config.siteUrl}/auth/verified` }),
+        )
 
         if (error) {
-            message.error(describeError(error))
+            setFormError(describeError(error))
             return
         }
 
-        message.success('Account created')
-        closeAuth()
+        setSentTo(email)
+    }
+
+    if (sentTo) {
+        return (
+            <Result
+                icon={<MailOutlined />}
+                title="Check your inbox"
+                subTitle={`We sent a confirmation link to ${sentTo}. Open it to activate your account.`}
+                extra={
+                    <Button type="primary" onClick={() => setView('signin')}>
+                        Back to sign in
+                    </Button>
+                }
+            />
+        )
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
+            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
+            <Field label="Name" error={errors.name?.message}>
+                <Controller
+                    name="name"
+                    control={control}
+                    render={({ field }) => (
+                        <Input
+                            {...field}
+                            size="large"
+                            placeholder="Your name"
+                            autoComplete="name"
+                            status={errors.name ? 'error' : undefined}
+                        />
+                    )}
+                />
+            </Field>
             <Field label="Email" error={errors.email?.message}>
                 <Controller
                     name="email"
@@ -104,7 +135,7 @@ export default function SignUpForm() {
             </Button>
             <div className={styles.switcher}>
                 <span>Already have an account?</span>
-                <Button type="link" onClick={() => openAuth('signin')}>
+                <Button type="link" onClick={() => setView('signin')}>
                     Sign in
                 </Button>
             </div>

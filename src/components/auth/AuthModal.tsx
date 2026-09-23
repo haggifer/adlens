@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal } from 'antd'
-import { AuthView, useAuth } from '@/auth/AuthContext'
+import { AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
 import ForgotForm from './ForgotForm'
 import SignInForm from './SignInForm'
 import SignUpForm from './SignUpForm'
@@ -15,13 +15,14 @@ const TITLES: Record<AuthView, string> = {
 
 const SUBTITLES: Record<AuthView, string> = {
     signin: '',
-    signup: 'Start diagnosing your video ads in minutes.',
+    signup: 'Check your video ads before they go live.',
     forgot: 'Enter your email and we’ll send you a reset link.',
 }
 
 export default function AuthModal() {
     const { styles } = useStyles()
-    const { view, closeAuth } = useAuth()
+    const view = useAuthModalStore((s) => s.view)
+    const setView = useAuthModalStore((s) => s.setView)
 
     const renderBody = () => {
         if (view === 'signup') {
@@ -38,7 +39,7 @@ export default function AuthModal() {
     return (
         <Modal
             open={view !== null}
-            onCancel={closeAuth}
+            onCancel={() => setView(null)}
             footer={null}
             width={420}
             centered

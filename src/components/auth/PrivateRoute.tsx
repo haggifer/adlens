@@ -1,8 +1,9 @@
 'use client'
 
-import { ReactNode } from 'react'
 import { Button, Spin } from 'antd'
+import { ReactNode } from 'react'
 import { useAuth } from '@/auth/AuthContext'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
 interface IProps {
@@ -12,9 +13,10 @@ interface IProps {
 // Pair with `robots: { index: false }` on the page so a private route stays uncrawlable.
 export default function PrivateRoute({ children }: IProps) {
     const { styles } = useStyles()
-    const { initializing, isSignedIn, openAuth } = useAuth()
+    const { isInitializing, isSignedIn } = useAuth()
+    const setView = useAuthModalStore((s) => s.setView)
 
-    if (initializing) {
+    if (isInitializing) {
         return (
             <div className={styles.gate}>
                 <Spin size="large" />
@@ -26,8 +28,8 @@ export default function PrivateRoute({ children }: IProps) {
     if (!isSignedIn) {
         return (
             <div className={styles.gate}>
-                <h2 className={styles.gateTitle}>Sign in to access this feature</h2>
-                <Button type="primary" size="large" onClick={() => openAuth('signin')}>
+                <h2 className={styles.gateTitle}>Sign in to access this page</h2>
+                <Button type="primary" size="large" onClick={() => setView('signin')}>
                     Sign In
                 </Button>
             </div>
