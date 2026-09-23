@@ -58,7 +58,8 @@ export default function AdWorkspace() {
                     <span className={styles.heroAccent}>underperform</span>
                 </h1>
                 <p className={styles.heroSubtitle}>
-                    Upload a video ad and AdLens diagnoses what’s holding it back — no guesswork
+                    Upload a video ad and AdLens checks it against platform ad policies and creative best practices —
+                    every finding timestamped and cited
                 </p>
             </header>
             <div className={styles.workspace} ref={workspaceRef}>

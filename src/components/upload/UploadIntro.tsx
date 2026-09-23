@@ -4,9 +4,10 @@ import { CheckCircleFilled } from '@ant-design/icons'
 import { useStyles } from './styles'
 
 const FEATURES = [
-    'An instant transcript of your ad',
-    'A structural breakdown — hook, pacing, message, CTA',
-    'Grounded explanations of the issues hurting performance',
+    'Will it be approved? Policy risks for every platform and market you target',
+    'What’s holding it back? Gaps against the platforms’ own creative best practices',
+    'Placement specs, plus a checklist of what to confirm in your campaign setup',
+    'Every finding timestamped and linked to the policy or guide it comes from',
 ]
 
 export default function UploadIntro() {
