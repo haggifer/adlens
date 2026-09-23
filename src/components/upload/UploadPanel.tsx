@@ -1,11 +1,14 @@
 'use client'
 
-import { DragEvent, useMemo, useState } from 'react'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, SwapOutlined } from '@ant-design/icons'
+import { MediaPlayer, MediaProvider } from '@vidstack/react'
+import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
+import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
 import { App, Button, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
-import { MediaPlayer, MediaProvider } from '@vidstack/react'
-import { DefaultVideoLayout, defaultLayoutIcons } from '@vidstack/react/player/layouts/default'
+import { DragEvent, useMemo, useState } from 'react'
+import { toVidstackType } from '@/components/utils/vidstack'
+import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
@@ -23,19 +26,11 @@ interface IProps {
 
 const { Dragger } = Upload
 
-// The MIME types Vidstack recognises as video. An object URL (blob:) has no extension, so Vidstack relies
-// entirely on this type to pick the native video provider — anything it doesn't list is never loaded and
-// the player spins forever. So map unknown/empty types onto a recognised one (the browser still sniffs the
-// real codec from the blob when the <source> is attached).
-const VIDSTACK_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/3gp', 'video/ogg', 'video/avi', 'video/mpeg'] as const
-type VidstackVideoType = (typeof VIDSTACK_VIDEO_TYPES)[number]
+const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1000 * 1000)
 
-const toVidstackType = (mime: string): VidstackVideoType =>
-    (VIDSTACK_VIDEO_TYPES as readonly string[]).includes(mime) ? (mime as VidstackVideoType) : 'video/mp4'
+const VIDEO_MIME_TYPES = Object.values(VideoMimeType) as string[]
 
-const MAX_UPLOAD_MB = 200
-const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1000 * 1000
-const MAX_DURATION_S = 60
+const ACCEPT = [...VIDEO_MIME_TYPES, '.mp4', '.mov', '.webm', '.mpeg', '.mpg', '.3gp', '.flv'].join(',')
 
 // Read the video's duration by loading only its metadata into a throwaway element. Rejected reads (a file
 // the browser can't decode) surface as an error so a doomed upload is stopped client-side.
@@ -58,7 +53,7 @@ const getVideoDuration = (file: File): Promise<number> =>
 export default function UploadPanel({ video, onSelect, onClear }: IProps) {
     const theme = useTheme()
     const { styles } = useStyles()
-    const { message } = App.useApp()
+    const { notification } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
 
     // Stable Vidstack source (memoised — Vidstack watches `src` by identity) with an explicit, recognised
@@ -67,13 +62,16 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
 
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
     const acceptFile = async (file: File) => {
-        if (!file.type.startsWith('video/')) {
-            message.error('Please upload a video file.')
+        if (!VIDEO_MIME_TYPES.includes(file.type)) {
+            notification.error({
+                message: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
+                placement: 'bottomRight',
+            })
             return false
         }
 
         if (file.size > MAX_UPLOAD_BYTES) {
-            message.error(`Video must be under ${MAX_UPLOAD_MB} MB.`)
+            notification.error({ message: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
             return false
         }
 
@@ -82,12 +80,18 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
         try {
             duration = await getVideoDuration(file)
         } catch {
-            message.error('Could not read the video. Please try a different file.')
+            notification.error({
+                message: 'Could not read the video. Please try a different file.',
+                placement: 'bottomRight',
+            })
             return false
         }
 
         if (duration > MAX_DURATION_S) {
-            message.error(`Video must be ${MAX_DURATION_S} seconds or shorter.`)
+            notification.error({
+                message: `Video must be ${MAX_DURATION_S} seconds or shorter.`,
+                placement: 'bottomRight',
+            })
             return false
         }
 
@@ -121,7 +125,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
     const requirements = (
         <div className="d-flex flex-column gap-1">
             <div>
-                <span className={styles.reqKey}>Formats:</span> MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP
+                <span className={styles.reqKey}>Formats:</span> {VIDEO_FORMATS_LABEL}
             </div>
             <div>
                 <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
@@ -163,7 +167,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                 </MediaPlayer>
                 <div data-overlay className={styles.overlay}>
                     <Upload
-                        accept="video/*"
+                        accept={ACCEPT}
                         maxCount={1}
                         showUploadList={false}
                         beforeUpload={async (incoming) => {
@@ -201,7 +205,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
         >
             <Dragger
                 className={styles.dragger}
-                accept="video/*"
+                accept={ACCEPT}
                 maxCount={1}
                 showUploadList={false}
                 beforeUpload={async (incoming) => {
@@ -225,7 +229,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         icon={<InfoCircleOutlined />}
                         className={styles.reqTag}
                         color={theme.colorTextTertiary}
-                        aria-label={`Accepted files: MP4, MOV, WEBM, AVI, FLV, MPEG, WMV, 3GPP · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
+                        aria-label={`Accepted files: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
                         onClick={(event) => event.stopPropagation()}
                     >
                         Requirements
