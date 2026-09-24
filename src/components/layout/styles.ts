@@ -136,7 +136,12 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     footerLink: css`
+        padding: 0;
+        border: none;
+        background: none;
         color: ${token.colorTextSecondary};
+        font: inherit;
+        cursor: pointer;
         transition: color 0.15s ease;
 
         &:hover {

@@ -1,16 +1,18 @@
 'use client'
 
-import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
+import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
 import { App, Avatar, Button, Dropdown, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import useHoverCapable from '@/hooks/useHoverCapable'
 import { useStyles } from './styles'
 
 enum AccountMenuKey {
     Email = 'email',
     Account = 'account',
+    Contact = 'contact',
     SignOut = 'signout',
 }
 
@@ -19,6 +21,7 @@ export default function AccountMenu() {
     const router = useRouter()
     const { isSignedIn, user, signOut } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
+    const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const { notification } = App.useApp()
     const isHoverCapable = useHoverCapable()
 
@@ -34,6 +37,7 @@ export default function AccountMenu() {
         { key: AccountMenuKey.Email, label: user?.email, disabled: true },
         { type: 'divider' },
         { key: AccountMenuKey.Account, label: 'Account', icon: <SettingOutlined /> },
+        { key: AccountMenuKey.Contact, label: 'Contact support', icon: <MailOutlined /> },
         { type: 'divider' },
         { key: AccountMenuKey.SignOut, label: 'Sign Out', icon: <LogoutOutlined />, danger: true },
     ]
@@ -51,6 +55,11 @@ export default function AccountMenu() {
     const handleClick: MenuProps['onClick'] = ({ key }) => {
         if (key === AccountMenuKey.Account) {
             router.push('/account')
+            return
+        }
+
+        if (key === AccountMenuKey.Contact) {
+            setIsContactOpen(true)
             return
         }
 

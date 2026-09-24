@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import AuthModal from '@/components/auth/AuthModal'
 import AmbientBackground from '@/components/background/AmbientBackground'
+import ContactModal from '@/components/contact/ContactModal'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import { useStyles } from './styles'
@@ -22,6 +23,7 @@ export default function AppShell({ children }: IProps) {
                 <main className={styles.appMain}>{children}</main>
                 <Footer />
                 <AuthModal />
+                <ContactModal />
             </div>
         </>
     )

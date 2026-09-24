@@ -14,3 +14,12 @@ Object.defineProperty(window, 'matchMedia', {
         dispatchEvent: () => false,
     }),
 })
+
+// antd's text areas measure themselves with ResizeObserver, which jsdom doesn't implement either.
+class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+}
+
+Object.defineProperty(window, 'ResizeObserver', { writable: true, value: ResizeObserverStub })
