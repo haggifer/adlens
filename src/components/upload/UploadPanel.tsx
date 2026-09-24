@@ -4,7 +4,8 @@ import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, 
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
-import { App, Button, Tag, Tooltip, Upload } from 'antd'
+import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
+import { useTheme } from 'antd-style'
 import { DragEvent, useMemo, useState } from 'react'
 import { toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
@@ -53,6 +54,7 @@ const getVideoDuration = (file: File): Promise<number> =>
     })
 
 export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
+    const theme = useTheme()
     const { styles } = useStyles()
     const { notification } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
@@ -229,17 +231,6 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 </p>
                 <p className={styles.title}>Drop your video ad here</p>
                 <p className={styles.hint}>Click or drag to upload</p>
-                {/* Inside the Dragger, so clicks and keys must not reach it and open the file dialog. */}
-                <div
-                    className={styles.samplesPrompt}
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                >
-                    <span>No ad at hand?</span>
-                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
-                        Try a sample ad
-                    </Button>
-                </div>
                 <Tooltip placement="bottom" title={requirements}>
                     <Tag
                         variant="outlined"
@@ -251,6 +242,26 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                         Requirements
                     </Tag>
                 </Tooltip>
+                {/* Inside the Dragger, so clicks and keys must not reach it and open the file dialog. */}
+                <div
+                    className={styles.samplesPrompt}
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                >
+                    <Divider
+                        plain
+                        className={styles.samplesDivider}
+                        styles={{ rail: { borderColor: theme.colorBorder } }}
+                    >
+                        or
+                    </Divider>
+                    <div className="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                        <span>No ad at hand?</span>
+                        <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                            Try a sample ad
+                        </Button>
+                    </div>
+                </div>
             </Dragger>
         </div>
     )

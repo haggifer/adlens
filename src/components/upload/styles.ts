@@ -385,14 +385,19 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     `,
 
     samplesPrompt: css`
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-top: 0.4rem;
+        width: min(70%, 18rem);
+        margin-top: 0.75rem;
         color: ${token.colorTextSecondary};
         font-size: 0.85rem;
+        cursor: default;
+    `,
+
+    samplesDivider: css`
+        &.ant-divider {
+            margin: 0 0 0.6rem;
+            color: ${token.colorTextTertiary};
+            font-size: 0.8rem;
+        }
     `,
 
     sampleBadge: css`
