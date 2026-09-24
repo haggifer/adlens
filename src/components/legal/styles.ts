@@ -82,6 +82,11 @@ export const useStyles = createStyles(({ token, css }) => ({
             margin: 0 0 1rem;
             border-collapse: collapse;
             font-size: 0.9rem;
+
+            @media (max-width: 575.98px) {
+                display: block;
+                overflow-x: auto;
+            }
         }
 
         th,

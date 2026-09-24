@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import StubPage from '@/components/layout/StubPage'
+import LegalPage from '@/components/legal/LegalPage'
+import Privacy from '@/content/legal/privacy.mdx'
 
 export const metadata: Metadata = {
     title: 'Privacy Policy',
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
     return (
-        <StubPage title="Privacy Policy" subtitle="The privacy policy is being prepared and will be published here." />
+        <LegalPage title="Privacy Policy" lastUpdated="September 24, 2026">
+            <Privacy />
+        </LegalPage>
     )
 }

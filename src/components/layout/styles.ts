@@ -1,5 +1,4 @@
 import { createStyles } from 'antd-style'
-import { HEADING_FONT_STACK } from '@/fonts'
 
 export const useStyles = createStyles(({ token, css }) => ({
     appShell: css`
@@ -99,30 +98,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         border: none;
         background: none;
         cursor: pointer;
-    `,
-
-    stubPage: css`
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        min-height: calc(100dvh - var(--header-h) - var(--footer-h));
-        padding: 3rem 0;
-        text-align: center;
-    `,
-
-    stubTitle: css`
-        font-family: ${HEADING_FONT_STACK};
-        color: ${token.colorTextHeading};
-        font-size: clamp(1.75rem, 4vw, 2.5rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    `,
-
-    stubSubtitle: css`
-        color: ${token.colorTextSecondary};
-        font-size: 1.05rem;
     `,
 
     footer: css`

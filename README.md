@@ -62,7 +62,7 @@ Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set the
 | `/auth/verified`  | Landing page of the email confirmation link                              |
 | `/reset-password` | Landing page of the password-reset link                                  |
 | `/terms`          | Terms of Use                                                             |
-| `/privacy`        | Privacy Policy (placeholder)                                             |
+| `/privacy`        | Privacy Policy                                                           |
 
 ## Structure
 
