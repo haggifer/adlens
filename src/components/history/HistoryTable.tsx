@@ -4,6 +4,7 @@ import type { Job } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import DeleteJobButton from '@/components/analysis/DeleteJobButton'
 import useJobs from '@/hooks/useJobs'
 import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
@@ -38,6 +39,12 @@ const COLUMNS: TableColumnsType<Job> = [
         key: 'createdAt',
         responsive: ['sm'],
         render: (_, job) => new Date(job.createdAt).toLocaleString(),
+    },
+    {
+        title: <span className="visually-hidden">Actions</span>,
+        key: 'actions',
+        align: 'right',
+        render: (_, job) => <DeleteJobButton job={job} isIconOnly />,
     },
 ]
 

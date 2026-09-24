@@ -19,6 +19,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: "You've used all your analyses for this 7-day window.",
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
+    [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
     [RequestErrorCode.Unauthenticated]: 'Please sign in again.',
     [RequestErrorCode.NotFound]: "We couldn't find that analysis.",

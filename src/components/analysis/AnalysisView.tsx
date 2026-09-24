@@ -10,6 +10,7 @@ import { toVidstackType } from '@/components/utils/vidstack'
 import useJob from '@/hooks/useJob'
 import useJobVideo from '@/hooks/useJobVideo'
 import { PLATFORM_LABELS } from '@/labels'
+import DeleteJobButton from './DeleteJobButton'
 import JobStatusPanel from './JobStatusPanel'
 import ResultsPanel from './ResultsPanel'
 import { useStyles } from './styles'
@@ -88,7 +89,10 @@ export default function AnalysisView({ jobId }: IProps) {
                         {platforms || 'General rules'} · {new Date(job.createdAt).toLocaleString()}
                     </p>
                 </div>
-                <Button onClick={() => router.push('/')}>New analysis</Button>
+                <div className="d-flex gap-2">
+                    <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
+                    <Button onClick={() => router.push('/')}>New analysis</Button>
+                </div>
             </header>
             <div className={styles.workspace}>
                 <div className={styles.stage}>

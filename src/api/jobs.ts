@@ -43,6 +43,10 @@ export const listJobs = async (cursor: string | null): Promise<JobListResponse> 
     return data
 }
 
+export const deleteJob = async (jobId: string): Promise<void> => {
+    await api.delete(`/v1/jobs/${jobId}`)
+}
+
 export const getJobVideo = async (jobId: string): Promise<JobVideoResponse> => {
     const { data } = await api.get<JobVideoResponse>(`/v1/jobs/${jobId}/video`)
 

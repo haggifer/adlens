@@ -1,0 +1,67 @@
+'use client'
+
+import { DeleteOutlined } from '@ant-design/icons'
+import { type Job, JobStatus } from 'adlens-shared'
+import { App, Button, Tooltip } from 'antd'
+import { toApiRequestError } from '@/api/errors'
+import useDeleteJob from '@/hooks/useDeleteJob'
+
+// The API refuses to delete a job it is still working on.
+const IN_PROGRESS: JobStatus[] = [JobStatus.Verifying, JobStatus.Queued, JobStatus.Analyzing]
+
+interface IProps {
+    job: Job
+    isIconOnly?: boolean
+    onDeleted?: () => void
+}
+
+export default function DeleteJobButton({ job, isIconOnly, onDeleted }: IProps) {
+    const { modal, notification } = App.useApp()
+    const { deleteJob } = useDeleteJob()
+    const isRunning = IN_PROGRESS.includes(job.status)
+
+    const handleDelete = async () => {
+        try {
+            await deleteJob(job.id)
+            notification.success({ title: 'Analysis deleted', placement: 'bottomRight' })
+            onDeleted?.()
+        } catch (error) {
+            console.error(error)
+            notification.error({ title: toApiRequestError(error).message, placement: 'bottomRight' })
+        }
+    }
+
+    const handleClick = () => {
+        modal.confirm({
+            title: 'Delete this analysis?',
+            content: job.sampleId
+                ? 'The analysis will be deleted permanently.'
+                : 'The analysis and the uploaded video will be deleted permanently. This can’t be undone.',
+            okText: 'Delete',
+            okButtonProps: { danger: true },
+            onOk: handleDelete,
+        })
+    }
+
+    const button = (
+        <Button
+            danger
+            icon={<DeleteOutlined />}
+            disabled={isRunning}
+            aria-label="Delete analysis"
+            onClick={handleClick}
+        >
+            {isIconOnly ? null : 'Delete'}
+        </Button>
+    )
+
+    if (isRunning) {
+        return (
+            <Tooltip title="You can delete it once the analysis finishes">
+                <span>{button}</span>
+            </Tooltip>
+        )
+    }
+
+    return button
+}
