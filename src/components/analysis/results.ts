@@ -35,6 +35,9 @@ export const countIssues = ({ findings, metadataChecks }: Analysis): IssueCounts
     }
 }
 
+export const formatCount = (count: number, singular: string, plural: string): string =>
+    `${count} ${count === 1 ? singular : plural}`
+
 export const formatSeconds = (totalSeconds: number): string => {
     const seconds = Math.floor(totalSeconds)
 

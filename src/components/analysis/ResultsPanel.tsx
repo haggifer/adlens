@@ -4,7 +4,7 @@ import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
 import { RULE_PLATFORM_LABELS } from '@/labels'
-import { countIssues, formatTimeRange, splitResults } from './results'
+import { countIssues, formatCount, formatTimeRange, splitResults } from './results'
 import { useStyles } from './styles'
 
 const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'gold', info: 'blue' }
@@ -98,8 +98,8 @@ export default function ResultsPanel({ analysis, onSeek }: IProps) {
         <div className={styles.panel}>
             <h2 className={styles.panelTitle}>Results</h2>
             <div className={styles.summaryRow}>
-                <Tag color={blockers ? 'red' : 'green'}>{blockers} blockers</Tag>
-                <Tag color={warnings ? 'gold' : 'default'}>{warnings} warnings</Tag>
+                <Tag color={blockers ? 'red' : 'green'}>{formatCount(blockers, 'blocker', 'blockers')}</Tag>
+                <Tag color={warnings ? 'gold' : 'default'}>{formatCount(warnings, 'warning', 'warnings')}</Tag>
                 <Tag color="blue">{advisories.length} to confirm</Tag>
             </div>
             <div className={styles.resultsScroll}>

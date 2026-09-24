@@ -63,7 +63,7 @@ describe('ResultsPanel', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
         expect(screen.getByText('2 blockers')).toBeInTheDocument()
-        expect(screen.getByText('1 warnings')).toBeInTheDocument()
+        expect(screen.getByText('1 warning')).toBeInTheDocument()
     })
 
     it('seeks the video to the start of a finding when its timestamp is clicked', async () => {
