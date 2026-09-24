@@ -1,4 +1,4 @@
-import { JobStatus, Market, type Objective, Placement, Platform, RulePlatform } from 'adlens-shared'
+import { JobStatus, Market, Placement, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, MOV, WebM, MPEG, 3GP, FLV'
 
@@ -44,12 +44,6 @@ export const MARKET_LABELS: Record<Market, string> = {
     [Market.UK]: 'United Kingdom',
     [Market.EU]: 'European Union',
     [Market.Other]: 'Other markets',
-}
-
-export const OBJECTIVE_LABELS: Record<Objective, string> = {
-    Conversion: 'Conversion',
-    Awareness: 'Awareness',
-    Consideration: 'Consideration',
 }
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {

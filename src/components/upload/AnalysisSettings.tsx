@@ -8,7 +8,6 @@ import {
     type AnalysisSettingsInput,
     analysisSettingsSchema,
     Market,
-    objectiveSchema,
     Placement,
     PLACEMENT_PLATFORM,
     Platform,
@@ -24,7 +23,7 @@ import { createJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import useQuota, { quotaKey } from '@/hooks/useQuota'
-import { MARKET_LABELS, OBJECTIVE_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
+import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { useStyles } from './styles'
 
@@ -32,13 +31,10 @@ const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label:
 
 const MARKET_OPTIONS = Object.values(Market).map((value) => ({ value, label: MARKET_LABELS[value] }))
 
-const OBJECTIVE_OPTIONS = objectiveSchema.options.map((value) => ({ value, label: OBJECTIVE_LABELS[value] }))
-
 const DEFAULT_VALUES: AnalysisSettingsInput = {
     platforms: [],
     placements: [],
     markets: [],
-    objective: 'Conversion',
     audience: '',
     brand: '',
 }
@@ -231,14 +227,6 @@ export default function AnalysisSettings({ file }: IProps) {
                                 allowClear
                             />
                         )}
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label className={styles.fieldLabel}>Objective</label>
-                    <Controller
-                        name="objective"
-                        control={control}
-                        render={({ field }) => <Select {...field} options={OBJECTIVE_OPTIONS} />}
                     />
                 </div>
                 <Button
