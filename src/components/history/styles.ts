@@ -18,4 +18,45 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-weight: 700;
         letter-spacing: -0.02em;
     `,
+
+    videoCell: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 0;
+    `,
+
+    videoName: css`
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+
+        .ant-tag {
+            flex-shrink: 0;
+            margin: 0;
+        }
+    `,
+
+    videoLink: css`
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    `,
+
+    compactMeta: css`
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        color: ${token.colorTextSecondary};
+        font-size: 0.8rem;
+
+        .ant-tag {
+            margin: 0;
+        }
+
+        @media (max-width: 575.98px) {
+            display: flex;
+        }
+    `,
 }))

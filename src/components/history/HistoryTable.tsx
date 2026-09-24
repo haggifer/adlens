@@ -9,21 +9,35 @@ import useJobs from '@/hooks/useJobs'
 import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
-const COLUMNS: TableColumnsType<Job> = [
+const formatCreatedAt = (job: Job) => new Date(job.createdAt).toLocaleString()
+
+const renderStatus = (job: Job) => <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>
+
+const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumnsType<Job> => [
     {
         title: 'Video',
         key: 'file',
         render: (_, job) => (
-            <span className="d-inline-flex align-items-center gap-2">
-                <Link href={`/analyses/${job.id}`}>{job.file.name}</Link>
-                {job.sampleId && <Tag color="processing">Sample</Tag>}
-            </span>
+            <div className={styles.videoCell}>
+                <div className={styles.videoName}>
+                    <Link href={`/analyses/${job.id}`} className={styles.videoLink} title={job.file.name}>
+                        {job.file.name}
+                    </Link>
+                    {job.sampleId && <Tag color="processing">Sample</Tag>}
+                </div>
+                {/* Phones drop the Status and Created columns, so the row carries them under the name. */}
+                <div className={styles.compactMeta}>
+                    {renderStatus(job)}
+                    <span>{formatCreatedAt(job)}</span>
+                </div>
+            </div>
         ),
     },
     {
         title: 'Platforms',
         key: 'platforms',
-        responsive: ['md'],
+        width: '25%',
+        responsive: ['lg'],
         render: (_, job) =>
             job.settings.platforms.length
                 ? job.settings.platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ')
@@ -32,17 +46,21 @@ const COLUMNS: TableColumnsType<Job> = [
     {
         title: 'Status',
         key: 'status',
-        render: (_, job) => <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>,
+        width: '8.5rem',
+        responsive: ['sm'],
+        render: (_, job) => renderStatus(job),
     },
     {
         title: 'Created',
         key: 'createdAt',
+        width: '12.5rem',
         responsive: ['sm'],
-        render: (_, job) => new Date(job.createdAt).toLocaleString(),
+        render: (_, job) => formatCreatedAt(job),
     },
     {
         title: <span className="visually-hidden">Actions</span>,
         key: 'actions',
+        width: '3.5rem',
         align: 'right',
         render: (_, job) => <DeleteJobButton job={job} isIconOnly />,
     },
@@ -59,7 +77,8 @@ export default function HistoryTable() {
             {error && <Alert type="error" showIcon title={error.message} />}
             <Table<Job>
                 rowKey="id"
-                columns={COLUMNS}
+                columns={getColumns(styles)}
+                tableLayout="fixed"
                 dataSource={jobs}
                 loading={isLoading}
                 pagination={false}
