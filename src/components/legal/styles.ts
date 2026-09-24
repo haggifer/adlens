@@ -5,15 +5,27 @@ export const useStyles = createStyles(({ token, css }) => ({
     page: css`
         display: flex;
         justify-content: center;
-        padding: 3rem 0 4rem;
+        padding: 1.5rem 0 4rem;
 
         @media (max-width: 575.98px) {
-            padding: 1.5rem 0 3rem;
+            padding: 1rem 0 3rem;
         }
     `,
 
-    document: css`
+    column: css`
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
         width: min(48rem, 100%);
+    `,
+
+    backButton: css`
+        color: ${token.colorTextSecondary};
+    `,
+
+    document: css`
+        width: 100%;
         padding: 2.5rem 3rem;
         border: 1px solid ${token.colorBorderSecondary};
         border-radius: ${token.borderRadiusLG}px;
