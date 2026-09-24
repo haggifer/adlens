@@ -6,7 +6,7 @@ import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
-import { toVidstackType } from '@/components/utils/vidstack'
+import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import useJob from '@/hooks/useJob'
 import useJobVideo from '@/hooks/useJobVideo'
 import { PLATFORM_LABELS } from '@/labels'
@@ -46,6 +46,14 @@ export default function AnalysisView({ jobId }: IProps) {
 
         player.currentTime = seconds
         void player.play()
+
+        // When the layout is stacked (phones, tablets) the findings sit below the video, often scrolled past it.
+        const stage = player.el?.parentElement
+        const rect = stage?.getBoundingClientRect()
+
+        if (stage && rect && (rect.bottom < 0 || rect.top > window.innerHeight)) {
+            stage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
     }
 
     if (isLoading) {
@@ -95,7 +103,7 @@ export default function AnalysisView({ jobId }: IProps) {
                 </div>
             </header>
             <div className={styles.workspace}>
-                <div className={styles.stage}>
+                <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
                     {playerSrc ? (
                         <MediaPlayer
                             ref={playerRef}

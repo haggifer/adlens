@@ -28,7 +28,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         margin: 0;
         font-family: ${HEADING_FONT_STACK};
         color: ${token.colorTextHeading};
-        font-size: 1.6rem;
+        font-size: clamp(1.25rem, 1rem + 1.5vw, 1.6rem);
         font-weight: 700;
         letter-spacing: -0.01em;
         overflow-wrap: anywhere;
@@ -60,10 +60,14 @@ export const useStyles = createStyles(({ token, css }) => ({
         border-radius: 0.5rem;
         background: #000000;
         overflow: hidden;
+        scroll-margin-top: calc(var(--header-h) + 0.75rem);
 
+        /* Stacked, the stage takes the video's own shape (--media-ratio, measured by the API) instead of a fixed
+           box, capped so a portrait video still leaves the results in view. */
         @media (max-width: 991.98px) {
             flex: none;
-            height: 60vh;
+            aspect-ratio: var(--media-ratio, 16 / 9);
+            max-height: 70vh;
         }
     `,
 
@@ -86,7 +90,8 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        width: min(35rem, 100%);
+        /* Side by side on small laptops and landscape tablets, the panel leaves the video at least half the row. */
+        width: min(35rem, 48%);
         flex-shrink: 0;
         padding: 1.5rem;
         border: 1px solid ${token.colorBorderSecondary};
@@ -182,11 +187,21 @@ export const useStyles = createStyles(({ token, css }) => ({
         padding: 0;
         font-size: 0.8rem;
         font-variant-numeric: tabular-nums;
+
+        @media (pointer: coarse) {
+            min-height: 2.75rem;
+        }
     `,
 
     sourceLink: css`
         color: ${token.colorPrimary};
         font-size: 0.8rem;
+
+        @media (pointer: coarse) {
+            display: inline-flex;
+            align-items: center;
+            min-height: 2.75rem;
+        }
     `,
 
     transcriptText: css`
