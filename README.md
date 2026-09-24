@@ -103,6 +103,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
   dynamically.
+- **Phones and tablets get the same pages, restacked.** Below 768px the header's navigation, account menu and theme
+  switch move into a menu drawer; below 992px the video and its panel stack. Stacked players take the video's own
+  aspect ratio (measured by the API, or read from the file before upload) rather than a fixed box, and touch screens
+  get 44px tap targets and 16px form fields, so iOS doesn't zoom into a focused field.
 - **Legal documents are MDX in the repo**, rendered in the app's layout and theme, not Termly's embed script. They
   are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.

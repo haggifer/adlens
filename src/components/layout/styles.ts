@@ -87,6 +87,110 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 0.75rem;
     `,
 
+    headerGroup: css`
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    `,
+
+    desktopOnly: css`
+        @media (max-width: 767.98px) {
+            display: none;
+        }
+    `,
+
+    mobileOnly: css`
+        display: none;
+
+        @media (max-width: 767.98px) {
+            display: inline-flex;
+        }
+    `,
+
+    menuButton: css`
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.25rem;
+    `,
+
+    drawerBody: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    `,
+
+    drawerUser: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0 0.75rem 0.75rem;
+        border-bottom: 1px solid ${token.colorBorderSecondary};
+        overflow-wrap: anywhere;
+    `,
+
+    drawerUserName: css`
+        color: ${token.colorText};
+        font-weight: 600;
+    `,
+
+    drawerUserEmail: css`
+        color: ${token.colorTextSecondary};
+        font-size: 0.875rem;
+    `,
+
+    drawerNav: css`
+        display: flex;
+        flex-direction: column;
+    `,
+
+    drawerItem: css`
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        border: none;
+        border-radius: ${token.borderRadius}px;
+        background: none;
+        color: ${token.colorText};
+        font: inherit;
+        font-size: 1rem;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover,
+        &[data-active='true'] {
+            background: ${token.colorFillTertiary};
+        }
+
+        &[data-active='true'] {
+            color: ${token.colorPrimary};
+            font-weight: 600;
+        }
+
+        &[data-danger='true'] {
+            color: ${token.colorError};
+        }
+
+        &:focus-visible {
+            outline: 2px solid ${token.colorPrimary};
+            outline-offset: -2px;
+        }
+    `,
+
+    drawerThemeRow: css`
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        border-top: 1px solid ${token.colorBorderSecondary};
+        border-bottom: 1px solid ${token.colorBorderSecondary};
+        color: ${token.colorText};
+        font-size: 1rem;
+    `,
+
     headerDivider: css`
         height: 1.4rem;
         margin: 0;
@@ -102,15 +206,29 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     footer: css`
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
+        gap: 0.25rem 0.75rem;
         min-height: var(--footer-h);
         padding: 0.75rem 1.5rem;
         font-size: 0.85rem;
+
+        @media (max-width: 575.98px) {
+            padding: 0.75rem 1rem;
+        }
+    `,
+
+    footerLinks: css`
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        white-space: nowrap;
     `,
 
     footerLink: css`
+        display: inline-flex;
+        align-items: center;
         padding: 0;
         border: none;
         background: none;
@@ -122,6 +240,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         &:hover {
             color: ${token.colorText};
         }
+
+        /* Touch targets need ~44px; desktop keeps the footer at its fixed height (pages size against it). */
+        @media (pointer: coarse) {
+            min-height: 2.75rem;
+        }
     `,
 
     footerSep: css`
@@ -130,5 +253,16 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     footerCopy: css`
         color: ${token.colorTextTertiary};
+
+        @media (max-width: 575.98px) {
+            flex-basis: 100%;
+            text-align: center;
+        }
+    `,
+
+    footerCopySep: css`
+        @media (max-width: 575.98px) {
+            display: none;
+        }
     `,
 }))

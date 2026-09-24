@@ -1,12 +1,13 @@
 'use client'
 
 import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
-import { App, Avatar, Button, Dropdown, MenuProps } from 'antd'
+import { Avatar, Button, Dropdown, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import useHoverCapable from '@/hooks/useHoverCapable'
+import useSignOut from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
 enum AccountMenuKey {
@@ -19,10 +20,10 @@ enum AccountMenuKey {
 export default function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
-    const { isSignedIn, user, signOut } = useAuth()
+    const { isSignedIn, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
-    const { notification } = App.useApp()
+    const signOut = useSignOut()
     const isHoverCapable = useHoverCapable()
 
     if (!isSignedIn) {
@@ -42,16 +43,6 @@ export default function AccountMenu() {
         { key: AccountMenuKey.SignOut, label: 'Sign Out', icon: <LogoutOutlined />, danger: true },
     ]
 
-    const handleSignOut = async () => {
-        try {
-            await signOut()
-            router.push('/')
-        } catch (error) {
-            console.error(error)
-            notification.error({ title: 'Could not sign out. Please try again.', placement: 'bottomRight' })
-        }
-    }
-
     const handleClick: MenuProps['onClick'] = ({ key }) => {
         if (key === AccountMenuKey.Account) {
             router.push('/account')
@@ -64,7 +55,7 @@ export default function AccountMenu() {
         }
 
         if (key === AccountMenuKey.SignOut) {
-            void handleSignOut()
+            void signOut()
         }
     }
 
