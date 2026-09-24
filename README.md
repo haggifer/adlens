@@ -67,15 +67,35 @@ Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set the
 
 ```
 src/
-  app/          # routes, root layout, Providers (antd registry, theme, React Query, auth)
-  api/          # axios client (cookies), typed endpoints, error codes → user-facing copy
-  auth/         # Better Auth client, AuthContext (session), password schemas
+  app/          # routes, root layout and client providers
+  api/          # API client, typed endpoints, error codes → user-facing copy
+  auth/         # Better Auth client and session context
+  components/   # UI by feature
   contexts/     # Zustand stores
-  hooks/        # useJob (query + socket), useJobs, useJobVideo, useQuota
+  hooks/        # server-state hooks (TanStack Query, realtime)
   storage/      # signed-URL upload
-  components/   # account, analysis (results, status), auth, history, layout, upload, utils
-  config.ts     # Zod-parsed public env
-  labels.ts     # display labels for the shared enums
 ```
 
 Imports use the `@/*` alias, which maps to `src/*`.
+
+## Deployment
+
+Vercel builds and deploys every push to `init-setup` to production at `https://www.useadlens.com` (the apex redirects
+to `www`). CI runs lint, types, tests and the build on every push and pull request.
+
+## Design decisions
+
+Decisions shared with the API (cookie sessions on one domain, the contract package) are recorded in the
+[API README](https://github.com/haggifer/adlens-api#design-decisions).
+
+- **Every analysis has its own page** (`/analyses/[id]`), so a result survives a reload and can be linked. The job is
+  loaded once, then kept live by Socket.IO pushes written into the query cache; every (re)connect refetches, because
+  updates sent while disconnected are lost.
+- **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
+  cache.
+- **The client owns user-facing copy.** The API returns stable error codes and the client maps them to messages, so
+  server internals never reach the screen and wording can change without an API release.
+- **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
+  a valid request is.
+- **The light/dark scheme is read from a cookie in the root layout**, so the first paint already has the right theme.
+  The cost is that every route renders dynamically.
