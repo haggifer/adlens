@@ -13,7 +13,7 @@ const buildFrameShadow = (primary: string, isDark: boolean) =>
            0 0 16px -12px ${primary}`
 
 const buildFrameDragShadow = (primaryHover: string, isDark: boolean) =>
-    isDark ? `0 6px 29px -2px #777` : `0 0 0 1px ${primaryHover}, 0 0 44px -2px ${primaryHover}`
+    isDark ? `0 6px 29px -2px #777` : `0 0 0 1px ${primaryHover}, 0 0 18px -6px ${primaryHover}`
 
 export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`
@@ -184,6 +184,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     reqTag: css`
         margin-top: 0.7rem;
         padding: 0.2rem 0.5rem;
+        color: ${token.colorTextTertiary};
+        background: transparent;
         border-color: currentColor;
         font-size: 0.78rem;
         line-height: 1;

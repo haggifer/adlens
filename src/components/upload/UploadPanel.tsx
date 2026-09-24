@@ -5,7 +5,6 @@ import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
 import { App, Button, Tag, Tooltip, Upload } from 'antd'
-import { useTheme } from 'antd-style'
 import { DragEvent, useMemo, useState } from 'react'
 import { toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
@@ -51,7 +50,6 @@ const getVideoDuration = (file: File): Promise<number> =>
     })
 
 export default function UploadPanel({ video, onSelect, onClear }: IProps) {
-    const theme = useTheme()
     const { styles } = useStyles()
     const { notification } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
@@ -228,7 +226,6 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         variant="outlined"
                         icon={<InfoCircleOutlined />}
                         className={styles.reqTag}
-                        color={theme.colorTextTertiary}
                         aria-label={`Accepted files: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
                         onClick={(event) => event.stopPropagation()}
                     >
