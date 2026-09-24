@@ -41,5 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# ai
-.claude
+# Personal agent settings and notes
+.claude/
+CLAUDE.local.md
