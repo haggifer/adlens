@@ -1,19 +1,15 @@
 import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
 
-// Dark uses one neutral drop shadow — the layered light stack is invisible on the near-black backdrop.
-const buildFrameShadow = (primary: string, isDark: boolean) =>
-    isDark
-        ? `0 6px 29px -2px #404040`
-        : `0 6px 29px -2px rgba(0, 0, 0, 0.3),
-           0 1px 2px 0 rgba(0, 0, 0, 0.05),
-           0 1px 6px -1px rgba(0, 0, 0, 0.03),
-           0 2px 4px 0 rgba(0, 0, 0, 0.03),
-           0 0 0 1px ${primary},
-           0 0 16px -12px ${primary}`
+// One neutral drop shadow in both schemes, faint at rest and bolder while a file is dragged over. Dark uses fixed greys
+// (a shadow has to be lighter than the near-black backdrop to show); light derives its tint from the text colour.
+const FRAME_SHADOW_SHAPE = '0 6px 29px -2px'
 
-const buildFrameDragShadow = (primaryHover: string, isDark: boolean) =>
-    isDark ? `0 6px 29px -2px #777` : `0 0 0 1px ${primaryHover}, 0 0 18px -6px ${primaryHover}`
+const buildFrameShadow = (textColor: string, isDark: boolean) =>
+    `${FRAME_SHADOW_SHAPE} ${isDark ? '#404040' : `color-mix(in srgb, ${textColor} 14%, transparent)`}`
+
+const buildFrameDragShadow = (textColor: string, isDark: boolean) =>
+    `${FRAME_SHADOW_SHAPE} ${isDark ? '#777' : `color-mix(in srgb, ${textColor} 30%, transparent)`}`
 
 export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`
@@ -126,9 +122,15 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         flex-shrink: 0;
         border: 1.5px solid ${token.colorBorder};
         border-radius: 0.5rem;
-        background: color-mix(in srgb, ${token.colorPrimary} 6%, transparent);
+        /* Light: the palest tint that still reads as teal (at ~3% it reads as white). antd's colorPrimaryBg is a muted
+           grey-teal for this primary, so the tint is mixed from the primary itself. */
+        background: ${
+            isDarkMode
+                ? `color-mix(in srgb, ${token.colorPrimary} 6%, transparent)`
+                : `color-mix(in srgb, ${token.colorPrimary} 8%, ${token.colorBgContainer})`
+        };
         overflow: hidden;
-        box-shadow: ${buildFrameShadow(token.colorPrimary, isDarkMode)};
+        box-shadow: ${buildFrameShadow(token.colorText, isDarkMode)};
         transition:
             border-color 0.2s ease,
             box-shadow 0.2s ease;
@@ -141,7 +143,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
         &[data-dragging='true'] {
             border-color: ${isDarkMode ? '#777' : token.colorPrimaryHover};
-            box-shadow: ${buildFrameDragShadow(token.colorPrimaryHover, isDarkMode)};
+            box-shadow: ${buildFrameDragShadow(token.colorText, isDarkMode)};
         }
 
         &[data-video='true'] {
@@ -385,8 +387,13 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     `,
 
     samplesPrompt: css`
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
         width: min(70%, 18rem);
-        margin-top: 0.75rem;
+        /* A block inside antd's text-centred drag container, so it needs auto margins to centre. */
+        margin: 0.75rem auto 0;
         color: ${token.colorTextSecondary};
         font-size: 0.85rem;
         cursor: default;
@@ -394,7 +401,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
     samplesDivider: css`
         &.ant-divider {
-            margin: 0 0 0.6rem;
+            align-self: stretch;
+            margin: 0 0 0.2rem;
             color: ${token.colorTextTertiary};
             font-size: 0.8rem;
         }

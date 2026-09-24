@@ -255,12 +255,10 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                     >
                         or
                     </Divider>
-                    <div className="d-flex flex-wrap align-items-center justify-content-center gap-2">
-                        <span>No ad at hand?</span>
-                        <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
-                            Try a sample ad
-                        </Button>
-                    </div>
+                    <span>No ad at hand?</span>
+                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                        Try a sample ad
+                    </Button>
                 </div>
             </Dragger>
         </div>
