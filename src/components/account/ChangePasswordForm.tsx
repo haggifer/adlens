@@ -34,13 +34,13 @@ export default function ChangePasswordForm() {
         )
 
         if (error) {
-            notification.error({ message: describeError(error), placement: 'bottomRight' })
+            notification.error({ title: describeError(error), placement: 'bottomRight' })
             return
         }
 
         reset(DEFAULT_VALUES)
         notification.success({
-            message: 'Password changed',
+            title: 'Password changed',
             description: 'Other devices have been signed out.',
             placement: 'bottomRight',
         })

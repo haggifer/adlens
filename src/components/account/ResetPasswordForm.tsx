@@ -82,7 +82,7 @@ export default function ResetPasswordForm({ token }: IProps) {
         return (
             <form onSubmit={handleSubmit(onSubmit)}>
                 <h1 className={styles.sectionTitle}>Choose a new password</h1>
-                {formError && <Alert className="mt-3" type="error" showIcon message={formError} />}
+                {formError && <Alert className="mt-3" type="error" showIcon title={formError} />}
                 <div className="mt-3">
                     <Field label="New password" error={errors.password?.message}>
                         <Controller

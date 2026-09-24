@@ -65,14 +65,14 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     const acceptFile = async (file: File) => {
         if (!VIDEO_MIME_TYPES.includes(file.type)) {
             notification.error({
-                message: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
+                title: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
                 placement: 'bottomRight',
             })
             return false
         }
 
         if (file.size > MAX_UPLOAD_BYTES) {
-            notification.error({ message: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
+            notification.error({ title: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
             return false
         }
 
@@ -82,7 +82,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
             duration = await getVideoDuration(file)
         } catch {
             notification.error({
-                message: 'Could not read the video. Please try a different file.',
+                title: 'Could not read the video. Please try a different file.',
                 placement: 'bottomRight',
             })
             return false
@@ -90,7 +90,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
 
         if (duration > MAX_DURATION_S) {
             notification.error({
-                message: `Video must be ${MAX_DURATION_S} seconds or shorter.`,
+                title: `Video must be ${MAX_DURATION_S} seconds or shorter.`,
                 placement: 'bottomRight',
             })
             return false

@@ -49,7 +49,7 @@ export default function HistoryTable() {
     return (
         <section className={styles.page}>
             <h1 className={styles.pageTitle}>History</h1>
-            {error && <Alert type="error" showIcon message={error.message} />}
+            {error && <Alert type="error" showIcon title={error.message} />}
             <Table<Job>
                 rowKey="id"
                 columns={COLUMNS}

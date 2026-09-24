@@ -23,11 +23,11 @@ export default function AccountSettings() {
         setIsRevoking(false)
 
         if (error) {
-            notification.error({ message: describeError(error), placement: 'bottomRight' })
+            notification.error({ title: describeError(error), placement: 'bottomRight' })
             return
         }
 
-        notification.success({ message: 'Signed out of all other devices', placement: 'bottomRight' })
+        notification.success({ title: 'Signed out of all other devices', placement: 'bottomRight' })
     }
 
     return (

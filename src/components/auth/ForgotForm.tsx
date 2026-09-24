@@ -63,7 +63,7 @@ export default function ForgotForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
+            {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Email" error={errors.email?.message}>
                 <Controller
                     name="email"

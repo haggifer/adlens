@@ -153,7 +153,7 @@ export default function AnalysisSettings({ source }: IProps) {
 
     const renderStatus = () => {
         if (run.error) {
-            return <Alert type="error" showIcon message={toApiRequestError(run.error).message} />
+            return <Alert type="error" showIcon title={toApiRequestError(run.error).message} />
         }
 
         if (stage === RunStage.Uploading) {
@@ -200,7 +200,7 @@ export default function AnalysisSettings({ source }: IProps) {
                 <Alert
                     type="info"
                     showIcon
-                    message={`Sample ad: ${source.sample.title}`}
+                    title={`Sample ad: ${source.sample.title}`}
                     description="Its platforms and markets are filled in. Change them to see how the results differ."
                 />
             )}

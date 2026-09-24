@@ -30,14 +30,14 @@ export default function DeleteAccountForm() {
         const error = await runAuthRequest(() => deleteUser({ password }))
 
         if (error) {
-            notification.error({ message: describeError(error), placement: 'bottomRight' })
+            notification.error({ title: describeError(error), placement: 'bottomRight' })
             return
         }
 
         // The API deleted the session with the user; refresh the client's view of it and drop the old user's data.
         authClient.$store.notify('$sessionSignal')
         queryClient.clear()
-        notification.success({ message: 'Your account has been deleted', placement: 'bottomRight' })
+        notification.success({ title: 'Your account has been deleted', placement: 'bottomRight' })
         router.push('/')
     }
 

@@ -69,7 +69,7 @@ export default function SignUpForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
+            {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Name" error={errors.name?.message}>
                 <Controller
                     name="name"

@@ -44,7 +44,7 @@ export default function AccountMenu() {
             router.push('/')
         } catch (error) {
             console.error(error)
-            notification.error({ message: 'Could not sign out. Please try again.', placement: 'bottomRight' })
+            notification.error({ title: 'Could not sign out. Please try again.', placement: 'bottomRight' })
         }
     }
 

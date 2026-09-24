@@ -39,13 +39,13 @@ export default function SignInForm() {
             return
         }
 
-        notification.success({ message: 'Signed in', placement: 'bottomRight' })
+        notification.success({ title: 'Signed in', placement: 'bottomRight' })
         setView(null)
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            {formError && <Alert className="mb-3" type="error" showIcon message={formError} />}
+            {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Email" error={errors.email?.message}>
                 <Controller
                     name="email"

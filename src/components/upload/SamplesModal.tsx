@@ -66,7 +66,7 @@ export default function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
 
     const renderBody = () => {
         if (error) {
-            return <Alert type="error" showIcon message={error.message} />
+            return <Alert type="error" showIcon title={error.message} />
         }
 
         if (isLoading) {

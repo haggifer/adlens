@@ -107,13 +107,13 @@ export default function ResultsPanel({ analysis, onSeek }: IProps) {
                 {compliance.length ? (
                     compliance.map(renderFinding)
                 ) : (
-                    <Alert type="success" showIcon message="No policy risks found for the selected platforms." />
+                    <Alert type="success" showIcon title="No policy risks found for the selected platforms." />
                 )}
                 <h3 className={styles.sectionLabel}>What’s holding it back?</h3>
                 {bestPractice.length ? (
                     bestPractice.map(renderFinding)
                 ) : (
-                    <Alert type="success" showIcon message="No gaps against the platforms’ best practices." />
+                    <Alert type="success" showIcon title="No gaps against the platforms’ best practices." />
                 )}
                 {(placementIssues.length > 0 || passedChecks > 0) && (
                     <>
