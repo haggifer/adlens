@@ -97,5 +97,7 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   server internals never reach the screen and wording can change without an API release.
 - **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
   a valid request is.
-- **The light/dark scheme is read from a cookie in the root layout**, so the first paint already has the right theme.
-  The cost is that every route renders dynamically.
+- **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
+  (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
+  other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
+  dynamically.

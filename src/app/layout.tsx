@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import type { ReactNode } from 'react'
 import { config } from '@/config'
-import { parseScheme, SCHEME_COOKIE } from '@/design/scheme-cookie'
+import { resolveInitialScheme, SCHEME_COOKIE, SCHEME_HINT_HEADER } from '@/design/scheme-cookie'
 import { FONT_VARIABLE_CLASSES } from '@/fonts'
 import Providers from './Providers'
 import 'bootstrap/dist/css/bootstrap-utilities.min.css'
@@ -41,15 +41,20 @@ interface IProps {
     children: ReactNode
 }
 
-// Reading the scheme cookie makes every route dynamic; accepted so the first paint already has the right scheme.
+// Reading the scheme cookie and hint makes every route dynamic; accepted so the first paint has the right scheme.
 export default async function RootLayout({ children }: IProps) {
     const cookieStore = await cookies()
-    const scheme = parseScheme(cookieStore.get(SCHEME_COOKIE)?.value)
+    const headerList = await headers()
+    const initialScheme = resolveInitialScheme(
+        cookieStore.get(SCHEME_COOKIE)?.value,
+        headerList.get(SCHEME_HINT_HEADER) ?? undefined,
+    )
+    const { scheme } = initialScheme
 
     return (
         <html lang="en" data-scheme={scheme} style={{ colorScheme: scheme }} className={FONT_VARIABLE_CLASSES}>
             <body>
-                <Providers initialScheme={scheme}>{children}</Providers>
+                <Providers initialScheme={initialScheme}>{children}</Providers>
             </body>
         </html>
     )

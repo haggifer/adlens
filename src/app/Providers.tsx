@@ -12,9 +12,9 @@ import { authClient } from '@/auth/authClient'
 import AuthProvider from '@/auth/AuthContext'
 import AppShell from '@/components/layout/AppShell'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { InitialScheme } from '@/design/scheme-cookie'
 import { ANTD_THEME } from '@/design/theme'
 import ThemeProvider, { useTheme } from '@/design/ThemeContext'
-import { ColorScheme } from '@/design/types'
 
 const MAX_QUERY_RETRIES = 2
 
@@ -80,7 +80,7 @@ const ThemedShell = ({ children }: IChildrenProps) => {
 
 interface IProps {
     children: ReactNode
-    initialScheme: ColorScheme
+    initialScheme: InitialScheme
 }
 
 export default function Providers({ children, initialScheme }: IProps) {
@@ -89,7 +89,7 @@ export default function Providers({ children, initialScheme }: IProps) {
     return (
         <AntdRegistry>
             <AntdStyleRegistry>
-                <ThemeProvider initialScheme={initialScheme}>
+                <ThemeProvider initial={initialScheme}>
                     <QueryClientProvider client={queryClient}>
                         <ThemedShell>{children}</ThemedShell>
                     </QueryClientProvider>
