@@ -7,7 +7,7 @@ import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, useMemo, useState } from 'react'
-import { toVidstackType } from '@/components/utils/vidstack'
+import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
 import '@vidstack/react/player/styles/default/theme.css'
@@ -16,13 +16,15 @@ import '@vidstack/react/player/styles/default/layouts/video.css'
 export interface SelectedVideo {
     url: string
     type: string
+    width?: number
+    height?: number
     // Set when the video is one of the published sample ads.
     sampleTitle?: string
 }
 
 interface IProps {
     video: SelectedVideo | null
-    onSelect: (file: File) => void
+    onSelect: (file: File, metadata: VideoMetadata) => void
     onClear: () => void
     onBrowseSamples: () => void
 }
@@ -35,16 +37,22 @@ const VIDEO_MIME_TYPES = Object.values(VideoMimeType) as string[]
 
 const ACCEPT = [...VIDEO_MIME_TYPES, '.mp4', '.mov', '.webm', '.mpeg', '.mpg', '.3gp', '.flv'].join(',')
 
-// Read the video's duration by loading only its metadata into a throwaway element. Rejected reads (a file
+export interface VideoMetadata {
+    durationS: number
+    width: number
+    height: number
+}
+
+// Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
 // the browser can't decode) surface as an error so a doomed upload is stopped client-side.
-const getVideoDuration = (file: File): Promise<number> =>
+const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
     new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file)
         const video = document.createElement('video')
         video.preload = 'metadata'
         video.onloadedmetadata = () => {
             URL.revokeObjectURL(url)
-            resolve(video.duration)
+            resolve({ durationS: video.duration, width: video.videoWidth, height: video.videoHeight })
         }
         video.onerror = () => {
             URL.revokeObjectURL(url)
@@ -64,41 +72,49 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
 
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
-    const acceptFile = async (file: File) => {
+    const acceptFile = async (file: File): Promise<VideoMetadata | null> => {
         if (!VIDEO_MIME_TYPES.includes(file.type)) {
             notification.error({
                 title: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
                 placement: 'bottomRight',
             })
-            return false
+            return null
         }
 
         if (file.size > MAX_UPLOAD_BYTES) {
             notification.error({ title: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
-            return false
+            return null
         }
 
-        let duration: number
+        let metadata: VideoMetadata
 
         try {
-            duration = await getVideoDuration(file)
+            metadata = await readVideoMetadata(file)
         } catch {
             notification.error({
                 title: 'Could not read the video. Please try a different file.',
                 placement: 'bottomRight',
             })
-            return false
+            return null
         }
 
-        if (duration > MAX_DURATION_S) {
+        if (metadata.durationS > MAX_DURATION_S) {
             notification.error({
                 title: `Video must be ${MAX_DURATION_S} seconds or shorter.`,
                 placement: 'bottomRight',
             })
-            return false
+            return null
         }
 
-        return true
+        return metadata
+    }
+
+    const selectIfAccepted = async (file: File) => {
+        const metadata = await acceptFile(file)
+
+        if (metadata) {
+            onSelect(file, metadata)
+        }
     }
 
     const handleDragEnter = () => setIsDragging(true)
@@ -118,11 +134,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
             return
         }
 
-        const accepted = await acceptFile(file)
-
-        if (accepted) {
-            onSelect(file)
-        }
+        await selectIfAccepted(file)
     }
 
     const requirements = (
@@ -143,6 +155,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
         return (
             <div
                 className={styles.frame}
+                style={toMediaRatioStyle(video.width, video.height)}
                 data-video="true"
                 data-dragging={isDragging}
                 onDragEnter={handleDragEnter}
@@ -179,12 +192,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                         maxCount={1}
                         showUploadList={false}
                         beforeUpload={async (incoming) => {
-                            const accepted = await acceptFile(incoming)
-
-                            if (accepted) {
-                                onSelect(incoming)
-                            }
-
+                            await selectIfAccepted(incoming)
                             return false
                         }}
                     >
@@ -217,21 +225,22 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 maxCount={1}
                 showUploadList={false}
                 beforeUpload={async (incoming) => {
-                    const accepted = await acceptFile(incoming)
-
-                    if (accepted) {
-                        onSelect(incoming)
-                    }
-
+                    await selectIfAccepted(incoming)
                     return false
                 }}
             >
                 <p className={styles.icon} data-icon>
                     <InboxOutlined />
                 </p>
-                <p className={styles.title}>Drop your video ad here</p>
-                <p className={styles.hint}>Click or drag to upload</p>
-                <Tooltip placement="bottom" title={requirements}>
+                <p className={styles.title}>
+                    <span className={styles.pointerOnly}>Drop your video ad here</span>
+                    <span className={styles.touchOnly}>Choose your video ad</span>
+                </p>
+                <p className={styles.hint}>
+                    <span className={styles.pointerOnly}>Click or drag to upload</span>
+                    <span className={styles.touchOnly}>Tap to pick a video from your device</span>
+                </p>
+                <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
                     <Tag
                         variant="outlined"
                         icon={<InfoCircleOutlined />}

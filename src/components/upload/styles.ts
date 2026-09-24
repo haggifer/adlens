@@ -47,13 +47,13 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         margin: 0 0 1.25rem;
         font-family: ${HEADING_FONT_STACK};
         color: ${token.colorTextHeading};
-        font-size: 3.75rem;
+        font-size: clamp(2.1rem, 1.2rem + 5vw, 3.75rem);
         font-weight: 700;
         line-height: 1.15;
         letter-spacing: -0.02em;
 
         @media (max-height: 840px) {
-            font-size: 3rem;
+            font-size: clamp(2.1rem, 1.2rem + 5vw, 3rem);
             margin-bottom: 0.75rem;
         }
     `,
@@ -66,7 +66,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         max-width: 34rem;
         margin: 0 auto;
         color: ${token.colorTextSecondary};
-        font-size: 1.375rem;
+        font-size: clamp(1.05rem, 0.9rem + 1.2vw, 1.375rem);
         line-height: 1.5;
     `,
 
@@ -197,6 +197,21 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
     `,
 
+    /* Touch screens can't drag files in, so the drop zone's wording switches to tapping there. */
+    pointerOnly: css`
+        @media (hover: none) {
+            display: none;
+        }
+    `,
+
+    touchOnly: css`
+        display: none;
+
+        @media (hover: none) {
+            display: inline;
+        }
+    `,
+
     reqKey: css`
         font-weight: 600;
     `,
@@ -237,9 +252,14 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             object-fit: contain;
         }
 
+        /* Stacked, the player takes the video's own shape (--media-ratio), capped at 70vh, instead of a fixed-height
+           black box. vertical-align drops the baseline gap under Vidstack's inline-flex player. */
         @media (max-width: 991.98px) {
-            height: 70vh;
+            height: auto;
+            max-height: 70vh;
             width: min(var(--col-w), 100%);
+            aspect-ratio: var(--media-ratio, 16 / 9);
+            vertical-align: top;
         }
     `,
 
@@ -434,6 +454,14 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         display: flex;
         align-items: flex-start;
         gap: 1rem;
+
+        /* Phones stack the preview above the text: side by side, a usable preview leaves no room for the info. */
+        @media (max-width: 575.98px) {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
         padding: 0.75rem;
         border: 1px solid ${token.colorBorderSecondary};
         border-radius: ${token.borderRadiusLG}px;
@@ -455,6 +483,11 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         flex-shrink: 0;
         width: 7.5rem;
         aspect-ratio: 1 / 1;
+
+        @media (max-width: 575.98px) {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+        }
         border-radius: ${token.borderRadius}px;
         background: #000000;
         overflow: hidden;
@@ -474,6 +507,12 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         flex-direction: column;
         gap: 0.4rem;
         min-width: 0;
+
+        .ant-tag {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     `,
 
     sampleHead: css`
