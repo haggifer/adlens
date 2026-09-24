@@ -4,7 +4,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RequestErrorCode } from 'adlens-shared'
 import { App as AntdApp } from 'antd'
-import { extractStaticStyle, ThemeProvider as StyleThemeProvider } from 'antd-style'
+import { styleManager, ThemeProvider as StyleThemeProvider } from 'antd-style'
 import { useServerInsertedHTML } from 'next/navigation'
 import { ReactNode, useRef, useState } from 'react'
 import { ApiRequestError } from '@/api/errors'
@@ -47,16 +47,33 @@ interface IChildrenProps {
 }
 
 // <AntdRegistry> only flushes antd's own cssinjs cache. createStyles (antd-style → emotion) keeps a separate cache
-// that nothing else writes into the SSR HTML, so without this every acss-* class is unstyled until hydration.
+// that nothing else writes into the SSR HTML, so without this every acss-* class is unstyled until hydration. The HTML
+// streams in several flushes (the page body after the shell), so each flush emits the styles registered since the last.
 const AntdStyleRegistry = ({ children }: IChildrenProps) => {
-    const isInserted = useRef(false)
+    const emitted = useRef(new Set<string>())
 
     useServerInsertedHTML(() => {
-        if (isInserted.current) return null
+        const { cache } = styleManager
+        const names = Object.keys(cache.inserted).filter((name) => !emitted.current.has(name))
 
-        isInserted.current = true
+        if (!names.length) {
+            return null
+        }
 
-        return <>{extractStaticStyle(undefined, { includeAntd: false }).map((item) => item.style)}</>
+        names.forEach((name) => emitted.current.add(name))
+
+        const css = names
+            .map((name) => cache.inserted[name])
+            .filter((rule) => typeof rule === 'string')
+            .join('')
+
+        return (
+            <style
+                key={names[0]}
+                data-emotion={`${cache.key} ${names.join(' ')}`}
+                dangerouslySetInnerHTML={{ __html: css }}
+            />
+        )
     })
 
     return <>{children}</>
