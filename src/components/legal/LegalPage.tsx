@@ -1,0 +1,24 @@
+'use client'
+
+import type { ReactNode } from 'react'
+import { useStyles } from './styles'
+
+interface IProps {
+    title: string
+    lastUpdated: string
+    children: ReactNode
+}
+
+export default function LegalPage({ title, lastUpdated, children }: IProps) {
+    const { styles } = useStyles()
+
+    return (
+        <section className={styles.page}>
+            <article className={styles.document}>
+                <h1 className={styles.title}>{title}</h1>
+                <p className={styles.updated}>Last updated {lastUpdated}</p>
+                {children}
+            </article>
+        </section>
+    )
+}

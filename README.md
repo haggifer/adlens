@@ -53,15 +53,16 @@ Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set the
 
 ## Routes
 
-| Route                | What it does                                                             |
-| -------------------- | ------------------------------------------------------------------------ |
-| `/`                  | Upload a video and choose the analysis settings                          |
-| `/analyses/[id]`     | Live status of one analysis, then its results next to the replayed video |
-| `/history`           | Every analysis, newest first                                             |
-| `/account`           | Change password, sign out other devices, delete the account              |
-| `/auth/verified`     | Landing page of the email confirmation link                              |
-| `/reset-password`    | Landing page of the password-reset link                                  |
-| `/privacy`, `/terms` | Legal pages (placeholders)                                               |
+| Route             | What it does                                                             |
+| ----------------- | ------------------------------------------------------------------------ |
+| `/`               | Upload a video and choose the analysis settings                          |
+| `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video |
+| `/history`        | Every analysis, newest first                                             |
+| `/account`        | Change password, sign out other devices, delete the account              |
+| `/auth/verified`  | Landing page of the email confirmation link                              |
+| `/reset-password` | Landing page of the password-reset link                                  |
+| `/terms`          | Terms of Use                                                             |
+| `/privacy`        | Privacy Policy (placeholder)                                             |
 
 ## Structure
 
@@ -71,6 +72,7 @@ src/
   api/          # API client, typed endpoints, error codes → user-facing copy
   auth/         # Better Auth client and session context
   components/   # UI by feature
+  content/      # long-form MDX content (legal documents)
   contexts/     # Zustand stores
   hooks/        # server-state hooks (TanStack Query, realtime)
   storage/      # signed-URL upload
@@ -101,3 +103,6 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
   dynamically.
+- **Legal documents are MDX in the repo**, rendered in the app's layout and theme, not Termly's embed script. They
+  are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
+  reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.

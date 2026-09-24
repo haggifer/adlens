@@ -1,3 +1,4 @@
+import createMDX from '@next/mdx'
 import type { NextConfig } from 'next'
 
 // Ask Chromium browsers for the system color scheme, so a first visit is rendered in the right theme. Critical-CH makes
@@ -18,4 +19,6 @@ const nextConfig: NextConfig = {
     },
 }
 
-export default nextConfig
+const withMDX = createMDX()
+
+export default withMDX(nextConfig)
