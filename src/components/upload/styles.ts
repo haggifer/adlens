@@ -120,7 +120,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         width: auto;
         max-width: var(--col-w);
         flex-shrink: 0;
-        border: 1.5px solid ${token.colorBorder};
+        border: 1.5px solid ${isDarkMode ? '#777' : token.colorPrimaryHover};
         border-radius: 0.5rem;
         /* Light: the palest tint that still reads as teal (at ~3% it reads as white). antd's colorPrimaryBg is a muted
            grey-teal for this primary, so the tint is mixed from the primary itself. */
@@ -131,9 +131,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         };
         overflow: hidden;
         box-shadow: ${buildFrameShadow(token.colorText, isDarkMode)};
-        transition:
-            border-color 0.2s ease,
-            box-shadow 0.2s ease;
+        transition: box-shadow 0.2s ease;
 
         /* Columns don't stretch when stacked, so size the square by width on mobile instead of height. */
         @media (max-width: 991.98px) {
@@ -142,7 +140,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
 
         &[data-dragging='true'] {
-            border-color: ${isDarkMode ? '#777' : token.colorPrimaryHover};
             box-shadow: ${buildFrameDragShadow(token.colorText, isDarkMode)};
         }
 
