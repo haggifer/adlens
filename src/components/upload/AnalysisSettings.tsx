@@ -19,13 +19,14 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toApiRequestError } from '@/api/errors'
-import { createJob, startAnalysis } from '@/api/jobs'
+import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import useQuota, { quotaKey } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { useStyles } from './styles'
+import type { AnalysisSource } from './types'
 
 const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))
 
@@ -38,6 +39,16 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     audience: '',
     brand: '',
 }
+
+const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput =>
+    source.kind === 'sample' ? { ...DEFAULT_VALUES, ...source.sample.settings } : DEFAULT_VALUES
+
+// Empty optional fields are left out rather than sent as empty strings.
+const toPayload = (settings: AnalysisSettingsValues): AnalysisSettingsValues => ({
+    ...settings,
+    audience: settings.audience || undefined,
+    brand: settings.brand || undefined,
+})
 
 const getPlacementOptions = (platforms: Platform[]) =>
     platforms.map((platform) => ({
@@ -61,10 +72,10 @@ enum RunStage {
 }
 
 interface IProps {
-    file: File
+    source: AnalysisSource
 }
 
-export default function AnalysisSettings({ file }: IProps) {
+export default function AnalysisSettings({ source }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
@@ -80,7 +91,7 @@ export default function AnalysisSettings({ file }: IProps) {
         AnalysisSettingsValues
     >({
         resolver: zodResolver(analysisSettingsSchema),
-        defaultValues: DEFAULT_VALUES,
+        defaultValues: getDefaultValues(source),
     })
 
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
@@ -91,8 +102,18 @@ export default function AnalysisSettings({ file }: IProps) {
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
+            if (source.kind === 'sample') {
+                const job = await createSampleJob({ sampleId: source.sample.id, settings: toPayload(settings) })
+
+                setStage(RunStage.Starting)
+                await startAnalysis(job.id)
+
+                return job.id
+            }
+
+            const { file } = source
             const { job, upload } = await createJob({
-                settings: { ...settings, audience: settings.audience || undefined, brand: settings.brand || undefined },
+                settings: toPayload(settings),
                 file: { name: file.name, contentType: file.type as VideoMimeType, size: file.size },
             })
 
@@ -175,6 +196,14 @@ export default function AnalysisSettings({ file }: IProps) {
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
             <h2 className={styles.panelTitle}>Where will it run?</h2>
+            {source.kind === 'sample' && (
+                <Alert
+                    type="info"
+                    showIcon
+                    message={`Sample ad: ${source.sample.title}`}
+                    description="Its platforms and markets are filled in. Change them to see how the results differ."
+                />
+            )}
             <div className={styles.settingsScroll}>
                 <div className={styles.field}>
                     <label className={styles.fieldLabel}>Platforms</label>

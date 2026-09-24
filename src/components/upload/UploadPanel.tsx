@@ -1,6 +1,6 @@
 'use client'
 
-import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, SwapOutlined } from '@ant-design/icons'
+import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
@@ -15,12 +15,15 @@ import '@vidstack/react/player/styles/default/layouts/video.css'
 export interface SelectedVideo {
     url: string
     type: string
+    // Set when the video is one of the published sample ads.
+    sampleTitle?: string
 }
 
 interface IProps {
     video: SelectedVideo | null
     onSelect: (file: File) => void
     onClear: () => void
+    onBrowseSamples: () => void
 }
 
 const { Dragger } = Upload
@@ -49,7 +52,7 @@ const getVideoDuration = (file: File): Promise<number> =>
         video.src = url
     })
 
-export default function UploadPanel({ video, onSelect, onClear }: IProps) {
+export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
     const { styles } = useStyles()
     const { notification } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
@@ -151,7 +154,7 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                     viewType="video"
                     load="eager"
                     playsInline
-                    aria-label="Uploaded video ad"
+                    aria-label={video.sampleTitle ? `Sample ad: ${video.sampleTitle}` : 'Uploaded video ad'}
                 >
                     <MediaProvider />
                     {/* Force the large layout so every control lives in the bottom bar, leaving the
@@ -163,6 +166,11 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                         slots={{ googleCastButton: null, airPlayButton: null }}
                     />
                 </MediaPlayer>
+                {video.sampleTitle && (
+                    <div className={styles.sampleBadge}>
+                        <Tag color="processing">Sample ad · {video.sampleTitle}</Tag>
+                    </div>
+                )}
                 <div data-overlay className={styles.overlay}>
                     <Upload
                         accept={ACCEPT}
@@ -221,6 +229,17 @@ export default function UploadPanel({ video, onSelect, onClear }: IProps) {
                 </p>
                 <p className={styles.title}>Drop your video ad here</p>
                 <p className={styles.hint}>Click or drag to upload</p>
+                {/* Inside the Dragger, so clicks and keys must not reach it and open the file dialog. */}
+                <div
+                    className={styles.samplesPrompt}
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                >
+                    <span>No ad at hand?</span>
+                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                        Try a sample ad
+                    </Button>
+                </div>
                 <Tooltip placement="bottom" title={requirements}>
                     <Tag
                         variant="outlined"

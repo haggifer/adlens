@@ -1,14 +1,24 @@
 'use client'
 
+import type { Sample } from 'adlens-shared'
 import { useEffect, useRef, useState } from 'react'
 import AnalysisSettings from './AnalysisSettings'
+import SamplesModal from './SamplesModal'
+import { useStyles } from './styles'
+import type { AnalysisSource } from './types'
 import UploadIntro from './UploadIntro'
 import UploadPanel from './UploadPanel'
-import { useStyles } from './styles'
+
+const releasePreview = (source: AnalysisSource | null) => {
+    if (source?.kind === 'file') {
+        URL.revokeObjectURL(source.url)
+    }
+}
 
 export default function AdWorkspace() {
     const { styles } = useStyles()
-    const [selected, setSelected] = useState<{ file: File; url: string } | null>(null)
+    const [source, setSource] = useState<AnalysisSource | null>(null)
+    const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const workspaceRef = useRef<HTMLDivElement>(null)
 
     // The square and panel size off the flex column height directly (100%). A hugged (fit-content) video
@@ -31,23 +41,31 @@ export default function AdWorkspace() {
     }, [])
 
     const selectFile = (file: File) => {
-        setSelected((prev) => {
-            if (prev) {
-                URL.revokeObjectURL(prev.url)
-            }
+        releasePreview(source)
+        setSource({ kind: 'file', file, url: URL.createObjectURL(file) })
+    }
 
-            return { file, url: URL.createObjectURL(file) }
-        })
+    const selectSample = (sample: Sample) => {
+        releasePreview(source)
+        setSource({ kind: 'sample', sample })
+        setIsSamplesOpen(false)
     }
 
     const clearVideo = () => {
-        setSelected((prev) => {
-            if (prev) {
-                URL.revokeObjectURL(prev.url)
-            }
+        releasePreview(source)
+        setSource(null)
+    }
 
+    const getVideo = () => {
+        if (!source) {
             return null
-        })
+        }
+
+        if (source.kind === 'sample') {
+            return { url: source.sample.previewUrl, type: source.sample.contentType, sampleTitle: source.sample.title }
+        }
+
+        return { url: source.url, type: source.file.type }
     }
 
     return (
@@ -65,15 +83,24 @@ export default function AdWorkspace() {
             <div className={styles.workspace} ref={workspaceRef}>
                 <div className={styles.left}>
                     <UploadPanel
-                        video={selected ? { url: selected.url, type: selected.file.type } : null}
+                        video={getVideo()}
                         onSelect={selectFile}
                         onClear={clearVideo}
+                        onBrowseSamples={() => setIsSamplesOpen(true)}
                     />
                 </div>
                 <div className={styles.right}>
-                    {selected ? <AnalysisSettings file={selected.file} /> : <UploadIntro />}
+                    {source ? (
+                        <AnalysisSettings
+                            key={source.kind === 'sample' ? `sample-${source.sample.id}` : 'upload'}
+                            source={source}
+                        />
+                    ) : (
+                        <UploadIntro />
+                    )}
                 </div>
             </div>
+            <SamplesModal isOpen={isSamplesOpen} onClose={() => setIsSamplesOpen(false)} onSelect={selectSample} />
         </div>
     )
 }

@@ -1,6 +1,7 @@
 import type {
     CreateJobInput,
     CreateJobResponse,
+    CreateSampleJobInput,
     Job,
     JobListResponse,
     JobResponse,
@@ -14,6 +15,12 @@ export const createJob = async (input: CreateJobInput): Promise<CreateJobRespons
     const { data } = await api.post<CreateJobResponse>('/v1/jobs', input)
 
     return data
+}
+
+export const createSampleJob = async (input: CreateSampleJobInput): Promise<Job> => {
+    const { data } = await api.post<JobResponse>('/v1/jobs/from-sample', input)
+
+    return data.job
 }
 
 export const startAnalysis = async (jobId: string): Promise<Job> => {

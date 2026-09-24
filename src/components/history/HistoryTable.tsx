@@ -12,7 +12,12 @@ const COLUMNS: TableColumnsType<Job> = [
     {
         title: 'Video',
         key: 'file',
-        render: (_, job) => <Link href={`/analyses/${job.id}`}>{job.file.name}</Link>,
+        render: (_, job) => (
+            <span className="d-inline-flex align-items-center gap-2">
+                <Link href={`/analyses/${job.id}`}>{job.file.name}</Link>
+                {job.sampleId && <Tag color="processing">Sample</Tag>}
+            </span>
+        ),
     },
     {
         title: 'Platforms',

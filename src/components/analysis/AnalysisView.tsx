@@ -3,7 +3,7 @@
 import { type MediaPlayerInstance, MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import { JobStatus, RequestErrorCode } from 'adlens-shared'
-import { Button, Result, Spin } from 'antd'
+import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
 import { toVidstackType } from '@/components/utils/vidstack'
@@ -80,7 +80,10 @@ export default function AnalysisView({ jobId }: IProps) {
         <div className={styles.page}>
             <header className={styles.pageHeader}>
                 <div className="d-flex flex-column gap-1">
-                    <h1 className={styles.pageTitle}>{job.file.name}</h1>
+                    <div className="d-flex align-items-center gap-2">
+                        <h1 className={styles.pageTitle}>{job.file.name}</h1>
+                        {job.sampleId && <Tag color="processing">Sample ad</Tag>}
+                    </div>
                     <p className={styles.pageMeta}>
                         {platforms || 'General rules'} · {new Date(job.createdAt).toLocaleString()}
                     </p>

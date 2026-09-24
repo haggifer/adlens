@@ -383,4 +383,113 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         font-size: 0.85rem;
         font-weight: 500;
     `,
+
+    samplesPrompt: css`
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 0.4rem;
+        color: ${token.colorTextSecondary};
+        font-size: 0.85rem;
+    `,
+
+    sampleBadge: css`
+        position: absolute;
+        top: 0.6rem;
+        left: 0.6rem;
+        z-index: 3;
+        max-width: calc(100% - 6rem);
+        pointer-events: none;
+
+        .ant-tag {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0;
+        }
+    `,
+
+    sampleList: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: min(70vh, 40rem);
+        margin-top: 0.75rem;
+        overflow-y: auto;
+    `,
+
+    sampleRow: css`
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.75rem;
+        border: 1px solid ${token.colorBorderSecondary};
+        border-radius: ${token.borderRadiusLG}px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+
+        &:hover {
+            background: ${token.colorFillTertiary};
+        }
+
+        &:focus-visible {
+            outline: 2px solid ${token.colorPrimary};
+            outline-offset: 2px;
+        }
+    `,
+
+    /* Square, so vertical and horizontal ads both fit; the black letterbox is the video stage, not a theme colour. */
+    sampleThumb: css`
+        flex-shrink: 0;
+        width: 7.5rem;
+        aspect-ratio: 1 / 1;
+        border-radius: ${token.borderRadius}px;
+        background: #000000;
+        overflow: hidden;
+        cursor: default;
+
+        video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    `,
+
+    sampleInfo: css`
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-width: 0;
+    `,
+
+    sampleHead: css`
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+    `,
+
+    sampleTitle: css`
+        color: ${token.colorText};
+        font-size: 1rem;
+        font-weight: 600;
+    `,
+
+    sampleDuration: css`
+        flex-shrink: 0;
+        color: ${token.colorTextTertiary};
+        font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
+    `,
+
+    sampleDescription: css`
+        margin: 0;
+        color: ${token.colorTextSecondary};
+        font-size: 0.875rem;
+        line-height: 1.45;
+    `,
 }))
