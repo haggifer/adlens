@@ -20,8 +20,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         width: min(48rem, 100%);
     `,
 
+    // Stays reachable under the sticky header however far the document is scrolled.
     backButton: css`
-        color: ${token.colorTextSecondary};
+        position: sticky;
+        top: calc(var(--header-h) + 0.75rem);
+        z-index: 5;
+        box-shadow: ${token.boxShadowTertiary};
     `,
 
     document: css`
@@ -42,7 +46,8 @@ export const useStyles = createStyles(({ token, css }) => ({
 
         h2,
         h3 {
-            scroll-margin-top: calc(var(--header-h) + 1rem);
+            /* Clears the header and the sticky Back button when jumping to a section. */
+            scroll-margin-top: calc(var(--header-h) + 4rem);
             font-family: ${HEADING_FONT_STACK};
             color: ${token.colorTextHeading};
             letter-spacing: -0.01em;
