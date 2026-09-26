@@ -56,6 +56,10 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             font-size: clamp(2.1rem, 1.2rem + 5vw, 3rem);
             margin-bottom: 0.75rem;
         }
+
+        @media (max-width: 767.98px) {
+            margin-bottom: 0;
+        }
     `,
 
     heroAccent: css`
@@ -68,6 +72,11 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         color: ${token.colorTextSecondary};
         font-size: clamp(1.05rem, 0.9rem + 1.2vw, 1.375rem);
         line-height: 1.5;
+
+        /* On phones the headline alone introduces the page, so the upload box stays within the first screen. */
+        @media (max-width: 767.98px) {
+            display: none;
+        }
     `,
 
     workspace: css`
@@ -110,12 +119,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             flex: none;
             width: 100%;
             justify-content: center;
-
-            /* Stacked, "What you'll get" reads first, so visitors know what the upload is for; once a video is
-               picked, the settings follow the video instead. */
-            &[data-intro='true'] {
-                order: -1;
-            }
         }
     `,
 

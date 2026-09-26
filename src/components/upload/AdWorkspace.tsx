@@ -91,7 +91,7 @@ export default function AdWorkspace() {
                         onBrowseSamples={() => setIsSamplesOpen(true)}
                     />
                 </div>
-                <div className={styles.right} data-intro={!source}>
+                <div className={styles.right}>
                     {source ? (
                         <AnalysisSettings
                             key={source.kind === 'sample' ? `sample-${source.sample.id}` : 'upload'}
