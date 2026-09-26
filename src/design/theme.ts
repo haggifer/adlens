@@ -27,12 +27,12 @@ export const ANTD_THEME: ThemeConfig = {
             defaultShadow: 'none',
             dangerShadow: 'none',
         },
-        // Scaled with the control heights above (antd's defaults: 22px track, 18px handle).
+        // The theme switch is the app's only Switch: a compact 20px track (antd's default is 22px, handle 18px).
         Switch: {
-            trackHeight: 26,
-            trackMinWidth: 50,
-            handleSize: 22,
-            innerMaxMargin: 28,
+            trackHeight: 20,
+            trackMinWidth: 40,
+            handleSize: 16,
+            innerMaxMargin: 22,
         },
     },
 }
