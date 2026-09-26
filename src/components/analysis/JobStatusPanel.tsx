@@ -60,7 +60,7 @@ export default function JobStatusPanel({ job }: IProps) {
             <h2 className={styles.panelTitle}>Analyzing your ad</h2>
             <p className={styles.hint}>This usually takes under a minute. You can leave this page and come back.</p>
             <Steps
-                direction="vertical"
+                orientation="vertical"
                 size="small"
                 current={current}
                 items={PROGRESS_STEPS.map((step, index) => ({
