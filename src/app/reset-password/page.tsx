@@ -7,12 +7,12 @@ export const metadata: Metadata = {
 }
 
 interface IProps {
-    searchParams: Promise<{ token?: string; error?: string }>
+    searchParams: Promise<{ token?: string }>
 }
 
-// Better Auth redirects here from the emailed link with `?token=` on success or `?error=INVALID_TOKEN`.
+// The password-reset email links here with `?token=`; an invalid or expired token is reported when the form is sent.
 export default async function ResetPasswordPage({ searchParams }: IProps) {
-    const { token, error } = await searchParams
+    const { token } = await searchParams
 
-    return <ResetPasswordForm token={error ? null : (token ?? null)} />
+    return <ResetPasswordForm token={token ?? null} />
 }

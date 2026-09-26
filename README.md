@@ -48,8 +48,8 @@ Open [http://localhost:3000](http://localhost:3000). It expects the API at `NEXT
 Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set them per environment in Vercel.
 
 - `NEXT_PUBLIC_API_BASE_URL` — origin of the AdLens API (`https://api.useadlens.com` in production).
-- `NEXT_PUBLIC_SITE_URL` — origin of this app (`https://www.useadlens.com` in production). Used for metadata and as
-  the return address of the verification and password-reset emails.
+- `NEXT_PUBLIC_SITE_URL` — origin of this app (`https://www.useadlens.com` in production). Used for page metadata;
+  the links in emails are built by the API from its `WEB_ORIGIN`.
 
 ## Routes
 
@@ -59,7 +59,7 @@ Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set the
 | `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video |
 | `/history`        | Every analysis, newest first                                             |
 | `/account`        | Change password, sign out other devices, delete the account              |
-| `/auth/verified`  | Landing page of the email confirmation link                              |
+| `/confirm-email`  | Landing page of the email confirmation link; confirms on a button press  |
 | `/reset-password` | Landing page of the password-reset link                                  |
 | `/terms`          | Terms of Use                                                             |
 | `/privacy`        | Privacy Policy                                                           |

@@ -5,7 +5,7 @@ import { Alert, App, Button, Input } from 'antd'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { EMAIL_VERIFIED_URL, signIn } from '@/auth/authClient'
+import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import Field from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -32,7 +32,7 @@ export default function SignInForm() {
     const onSubmit = async (values: SignInValues) => {
         setFormError(null)
 
-        const error = await runAuthRequest(() => signIn.email({ ...values, callbackURL: EMAIL_VERIFIED_URL }))
+        const error = await runAuthRequest(() => signIn.email(values))
 
         if (error) {
             setFormError(describeError(error))

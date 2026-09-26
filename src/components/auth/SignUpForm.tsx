@@ -6,7 +6,7 @@ import { Alert, Button, Input, Result } from 'antd'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { EMAIL_VERIFIED_URL, signUp } from '@/auth/authClient'
+import { signUp } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import Field from '@/components/utils/Field'
@@ -39,9 +39,7 @@ export default function SignUpForm() {
     const onSubmit = async ({ name, email, password }: SignUpValues) => {
         setFormError(null)
 
-        const error = await runAuthRequest(() =>
-            signUp.email({ name, email, password, callbackURL: EMAIL_VERIFIED_URL }),
-        )
+        const error = await runAuthRequest(() => signUp.email({ name, email, password }))
 
         if (error) {
             setFormError(describeError(error))

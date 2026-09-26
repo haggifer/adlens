@@ -9,7 +9,6 @@ import { z } from 'zod'
 import { requestPasswordReset } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import Field from '@/components/utils/Field'
-import { config } from '@/config'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -33,9 +32,7 @@ export default function ForgotForm() {
     const onSubmit = async ({ email }: ForgotValues) => {
         setFormError(null)
 
-        const error = await runAuthRequest(() =>
-            requestPasswordReset({ email, redirectTo: `${config.siteUrl}/reset-password` }),
-        )
+        const error = await runAuthRequest(() => requestPasswordReset({ email }))
 
         if (error) {
             setFormError(describeError(error))
