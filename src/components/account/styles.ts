@@ -7,7 +7,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+        flex: 1;
         padding: 2.5rem 0;
     `,
 

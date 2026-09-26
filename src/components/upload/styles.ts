@@ -20,7 +20,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
         @media (max-width: 991.98px) {
             height: auto;
-            min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+            flex: 1;
             padding: 1.5rem 0 2rem;
         }
 

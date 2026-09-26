@@ -6,7 +6,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
-        min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+        flex: 1;
         padding: 2rem 0;
     `,
 

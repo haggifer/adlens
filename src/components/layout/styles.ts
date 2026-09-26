@@ -6,16 +6,28 @@ export const useStyles = createStyles(({ token, css }) => ({
         --footer-h: 3.5rem;
         position: relative;
         z-index: 1;
-        flex: 1;
+        /* A full-height column: main takes whatever the header and footer leave, so pages fill the screen by growing
+           into it rather than by subtracting a footer height that varies (it wraps to two lines on phones). */
+        display: flex;
+        flex-direction: column;
         min-width: 0;
-        min-height: 100vh;
+        min-height: 100dvh;
 
         @media (max-width: 991.98px) {
             --header-h: 3.5rem;
         }
+
+        /* Touch screens get 44px footer links. Only the side-by-side desktop layouts still size against this value. */
+        @media (pointer: coarse) {
+            --footer-h: 4.25rem;
+        }
     `,
 
     appMain: css`
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        width: 100%;
         max-width: 1120px;
         margin: 0 auto;
         padding: 0 1.5rem;
