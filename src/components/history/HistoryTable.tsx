@@ -61,7 +61,8 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
     {
         title: <span className="visually-hidden">Actions</span>,
         key: 'actions',
-        width: '3.5rem',
+        // The 36px icon button plus the cell's 16px side padding.
+        width: '4.5rem',
         align: 'right',
         render: (_, job) => <DeleteJobButton job={job} isIconOnly />,
     },
