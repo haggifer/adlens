@@ -85,7 +85,8 @@ export default function AnalysisSettings({ source }: IProps) {
     })
 
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
-    const hasQuotaLeft = !quota || quota.used < quota.limit
+    // A null limit is an unlimited (admin) account.
+    const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
 
     const run = useMutation({
         mutationFn: async (settings: AnalysisSettingsValues) => {
@@ -165,6 +166,10 @@ export default function AnalysisSettings({ source }: IProps) {
     const renderQuota = () => {
         if (!quota) {
             return null
+        }
+
+        if (quota.limit === null) {
+            return <p className={styles.hint}>Unlimited analyses</p>
         }
 
         if (!hasQuotaLeft && quota.windowStart) {
