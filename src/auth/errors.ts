@@ -11,6 +11,8 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     INVALID_TOKEN: 'This link is invalid or has already been used.',
     TOKEN_EXPIRED: 'This link has expired. Request a new one.',
     SESSION_EXPIRED: 'Your session has expired. Sign in again.',
+    EMAIL_NOT_SENT:
+        'We couldn’t send the email. Try again in a few minutes; if you just signed up, sign in to get a new link.',
     NETWORK_ERROR: 'Couldn’t reach AdLens. Check your connection and try again.',
 }
 
