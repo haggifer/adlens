@@ -4,6 +4,7 @@ import type { Job } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { MouseEvent } from 'react'
 import DeleteJobButton from '@/components/analysis/DeleteJobButton'
 import useJobs from '@/hooks/useJobs'
 import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
@@ -71,6 +72,16 @@ export default function HistoryTable() {
     const router = useRouter()
     const { jobs, isLoading, error, hasMore, isLoadingMore, loadMore } = useJobs()
 
+    // The whole row opens the analysis. Clicks on its link or its Delete button are left to them, so a row never
+    // navigates twice or opens when deleting.
+    const handleRowClick = (event: MouseEvent<HTMLElement>, job: Job) => {
+        if ((event.target as HTMLElement).closest('a, button')) {
+            return
+        }
+
+        router.push(`/analyses/${job.id}`)
+    }
+
     return (
         <section className={styles.page}>
             <h1 className={styles.pageTitle}>History</h1>
@@ -79,6 +90,8 @@ export default function HistoryTable() {
                 rowKey="id"
                 columns={getColumns(styles)}
                 tableLayout="fixed"
+                rowClassName={() => styles.row}
+                onRow={(job) => ({ onClick: (event) => handleRowClick(event, job) })}
                 dataSource={jobs}
                 loading={isLoading}
                 pagination={false}

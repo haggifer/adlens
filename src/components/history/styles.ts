@@ -38,7 +38,13 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    row: css`
+        cursor: pointer;
+    `,
+
     videoLink: css`
+        color: ${token.colorText};
+        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
