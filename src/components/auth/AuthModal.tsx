@@ -2,6 +2,7 @@
 
 import { Modal } from 'antd'
 import { AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { MODAL_WIDTH } from '@/design/theme'
 import ForgotForm from './ForgotForm'
 import SignInForm from './SignInForm'
 import SignUpForm from './SignUpForm'
@@ -41,7 +42,7 @@ export default function AuthModal() {
             open={view !== null}
             onCancel={() => setView(null)}
             footer={null}
-            width={420}
+            width={MODAL_WIDTH}
             centered
             destroyOnHidden
             title={

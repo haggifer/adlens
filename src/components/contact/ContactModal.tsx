@@ -2,6 +2,7 @@
 
 import { Modal } from 'antd'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { MODAL_WIDTH } from '@/design/theme'
 import ContactForm from './ContactForm'
 
 export default function ContactModal() {
@@ -13,7 +14,7 @@ export default function ContactModal() {
             open={isOpen}
             onCancel={() => setIsOpen(false)}
             footer={null}
-            width={520}
+            width={MODAL_WIDTH}
             centered
             destroyOnHidden
             title="Contact us"

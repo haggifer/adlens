@@ -4,6 +4,7 @@ import { DeleteOutlined } from '@ant-design/icons'
 import { type Job, JobStatus } from 'adlens-shared'
 import { App, Button, Tooltip } from 'antd'
 import { toApiRequestError } from '@/api/errors'
+import { MODAL_WIDTH } from '@/design/theme'
 import useDeleteJob from '@/hooks/useDeleteJob'
 
 // The API refuses to delete a job it is still working on.
@@ -34,6 +35,7 @@ export default function DeleteJobButton({ job, isIconOnly, onDeleted }: IProps) 
     const handleClick = () => {
         modal.confirm({
             title: 'Delete this analysis?',
+            width: MODAL_WIDTH,
             content: job.sampleId
                 ? 'The analysis will be deleted permanently.'
                 : 'The analysis and the uploaded video will be deleted permanently. This can’t be undone.',

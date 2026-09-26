@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { authClient, deleteUser } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import Field from '@/components/utils/Field'
+import { MODAL_WIDTH } from '@/design/theme'
 import { useStyles } from './styles'
 
 const deleteAccountSchema = z.object({ password: z.string().min(1, 'Enter your password') })
@@ -44,6 +45,7 @@ export default function DeleteAccountForm() {
     const onSubmit = (values: DeleteAccountValues) => {
         modal.confirm({
             title: 'Delete your account?',
+            width: MODAL_WIDTH,
             content: 'Your analyses and uploaded videos will be deleted permanently. This can’t be undone.',
             okText: 'Delete account',
             okButtonProps: { danger: true },

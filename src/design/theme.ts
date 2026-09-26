@@ -5,6 +5,8 @@ import { BODY_FONT_STACK } from '@/fonts'
 // intentionally not set here — antd-style's ThemeProvider applies it via `appearance` (see Providers.tsx).
 export const PRIMARY_COLOR = '#0d9488'
 export const BORDER_RADIUS = 10
+// Every modal is at least this wide on screens that fit it; antd shrinks them to the viewport on phones.
+export const MODAL_WIDTH = 600
 
 export const ANTD_THEME: ThemeConfig = {
     token: {
