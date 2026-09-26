@@ -60,6 +60,13 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-weight: 700;
     `,
 
+    // A line break only on phones, where the one-line title nearly fills the width.
+    phoneBreak: css`
+        @media (min-width: 768px) {
+            display: none;
+        }
+    `,
+
     gateText: css`
         margin: 0;
         color: ${token.colorTextSecondary};

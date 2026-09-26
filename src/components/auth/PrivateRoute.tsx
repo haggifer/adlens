@@ -28,7 +28,10 @@ export default function PrivateRoute({ children }: IProps) {
     if (!isSignedIn) {
         return (
             <div className={styles.gate}>
-                <h2 className={styles.gateTitle}>Sign in to access this page</h2>
+                <h2 className={styles.gateTitle}>
+                    Sign in
+                    <br className={styles.phoneBreak} /> to access this page
+                </h2>
                 <Button type="primary" size="large" onClick={() => setView('signin')}>
                     Sign In
                 </Button>
