@@ -1,10 +1,7 @@
 'use client'
 
-import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button } from 'antd'
-import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { useNavigationStore } from '@/contexts/stores/navigationStore'
+import BackButton from '@/components/utils/BackButton'
 import { useStyles } from './styles'
 
 interface IProps {
@@ -15,19 +12,12 @@ interface IProps {
 
 export default function LegalPage({ title, lastUpdated, children }: IProps) {
     const { styles } = useStyles()
-    const router = useRouter()
-    const hasNavigated = useNavigationStore((s) => s.hasNavigated)
-
-    // Opened directly (a new tab, an email link), there is no in-app page to return to, so go home instead.
-    const handleBack = () => (hasNavigated ? router.back() : router.push('/'))
 
     return (
         <section className={styles.page}>
             <div className={styles.column}>
                 <div className={styles.backBar}>
-                    <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-                        Back
-                    </Button>
+                    <BackButton fallbackHref="/" />
                 </div>
                 <article className={styles.document}>
                     <h1 className={styles.title}>{title}</h1>
