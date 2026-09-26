@@ -1,6 +1,6 @@
 'use client'
 
-import { DownOutlined, ThunderboltOutlined, UpOutlined } from '@ant-design/icons'
+import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -14,7 +14,7 @@ import {
     QUOTA_WINDOW_MS,
     type VideoMimeType,
 } from 'adlens-shared'
-import { Alert, Button, Input, Progress, Select } from 'antd'
+import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
@@ -36,19 +36,10 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     platforms: [],
     placements: [],
     markets: [],
-    audience: '',
-    brand: '',
 }
 
 const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput =>
     source.kind === 'sample' ? { ...DEFAULT_VALUES, ...source.sample.settings } : DEFAULT_VALUES
-
-// Empty optional fields are left out rather than sent as empty strings.
-const toPayload = (settings: AnalysisSettingsValues): AnalysisSettingsValues => ({
-    ...settings,
-    audience: settings.audience || undefined,
-    brand: settings.brand || undefined,
-})
 
 const getPlacementOptions = (platforms: Platform[]) =>
     platforms.map((platform) => ({
@@ -82,7 +73,6 @@ export default function AnalysisSettings({ source }: IProps) {
     const { isSignedIn, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const { quota } = useQuota()
-    const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
     const [stage, setStage] = useState<RunStage>(RunStage.Idle)
     const [uploadProgress, setUploadProgress] = useState(0)
     const { control, handleSubmit, getValues, setValue } = useForm<
@@ -103,7 +93,7 @@ export default function AnalysisSettings({ source }: IProps) {
             setUploadProgress(0)
 
             if (source.kind === 'sample') {
-                const job = await createSampleJob({ sampleId: source.sample.id, settings: toPayload(settings) })
+                const job = await createSampleJob({ sampleId: source.sample.id, settings })
 
                 setStage(RunStage.Starting)
                 await startAnalysis(job.id)
@@ -113,7 +103,7 @@ export default function AnalysisSettings({ source }: IProps) {
 
             const { file } = source
             const { job, upload } = await createJob({
-                settings: toPayload(settings),
+                settings,
                 file: { name: file.name, contentType: file.type as VideoMimeType, size: file.size },
             })
 
@@ -258,44 +248,6 @@ export default function AnalysisSettings({ source }: IProps) {
                         )}
                     />
                 </div>
-                <Button
-                    block
-                    htmlType="button"
-                    className={styles.advancedToggle}
-                    icon={isAdvancedOpen ? <UpOutlined /> : <DownOutlined />}
-                    onClick={() => setIsAdvancedOpen((open) => !open)}
-                >
-                    Advanced settings
-                </Button>
-                {isAdvancedOpen && (
-                    <>
-                        <div className={styles.field}>
-                            <label className={styles.fieldLabel}>Target audience</label>
-                            <Controller
-                                name="audience"
-                                control={control}
-                                render={({ field }) => (
-                                    <Input {...field} maxLength={500} placeholder="e.g. Gen-Z gamers in the US" />
-                                )}
-                            />
-                        </div>
-                        <div className={styles.field}>
-                            <label className={styles.fieldLabel}>Brand context</label>
-                            <Controller
-                                name="brand"
-                                control={control}
-                                render={({ field }) => (
-                                    <Input.TextArea
-                                        {...field}
-                                        maxLength={2000}
-                                        placeholder="Anything AdLens should know about the brand or product"
-                                        rows={3}
-                                    />
-                                )}
-                            />
-                        </div>
-                    </>
-                )}
             </div>
             {renderQuota()}
             <Button

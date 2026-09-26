@@ -343,11 +343,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         padding-inline: 0.5rem;
     `,
 
-    advancedToggle: css`
-        margin-top: 0.15rem;
-        flex-shrink: 0;
-    `,
-
     runButton: css`
         flex-shrink: 0;
         height: auto;
