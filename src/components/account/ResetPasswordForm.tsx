@@ -7,7 +7,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { resetPassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import { newPasswordFieldsSchema } from '@/auth/schemas'
+import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import Field from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
@@ -84,7 +84,7 @@ export default function ResetPasswordForm({ token }: IProps) {
                 <h1 className={styles.sectionTitle}>Choose a new password</h1>
                 {formError && <Alert className="mt-3" type="error" showIcon title={formError} />}
                 <div className="mt-3">
-                    <Field label="New password" error={errors.password?.message}>
+                    <Field label="New password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
                         <Controller
                             name="password"
                             control={control}

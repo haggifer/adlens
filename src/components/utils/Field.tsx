@@ -7,11 +7,13 @@ interface IProps {
     label: string
     // The id of the input the label names, so the label is announced with it and clicking it focuses the input.
     htmlFor?: string
+    // A requirement shown under the input until an error replaces it.
+    hint?: string
     error?: string
     children: ReactNode
 }
 
-export default function Field({ label, htmlFor, error, children }: IProps) {
+export default function Field({ label, htmlFor, hint, error, children }: IProps) {
     const { styles } = useStyles()
 
     return (
@@ -20,7 +22,7 @@ export default function Field({ label, htmlFor, error, children }: IProps) {
                 {label}
             </label>
             {children}
-            {error && <p className={styles.fieldError}>{error}</p>}
+            {error ? <p className={styles.fieldError}>{error}</p> : hint && <p className={styles.fieldHint}>{hint}</p>}
         </div>
     )
 }

@@ -8,7 +8,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { EMAIL_VERIFIED_URL, signUp } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import { newPasswordFieldsSchema } from '@/auth/schemas'
+import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import Field from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
@@ -99,7 +99,7 @@ export default function SignUpForm() {
                     )}
                 />
             </Field>
-            <Field label="Password" error={errors.password?.message}>
+            <Field label="Password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
                 <Controller
                     name="password"
                     control={control}

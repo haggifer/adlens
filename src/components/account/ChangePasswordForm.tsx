@@ -6,7 +6,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { changePassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import { newPasswordFieldsSchema } from '@/auth/schemas'
+import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import Field from '@/components/utils/Field'
 import { useStyles } from './styles'
 
@@ -63,7 +63,7 @@ export default function ChangePasswordForm() {
                         )}
                     />
                 </Field>
-                <Field label="New password" error={errors.password?.message}>
+                <Field label="New password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
                     <Controller
                         name="password"
                         control={control}

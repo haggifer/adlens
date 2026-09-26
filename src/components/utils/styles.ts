@@ -14,6 +14,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-weight: 500;
     `,
 
+    fieldHint: css`
+        margin: 0;
+        color: ${token.colorTextSecondary};
+        font-size: 0.8rem;
+    `,
+
     fieldError: css`
         margin: 0;
         color: ${token.colorError};
