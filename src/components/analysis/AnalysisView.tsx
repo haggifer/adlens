@@ -6,6 +6,7 @@ import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
+import BackButton from '@/components/utils/BackButton'
 import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import useJob from '@/hooks/useJob'
 import useJobVideo from '@/hooks/useJobVideo'
@@ -87,6 +88,9 @@ export default function AnalysisView({ jobId }: IProps) {
 
     return (
         <div className={styles.page}>
+            <div>
+                <BackButton fallbackHref="/history" />
+            </div>
             <header className={styles.pageHeader}>
                 <div className="d-flex flex-column gap-1">
                     <div className="d-flex align-items-center gap-2">
@@ -97,10 +101,7 @@ export default function AnalysisView({ jobId }: IProps) {
                         {platforms || 'General rules'} · {new Date(job.createdAt).toLocaleString()}
                     </p>
                 </div>
-                <div className="d-flex gap-2">
-                    <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
-                    <Button onClick={() => router.push('/')}>New analysis</Button>
-                </div>
+                <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
             </header>
             <div className={styles.workspace}>
                 <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
