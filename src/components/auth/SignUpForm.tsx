@@ -135,7 +135,7 @@ export default function SignUpForm() {
             </Button>
             <div className={styles.switcher}>
                 <span>Already have an account?</span>
-                <Button type="link" onClick={() => setView('signin')}>
+                <Button className={styles.switchAction} onClick={() => setView('signin')}>
                     Sign in
                 </Button>
             </div>
