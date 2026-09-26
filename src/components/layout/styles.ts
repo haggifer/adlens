@@ -85,6 +85,10 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         align-items: center;
         gap: 0.75rem;
+
+        @media (max-width: 767.98px) {
+            gap: 1rem;
+        }
     `,
 
     headerGroup: css`
