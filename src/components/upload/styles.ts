@@ -27,6 +27,10 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         @media (max-height: 840px) {
             padding: 1rem 0;
         }
+
+        @media (max-width: 767.98px) {
+            padding: 2rem 0 1rem;
+        }
     `,
 
     hero: css`

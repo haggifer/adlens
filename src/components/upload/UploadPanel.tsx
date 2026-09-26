@@ -63,7 +63,7 @@ const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
 
 export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
     const theme = useTheme()
-    const { styles } = useStyles()
+    const { styles, cx } = useStyles()
     const { notification } = App.useApp()
     const [isDragging, setIsDragging] = useState(false)
 
@@ -234,12 +234,9 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 </p>
                 <p className={styles.title}>
                     <span className={styles.pointerOnly}>Drop your video ad here</span>
-                    <span className={styles.touchOnly}>Choose your video ad</span>
+                    <span className={styles.touchOnly}>Tap to upload your video ad</span>
                 </p>
-                <p className={styles.hint}>
-                    <span className={styles.pointerOnly}>Click or drag to upload</span>
-                    <span className={styles.touchOnly}>Tap to pick a video from your device</span>
-                </p>
+                <p className={cx(styles.hint, styles.pointerOnly)}>Click or drag to upload</p>
                 <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
                     {/* Inside the Dragger: clicks and keys must not reach it and open the file dialog. */}
                     <Button
