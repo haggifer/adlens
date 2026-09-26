@@ -24,9 +24,11 @@ export default function LegalPage({ title, lastUpdated, children }: IProps) {
     return (
         <section className={styles.page}>
             <div className={styles.column}>
-                <Button icon={<ArrowLeftOutlined />} className={styles.backButton} onClick={handleBack}>
-                    Back
-                </Button>
+                <div className={styles.backBar}>
+                    <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+                        Back
+                    </Button>
+                </div>
                 <article className={styles.document}>
                     <h1 className={styles.title}>{title}</h1>
                     <p className={styles.updated}>Last updated {lastUpdated}</p>

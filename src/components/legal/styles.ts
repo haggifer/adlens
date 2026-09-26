@@ -5,27 +5,29 @@ export const useStyles = createStyles(({ token, css }) => ({
     page: css`
         display: flex;
         justify-content: center;
-        padding: 1.5rem 0 4rem;
+        padding: 0 0 4rem;
 
         @media (max-width: 575.98px) {
-            padding: 1rem 0 3rem;
+            padding-bottom: 3rem;
         }
     `,
 
     column: css`
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
         width: min(48rem, 100%);
     `,
 
-    // Stays reachable under the sticky header however far the document is scrolled.
-    backButton: css`
+    /* Pinned under the header. Its padding, not the page's, spaces it from the header, so it already sits at its
+       sticky offset and doesn't jump when scrolling starts. Frosted like the header so text scrolls under it. */
+    backBar: css`
         position: sticky;
-        top: calc(var(--header-h) + 0.75rem);
+        top: var(--header-h);
         z-index: 5;
-        box-shadow: ${token.boxShadowTertiary};
+        padding: 0.75rem 0;
+        background: color-mix(in srgb, ${token.colorBgLayout} 72%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     `,
 
     document: css`
@@ -47,7 +49,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         h2,
         h3 {
             /* Clears the header and the sticky Back button when jumping to a section. */
-            scroll-margin-top: calc(var(--header-h) + 4rem);
+            scroll-margin-top: calc(var(--header-h) + 4.5rem);
             font-family: ${HEADING_FONT_STACK};
             color: ${token.colorTextHeading};
             letter-spacing: -0.01em;
