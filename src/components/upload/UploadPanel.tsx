@@ -265,7 +265,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                         or
                     </Divider>
                     <span>No ad at hand?</span>
-                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                    <Button icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
                         Try a sample ad
                     </Button>
                 </div>

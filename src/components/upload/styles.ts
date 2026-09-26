@@ -182,18 +182,18 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
     reqTag: css`
         margin-top: 0.7rem;
-        padding: 0.2rem 0.5rem;
+        padding: 0.45rem 0.8rem;
         color: ${token.colorTextTertiary};
         background: transparent;
         border-color: currentColor;
-        font-size: 0.78rem;
+        font-size: 0.85rem;
         line-height: 1;
         cursor: help;
         transition: color 0.2s ease;
 
         .anticon {
             margin: 0;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
     `,
 

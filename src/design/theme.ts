@@ -13,6 +13,10 @@ export const ANTD_THEME: ThemeConfig = {
         colorLink: PRIMARY_COLOR,
         borderRadius: BORDER_RADIUS,
         fontFamily: BODY_FONT_STACK,
+        // A step up from antd's 32/24/40 so buttons, fields and menu items are easier to hit, on touch in particular.
+        controlHeight: 36,
+        controlHeightSM: 28,
+        controlHeightLG: 44,
     },
     components: {
         // antd buttons carry a default drop shadow via these component tokens; turned off app-wide for a flat look.
@@ -20,6 +24,13 @@ export const ANTD_THEME: ThemeConfig = {
             primaryShadow: 'none',
             defaultShadow: 'none',
             dangerShadow: 'none',
+        },
+        // Scaled with the control heights above (antd's defaults: 22px track, 18px handle).
+        Switch: {
+            trackHeight: 26,
+            trackMinWidth: 50,
+            handleSize: 22,
+            innerMaxMargin: 28,
         },
     },
 }

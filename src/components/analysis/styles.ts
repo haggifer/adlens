@@ -179,13 +179,13 @@ export const useStyles = createStyles(({ token, css }) => ({
         align-items: center;
         gap: 0.75rem;
         color: ${token.colorTextSecondary};
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     `,
 
     timeButton: css`
         height: auto;
-        padding: 0;
-        font-size: 0.8rem;
+        padding: 0.25rem 0;
+        font-size: 0.875rem;
         font-variant-numeric: tabular-nums;
 
         @media (pointer: coarse) {
@@ -195,7 +195,7 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     sourceLink: css`
         color: ${token.colorPrimary};
-        font-size: 0.8rem;
+        font-size: 0.875rem;
 
         @media (pointer: coarse) {
             display: inline-flex;
