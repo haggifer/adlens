@@ -13,8 +13,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
+import { formatQuotaLeft } from '@/components/layout/quota-label'
 import ThemeSwitch from '@/components/layout/ThemeSwitch'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import useQuota from '@/hooks/useQuota'
 import useSignOut from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
@@ -39,6 +41,7 @@ export default function MobileMenu() {
     const { isSignedIn, user } = useAuth()
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
+    const { quota } = useQuota()
     const [isOpen, setIsOpen] = useState(false)
 
     const close = () => setIsOpen(false)
@@ -74,6 +77,7 @@ export default function MobileMenu() {
                     <div className={styles.drawerUser}>
                         <span className={styles.drawerUserName}>{user.name}</span>
                         <span className={styles.drawerUserEmail}>{user.email}</span>
+                        {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
                     </div>
                 )}
                 <nav className={styles.drawerNav} aria-label="Main">

@@ -7,7 +7,9 @@ import { useAuth } from '@/auth/AuthContext'
 import Logo from '@/components/brand/Logo'
 import AccountMenu from '@/components/layout/AccountMenu'
 import MobileMenu from '@/components/layout/MobileMenu'
+import { formatQuotaLeft } from '@/components/layout/quota-label'
 import ThemeSwitch from '@/components/layout/ThemeSwitch'
+import useQuota from '@/hooks/useQuota'
 import { useStyles } from './styles'
 
 const NAV_LINKS = [
@@ -19,6 +21,7 @@ export default function Header() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
     const { isSignedIn } = useAuth()
+    const { quota } = useQuota()
 
     return (
         <header className={styles.header}>
@@ -46,6 +49,12 @@ export default function Header() {
                 <div className={styles.headerRight}>
                     {/* Below the md breakpoint the account and theme controls move into the menu drawer; the Sign In
                         button stays in the bar because it is the one action a signed-out visitor needs. */}
+                    {isSignedIn && quota && (
+                        <span className={cx(styles.headerGroup, styles.desktopOnly)}>
+                            <span className={styles.quotaLabel}>{formatQuotaLeft(quota)}</span>
+                            <Divider orientation="vertical" className={styles.headerDivider} />
+                        </span>
+                    )}
                     <span className={cx(styles.headerGroup, isSignedIn && styles.desktopOnly)}>
                         <AccountMenu />
                     </span>

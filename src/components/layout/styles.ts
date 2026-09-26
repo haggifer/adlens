@@ -154,6 +154,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-size: 0.875rem;
     `,
 
+    drawerUserQuota: css`
+        margin-top: 0.35rem;
+        color: ${token.colorTextSecondary};
+        font-size: 0.875rem;
+    `,
+
     drawerNav: css`
         display: flex;
         flex-direction: column;
@@ -205,6 +211,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         border-bottom: 1px solid ${token.colorBorderSecondary};
         color: ${token.colorText};
         font-size: 1rem;
+    `,
+
+    quotaLabel: css`
+        color: ${token.colorTextSecondary};
+        font-size: 0.875rem;
+        white-space: nowrap;
     `,
 
     headerDivider: css`
