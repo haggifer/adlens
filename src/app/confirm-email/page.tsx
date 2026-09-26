@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ConfirmEmail from '@/components/account/ConfirmEmail'
 
 export const metadata: Metadata = {
-    title: 'Confirm your email',
+    title: 'Confirming your email',
     robots: { index: false, follow: false },
 }
 
@@ -10,7 +10,7 @@ interface IProps {
     searchParams: Promise<{ token?: string }>
 }
 
-// The confirmation email links here with `?token=`; the page confirms on a button press.
+// The confirmation email links here with `?token=`; the page confirms it, then sends the user home.
 export default async function ConfirmEmailPage({ searchParams }: IProps) {
     const { token } = await searchParams
 

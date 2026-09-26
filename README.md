@@ -59,7 +59,7 @@ Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set the
 | `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video |
 | `/history`        | Every analysis, newest first                                             |
 | `/account`        | Change password, sign out other devices, delete the account              |
-| `/confirm-email`  | Landing page of the email confirmation link; confirms on a button press  |
+| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home    |
 | `/reset-password` | Landing page of the password-reset link                                  |
 | `/terms`          | Terms of Use                                                             |
 | `/privacy`        | Privacy Policy                                                           |
