@@ -110,6 +110,12 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
             flex: none;
             width: 100%;
             justify-content: center;
+
+            /* Stacked, "What you'll get" reads first, so visitors know what the upload is for; once a video is
+               picked, the settings follow the video instead. */
+            &[data-intro='true'] {
+                order: -1;
+            }
         }
     `,
 
@@ -133,10 +139,17 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         box-shadow: ${buildFrameShadow(token.colorText, isDarkMode)};
         transition: box-shadow 0.2s ease;
 
-        /* Columns don't stretch when stacked, so size the square by width on mobile instead of height. */
+        /* Stacked, the drop zone is only as tall as its content plus even padding: a full-width square would be
+           mostly empty space pushing everything below it off screen. */
         @media (max-width: 991.98px) {
             height: auto;
             width: min(var(--col-w), 100%);
+            aspect-ratio: auto;
+
+            /* antd pads the drag area through a three-class selector, so this needs as many to win. */
+            .ant-upload.ant-upload-drag .ant-upload-btn {
+                padding: 2rem 1rem;
+            }
         }
 
         &[data-dragging='true'] {
