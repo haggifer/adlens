@@ -241,15 +241,16 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                     <span className={styles.touchOnly}>Tap to pick a video from your device</span>
                 </p>
                 <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
-                    <Tag
-                        variant="outlined"
+                    {/* Inside the Dragger: clicks and keys must not reach it and open the file dialog. */}
+                    <Button
                         icon={<InfoCircleOutlined />}
-                        className={styles.reqTag}
-                        aria-label={`Accepted files: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
+                        className={styles.reqButton}
+                        aria-label={`Requirements: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
                         onClick={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => event.stopPropagation()}
                     >
                         Requirements
-                    </Tag>
+                    </Button>
                 </Tooltip>
                 {/* Inside the Dragger, so clicks and keys must not reach it and open the file dialog. */}
                 <div

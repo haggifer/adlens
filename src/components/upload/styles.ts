@@ -196,21 +196,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         height: 100%;
     `,
 
-    reqTag: css`
+    reqButton: css`
         margin-top: 0.7rem;
-        padding: 0.45rem 0.8rem;
-        color: ${token.colorTextTertiary};
-        background: transparent;
-        border-color: currentColor;
-        font-size: 0.85rem;
-        line-height: 1;
-        cursor: help;
-        transition: color 0.2s ease;
-
-        .anticon {
-            margin: 0;
-            font-size: 1rem;
-        }
     `,
 
     /* Touch screens can't drag files in, so the drop zone's wording switches to tapping there. */
