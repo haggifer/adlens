@@ -77,7 +77,7 @@ export default function SignInForm() {
                 />
             </Field>
             <div className={styles.forgot}>
-                <Button type="link" onClick={() => setView('forgot')}>
+                <Button type="link" size="small" onClick={() => setView('forgot')}>
                     Forgot password?
                 </Button>
             </div>

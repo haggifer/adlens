@@ -240,7 +240,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 0.25rem 0.75rem;
         min-height: var(--footer-h);
         padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+
+        @media (max-width: 767.98px) {
+            font-size: 0.9rem;
+        }
 
         @media (max-width: 575.98px) {
             padding: 0.75rem 1rem;

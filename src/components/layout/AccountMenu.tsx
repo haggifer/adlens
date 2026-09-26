@@ -66,7 +66,7 @@ export default function AccountMenu() {
             menu={{ items, onClick: handleClick }}
         >
             <button type="button" className={styles.accountAvatar} aria-label="Account menu">
-                <Avatar size={36} icon={<UserOutlined />} />
+                <Avatar size={32} icon={<UserOutlined />} />
             </button>
         </Dropdown>
     )

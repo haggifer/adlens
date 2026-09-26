@@ -55,6 +55,7 @@ export default function ResultsPanel({ analysis, onSeek }: IProps) {
                     {time && (
                         <Button
                             type="link"
+                            size="small"
                             className={styles.timeButton}
                             icon={<PlayCircleOutlined />}
                             onClick={() => onSeek?.(time.startS)}
@@ -134,6 +135,7 @@ export default function ResultsPanel({ analysis, onSeek }: IProps) {
                 )}
                 <Collapse
                     className="mt-2"
+                    size="small"
                     items={[
                         {
                             key: 'transcript',

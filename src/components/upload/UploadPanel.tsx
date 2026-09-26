@@ -240,6 +240,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
                     {/* Inside the Dragger: clicks and keys must not reach it and open the file dialog. */}
                     <Button
+                        size="small"
                         icon={<InfoCircleOutlined />}
                         className={styles.reqButton}
                         aria-label={`Requirements: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
@@ -263,7 +264,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                         or
                     </Divider>
                     <span>No ad at hand?</span>
-                    <Button icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
                         Try a sample ad
                     </Button>
                 </div>

@@ -35,3 +35,14 @@ a {
         font-size: 16px;
     }
 }
+
+/* Phones get bigger controls to avoid mis-taps; desktop keeps antd's 32/24/40px. antd reads these sizes from CSS
+   variables on its css-var classes, and :root raises the override above antd's single-class rules. Small controls
+   match the default ones here, so a compact desktop button is still a comfortable tap target. */
+@media (max-width: 767.98px) {
+    :root [class*='css-var-'] {
+        --ant-control-height: 36px;
+        --ant-control-height-sm: 36px;
+        --ant-control-height-lg: 44px;
+    }
+}
