@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -179,7 +179,7 @@ export function AnalysisSettings({ source }: IProps) {
         if (!hasQuotaLeft && quota.nextFreeAt) {
             return (
                 <p className={styles.hint}>
-                    You&apos;ve used all {quota.limit} analyses for the last 7 days. The next one is available on{' '}
+                    You’ve used all {quota.limit} analyses for the last 7 days. The next one is available on{' '}
                     {formatNextFree(quota.nextFreeAt)}.
                 </p>
             )
