@@ -85,13 +85,13 @@ export function SignInForm() {
             <Button type="primary" htmlType="submit" size="large" block loading={isSubmitting}>
                 Sign in
             </Button>
-            <SocialButtons />
             <div className={styles.switcher}>
                 <span>Don’t have an account?</span>
                 <Button className={styles.switchAction} onClick={() => setView('signup')}>
                     Sign up
                 </Button>
             </div>
+            <SocialButtons />
         </form>
     )
 }

@@ -131,13 +131,13 @@ export function SignUpForm() {
             <Button type="primary" htmlType="submit" size="large" block loading={isSubmitting}>
                 Create account
             </Button>
-            <SocialButtons />
             <div className={styles.switcher}>
                 <span>Already have an account?</span>
                 <Button className={styles.switchAction} onClick={() => setView('signin')}>
                     Sign in
                 </Button>
             </div>
+            <SocialButtons />
         </form>
     )
 }
