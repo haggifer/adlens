@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Mirrors the API's Better Auth `minPasswordLength`.
 export const MIN_PASSWORD_LENGTH = 8
 
-// Shown under every new-password field before it is filled, and as the error when a password is too short.
+// Doubles as the too-short error, so the hint and the error always agree.
 export const NEW_PASSWORD_HINT = `At least ${MIN_PASSWORD_LENGTH} characters`
 
 export const newPasswordSchema = z.string().min(MIN_PASSWORD_LENGTH, NEW_PASSWORD_HINT)

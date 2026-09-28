@@ -241,8 +241,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         font-size: 0.85rem;
     `,
 
-    /* Vidstack forces the inner <video> to 16/9, shrinking non-16/9 clips; the override below makes the
-       media fill the player instead. --stage-h mirrors the flex column height (set by AdWorkspace). */
+    /* The same Vidstack 16/9 override as the analysis player. --stage-h mirrors the flex column height (set by
+       AdWorkspace). */
     player: css`
         height: var(--stage-h, 60vh);
         max-height: var(--stage-h, 60vh);

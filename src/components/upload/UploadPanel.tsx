@@ -6,7 +6,7 @@ import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/l
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES, type VideoMimeType } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
-import { DragEvent, useMemo, useState } from 'react'
+import { DragEvent, SyntheticEvent, useMemo, useState } from 'react'
 import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
@@ -43,6 +43,9 @@ export interface VideoMetadata {
 export interface AcceptedVideo extends VideoMetadata {
     contentType: VideoMimeType
 }
+
+// For the controls inside the Dragger: their clicks and keys must not reach it and open the file dialog.
+const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()
 
 // Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
 // the browser can't decode) surface as an error so a doomed upload is stopped client-side.
@@ -241,24 +244,18 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 </p>
                 <p className={cx(styles.hint, styles.pointerOnly)}>Click or drag to upload</p>
                 <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
-                    {/* Inside the Dragger: clicks and keys must not reach it and open the file dialog. */}
                     <Button
                         size="small"
                         icon={<InfoCircleOutlined />}
                         className={styles.reqButton}
                         aria-label={`Requirements: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
-                        onClick={(event) => event.stopPropagation()}
-                        onKeyDown={(event) => event.stopPropagation()}
+                        onClick={stopAtControl}
+                        onKeyDown={stopAtControl}
                     >
                         Requirements
                     </Button>
                 </Tooltip>
-                {/* Inside the Dragger, so clicks and keys must not reach it and open the file dialog. */}
-                <div
-                    className={styles.samplesPrompt}
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                >
+                <div className={styles.samplesPrompt} onClick={stopAtControl} onKeyDown={stopAtControl}>
                     <Divider
                         plain
                         className={styles.samplesDivider}
