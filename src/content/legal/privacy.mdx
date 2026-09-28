@@ -67,6 +67,8 @@ We collect personal information that you voluntarily provide to us when you regi
 
 **Videos You Upload.** When you analyze a video ad, we store the video and the settings you chose, and we process them to produce your analysis. A video may show or contain the voices of people who appear in it. You can delete an analysis and its video at any time.
 
+**Using AdLens without an account.** If you run an analysis without signing up, we create an anonymous account for your browser: a random identifier, kept in the session cookie, with no name or email address. Your analyses and your weekly allowance are stored under it. If you later sign up or sign in in the same browser, we move them to your account and delete the anonymous one.
+
 **Sensitive Information.** We do not process sensitive information.
 
 All personal information that you provide to us must be true, complete, and accurate, and you must notify us of any changes to such personal information.
@@ -82,6 +84,7 @@ Like many businesses, we also collect information through cookies and similar te
 The information we collect includes:
 
 - _Log and Usage Data._ Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files. Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called "crash dumps"), and hardware settings).
+- _Abuse-prevention data._ To keep our free analyses from being abused, we count the analyses started from each network: your IP address, or for IPv6 addresses the network prefix (/64) they share. We store only a keyed hash of that network, which can't be turned back into the address, with the times of those analyses, and delete it 7 days after the last one. We never store or log the IP address itself for this purpose.
 
 ## 2. How do we process your information?
 
@@ -101,6 +104,7 @@ The information we collect includes:
 The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:
 
 - **Consent.** We may process your information if you have given us permission (i.e., consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Learn more about [withdrawing your consent](#withdrawing-your-consent).
+- **Legitimate Interests.** We may process your information when it is reasonably necessary to achieve our legitimate business interests and those interests do not outweigh your interests and fundamental rights and freedoms, such as limiting how many free analyses one network can run and checking that a visitor is not a bot, to protect the Services and their costs from abuse.
 - **Legal Obligations.** We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
 - **Vital Interests.** We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
 
@@ -134,6 +138,7 @@ We may need to share your personal information in the following situations:
     - MongoDB Atlas (Belgium): our database
     - Vercel: hosting of our website
     - Resend (Ireland): sending account emails, such as email confirmation and password reset, and delivering the messages you send through our Contact form
+    - Cloudflare: the Turnstile check on the analysis form, which tells people from bots. To do so, Cloudflare processes your IP address and signals from your browser under its [Turnstile Privacy Addendum](https://www.cloudflare.com/turnstile-privacy-policy/).
 
     Some of these providers may process your information outside your country, including in the United States.
 
@@ -145,8 +150,10 @@ We may need to share your personal information in the following situations:
 
 We use cookies only to keep you signed in and to remember the color theme you choose. We do not use analytics or advertising cookies, and we do not allow third parties to place tracking technologies on our Services. We use the following cookies:
 
-- **better-auth.session_token** (on our live site, **\_\_Secure-better-auth.session_token**): keeps you signed in. It is set when you sign in and removed when you sign out; otherwise it expires after 7 days without use.
+- **better-auth.session_token** (on our live site, **\_\_Secure-better-auth.session_token**): keeps you signed in. It is set when you sign in, or when you start your first analysis without an account, and removed when you sign out; otherwise it expires after 7 days without use.
 - **adlens_scheme**: remembers whether you chose the light or dark theme. It is set only when you switch the theme, and expires after one year.
+
+The Turnstile check runs in a frame served by Cloudflare. Anything it keeps in your browser belongs to Cloudflare and is used only to tell people from bots, as its Turnstile Privacy Addendum describes.
 
 Because these cookies are strictly necessary or only store a choice you made, we do not ask for your consent to them. You can delete or block cookies in your browser settings, but if you block the session cookie you will not be able to sign in.
 
@@ -185,6 +192,8 @@ We do not store the access or refresh tokens the provider issues, we do not acce
 **_In Short:_** _We keep your information for as long as necessary to fulfill the purposes outlined in this Privacy Notice unless otherwise required by law._
 
 We will only keep your personal information for as long as it is necessary for the purposes set out in this Privacy Notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). No purpose in this notice will require us keeping your personal information for longer than the period of time in which users have an account with us.
+
+The keyed hash of your network used for abuse limits is deleted 7 days after the last analysis started from it. An anonymous account and its analyses are kept until you sign up or sign in in the same browser, which moves them to your account; you can ask us to delete them at any time (see section 17).
 
 When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information, or, if this is not possible (for example, because your personal information has been stored in backup archives), then we will securely store your personal information and isolate it from any further processing until deletion is possible.
 

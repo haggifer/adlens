@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
     return (
-        <LegalPage title="Privacy Policy" lastUpdated="September 28, 2026">
+        <LegalPage title="Privacy Policy" lastUpdated="September 29, 2026">
             <Privacy />
         </LegalPage>
     )
