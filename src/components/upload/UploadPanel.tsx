@@ -63,7 +63,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
 
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
-    const acceptFile = async (file: File): Promise<AcceptedVideo | null> => {
+    const verifyFile = async (file: File): Promise<AcceptedVideo | null> => {
         const contentType = toVideoMimeType(file.type)
 
         if (!contentType) {
@@ -103,7 +103,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     }
 
     const selectIfAccepted = async (file: File) => {
-        const accepted = await acceptFile(file)
+        const accepted = await verifyFile(file)
 
         if (accepted) {
             onSelect(file, accepted)
