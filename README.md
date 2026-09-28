@@ -16,7 +16,7 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
   cache
-- **Zustand** for UI state (the auth modal)
+- **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
 - **react-hook-form + zod**; the analysis settings form validates with the shared `analysisSettingsSchema`
 - Direct-to-GCS uploads via V4 signed URLs, with progress
 - **Vidstack** player for the uploaded and replayed video
