@@ -5,13 +5,24 @@ import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { revokeOtherSessions } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
+import { useLinkedAccounts } from '@/hooks/useLinkedAccounts'
+import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { ChangePasswordForm } from './ChangePasswordForm'
 import { DeleteAccountForm } from './DeleteAccountForm'
+import { SetPasswordSection } from './SetPasswordSection'
 import { useStyles } from './styles'
+
+const PASSWORD_PROVIDER = 'credential'
+
+const METHOD_LABELS: Record<string, string> = { [PASSWORD_PROVIDER]: 'Email and password', ...SOCIAL_PROVIDER_LABELS }
+
+const formatMethods = (providers: string[]) =>
+    providers.map((provider) => METHOD_LABELS[provider] ?? provider).join(', ')
 
 export function AccountSettings() {
     const { styles } = useStyles()
     const { user } = useAuth()
+    const { providers } = useLinkedAccounts()
     const { notification } = App.useApp()
     const [isRevoking, setIsRevoking] = useState(false)
 
@@ -39,7 +50,15 @@ export function AccountSettings() {
                         {user?.name} · {user?.email}
                     </p>
                 </div>
-                <ChangePasswordForm />
+                {providers && (
+                    <>
+                        <div className={styles.section}>
+                            <h2 className={styles.sectionTitle}>Sign-in methods</h2>
+                            <p className={styles.sectionText}>{formatMethods(providers)}</p>
+                        </div>
+                        {providers.includes(PASSWORD_PROVIDER) ? <ChangePasswordForm /> : <SetPasswordSection />}
+                    </>
+                )}
                 <div className={styles.section}>
                     <h2 className={styles.sectionTitle}>Sessions</h2>
                     <p className={styles.sectionText}>
@@ -51,7 +70,7 @@ export function AccountSettings() {
                         </Button>
                     </div>
                 </div>
-                <DeleteAccountForm />
+                {providers && <DeleteAccountForm hasPassword={providers.includes(PASSWORD_PROVIDER)} />}
             </div>
         </section>
     )

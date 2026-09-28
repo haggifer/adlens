@@ -6,29 +6,61 @@ import { App, Button, Input } from 'antd'
 import { useRouter } from 'next/navigation'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useAuth } from '@/auth/AuthContext'
 import { authClient, deleteUser } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { Field } from '@/components/utils/Field'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useStyles } from './styles'
 
-const deleteAccountSchema = z.object({ password: z.string().min(1, 'Enter your password') })
+// Without a password, Better Auth deletes only from a recent sign-in and answers SESSION_EXPIRED otherwise.
+const SESSION_EXPIRED = 'SESSION_EXPIRED'
 
-type DeleteAccountValues = z.infer<typeof deleteAccountSchema>
+const PASSWORD_INPUT_ID = 'delete-account-password'
 
-export function DeleteAccountForm() {
+const withPasswordSchema = z.object({ password: z.string().min(1, 'Enter your password') })
+
+const withoutPasswordSchema = z.object({ password: z.string() })
+
+type DeleteAccountValues = z.infer<typeof withPasswordSchema>
+
+interface IProps {
+    hasPassword: boolean
+}
+
+export function DeleteAccountForm({ hasPassword }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
+    const { signOut } = useAuth()
+    const setView = useAuthModalStore((s) => s.setView)
     const { modal, notification } = App.useApp()
     const {
         control,
         handleSubmit,
         formState: { errors },
-    } = useForm<DeleteAccountValues>({ resolver: zodResolver(deleteAccountSchema), defaultValues: { password: '' } })
+    } = useForm<DeleteAccountValues>({
+        resolver: zodResolver(hasPassword ? withPasswordSchema : withoutPasswordSchema),
+        defaultValues: { password: '' },
+    })
+
+    const askToSignInAgain = async () => {
+        notification.info({
+            title: 'For your security, sign in again to delete your account.',
+            placement: 'bottomRight',
+        })
+        await signOut()
+        setView('signin')
+    }
 
     const deleteAccount = async ({ password }: DeleteAccountValues) => {
-        const error = await runAuthRequest(() => deleteUser({ password }))
+        const error = await runAuthRequest(() => deleteUser(hasPassword ? { password } : {}))
+
+        if (error?.code === SESSION_EXPIRED && !hasPassword) {
+            await askToSignInAgain()
+            return
+        }
 
         if (error) {
             notification.error({ title: describeError(error), placement: 'bottomRight' })
@@ -47,7 +79,7 @@ export function DeleteAccountForm() {
             title: 'Delete your account?',
             width: MODAL_WIDTH,
             content: 'Your analyses and uploaded videos will be deleted permanently. This can’t be undone.',
-            okText: 'Delete account',
+            okText: 'Delete my account',
             okButtonProps: { danger: true },
             onOk: () => deleteAccount(values),
         })
@@ -57,21 +89,25 @@ export function DeleteAccountForm() {
         <form className={cx(styles.section, styles.dangerSection)} onSubmit={handleSubmit(onSubmit)}>
             <h2 className={styles.sectionTitle}>Delete account</h2>
             <p className={styles.sectionText}>
-                Deletes your account, every analysis and every uploaded video. Enter your password to confirm.
+                Deletes your account, every analysis and every uploaded video.
+                {hasPassword && ' Enter your password to confirm.'}
             </p>
-            <Field label="Password" error={errors.password?.message}>
-                <Controller
-                    name="password"
-                    control={control}
-                    render={({ field }) => (
-                        <Input.Password
-                            {...field}
-                            autoComplete="current-password"
-                            status={errors.password ? 'error' : undefined}
-                        />
-                    )}
-                />
-            </Field>
+            {hasPassword && (
+                <Field label="Password" htmlFor={PASSWORD_INPUT_ID} error={errors.password?.message}>
+                    <Controller
+                        name="password"
+                        control={control}
+                        render={({ field }) => (
+                            <Input.Password
+                                {...field}
+                                id={PASSWORD_INPUT_ID}
+                                autoComplete="current-password"
+                                status={errors.password ? 'error' : undefined}
+                            />
+                        )}
+                    />
+                </Field>
+            )}
             <div>
                 <Button danger htmlType="submit">
                     Delete account

@@ -6,6 +6,7 @@ export const authClient = createAuthClient({ baseURL: config.apiBaseUrl, fetchOp
 export const {
     changePassword,
     deleteUser,
+    listAccounts,
     requestPasswordReset,
     resetPassword,
     revokeOtherSessions,
