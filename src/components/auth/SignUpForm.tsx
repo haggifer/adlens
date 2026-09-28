@@ -11,6 +11,7 @@ import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { SocialButtons } from './SocialButtons'
 import { useStyles } from './styles'
 
 const signUpSchema = z
@@ -66,6 +67,7 @@ export function SignUpForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
+            <SocialButtons />
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Name" error={errors.name?.message}>
                 <Controller

@@ -1,4 +1,5 @@
 import { JobStatus, Market, Placement, Platform, RulePlatform } from 'adlens-shared'
+import type { SocialProvider } from '@/auth/types'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
 
@@ -62,4 +63,9 @@ export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
     [JobStatus.Analyzing]: 'processing',
     [JobStatus.Analyzed]: 'success',
     [JobStatus.Error]: 'error',
+}
+
+export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
+    google: 'Google',
+    github: 'GitHub',
 }

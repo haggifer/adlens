@@ -9,6 +9,7 @@ import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { SocialButtons } from './SocialButtons'
 import { useStyles } from './styles'
 
 const signInSchema = z.object({
@@ -45,6 +46,7 @@ export function SignInForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
+            <SocialButtons />
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Email" error={errors.email?.message}>
                 <Controller

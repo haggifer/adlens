@@ -12,8 +12,9 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Ant Design 6** (`antd`, `antd-style`) with `@ant-design/nextjs-registry` for SSR; Bootstrap 5 utility classes
   for layout
-- **Better Auth** React client: email and password with email verification and password reset. The session is an
-  httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
+- **Better Auth** React client: email and password with email verification and password reset, plus Google and GitHub
+  sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`). The
+  session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
   cache
 - **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
