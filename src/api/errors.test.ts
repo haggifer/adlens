@@ -18,7 +18,7 @@ describe('toApiRequestError', () => {
         )
 
         expect(error.code).toBe(RequestErrorCode.QuotaExceeded)
-        expect(error.message).toBe("You've used all your analyses for this 7-day window.")
+        expect(error.message).toBe('You’ve used all your analyses for the last 7 days.')
     })
 
     it('treats a response without an API error body as an internal error', () => {

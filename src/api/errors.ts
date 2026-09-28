@@ -17,7 +17,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.AnalysisFailed]: "The analysis failed and your run wasn't counted. Please try again.",
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. Your run wasn't counted.",
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
-    [RequestErrorCode.QuotaExceeded]: "You've used all your analyses for this 7-day window.",
+    [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
     [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
