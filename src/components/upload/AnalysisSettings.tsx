@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,7 +11,6 @@ import {
     Placement,
     PLACEMENT_PLATFORM,
     Platform,
-    QUOTA_WINDOW_MS,
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
@@ -52,10 +51,12 @@ const renderMarketsSelect = ({ field }: { field: ControllerRenderProps<AnalysisS
     <Select {...field} mode="multiple" placeholder="Adds local advertising rules" options={MARKET_OPTIONS} allowClear />
 )
 
-const formatResetDate = (windowStart: string) =>
-    new Date(new Date(windowStart).getTime() + QUOTA_WINDOW_MS).toLocaleDateString(undefined, {
+const formatNextFree = (nextFreeAt: string) =>
+    new Date(nextFreeAt).toLocaleString(undefined, {
         month: 'short',
         day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
     })
 
 enum RunStage {
@@ -175,18 +176,18 @@ export function AnalysisSettings({ source }: IProps) {
             return <p className={styles.hint}>Unlimited analyses</p>
         }
 
-        if (!hasQuotaLeft && quota.windowStart) {
+        if (!hasQuotaLeft && quota.nextFreeAt) {
             return (
                 <p className={styles.hint}>
-                    You’ve used all {quota.limit} analyses for this week. More are available on{' '}
-                    {formatResetDate(quota.windowStart)}.
+                    You&apos;ve used all {quota.limit} analyses for the last 7 days. The next one is available on{' '}
+                    {formatNextFree(quota.nextFreeAt)}.
                 </p>
             )
         }
 
         return (
             <p className={styles.hint}>
-                {quota.used} of {quota.limit} analyses used this week
+                {quota.used} of {quota.limit} analyses used in the last 7 days
             </p>
         )
     }

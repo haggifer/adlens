@@ -23,7 +23,7 @@ const renderHeader = () =>
 describe('Header', () => {
     it('shows how many analyses are left next to the account menu', () => {
         isSignedIn = true
-        quota = { used: 1, limit: 3, windowStart: null }
+        quota = { used: 1, limit: 3, nextFreeAt: null }
         renderHeader()
 
         expect(screen.getByText('2/3 analyses left')).toBeInTheDocument()
