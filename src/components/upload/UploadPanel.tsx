@@ -3,25 +3,17 @@
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
-import { MAX_DURATION_S, MAX_UPLOAD_BYTES, type VideoMimeType } from 'adlens-shared'
+import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, SyntheticEvent, useMemo, useState } from 'react'
 import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
+import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
-
-export interface SelectedVideo {
-    url: string
-    type: string
-    width?: number
-    height?: number
-    // Set when the video is one of the published sample ads.
-    sampleTitle?: string
-}
 
 interface IProps {
     video: SelectedVideo | null
@@ -33,16 +25,6 @@ interface IProps {
 const { Dragger } = Upload
 
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1000 * 1000)
-
-export interface VideoMetadata {
-    durationS: number
-    width: number
-    height: number
-}
-
-export interface AcceptedVideo extends VideoMetadata {
-    contentType: VideoMimeType
-}
 
 // For the controls inside the Dragger: their clicks and keys must not reach it and open the file dialog.
 const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()

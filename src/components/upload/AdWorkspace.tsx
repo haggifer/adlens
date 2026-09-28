@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import AnalysisSettings from './AnalysisSettings'
 import SamplesModal from './SamplesModal'
 import { useStyles } from './styles'
-import type { AnalysisSource } from './types'
+import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
 import UploadIntro from './UploadIntro'
-import UploadPanel, { type AcceptedVideo } from './UploadPanel'
+import UploadPanel from './UploadPanel'
 
 const releasePreview = (source: AnalysisSource | null) => {
     if (source?.kind === 'file') {
@@ -56,7 +56,7 @@ export default function AdWorkspace() {
         setSource(null)
     }
 
-    const getVideo = () => {
+    const getVideo = (): SelectedVideo | null => {
         if (!source) {
             return null
         }
