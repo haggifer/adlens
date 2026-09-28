@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AccountPage() {
     return (
-        <PrivateRoute>
+        <PrivateRoute isAccountOnly>
             <AccountSettings />
         </PrivateRoute>
     )

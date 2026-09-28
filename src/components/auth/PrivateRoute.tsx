@@ -8,12 +8,14 @@ import { useStyles } from './styles'
 
 interface IProps {
     children: ReactNode
+    // A page that manages the account itself, which an anonymous session doesn't have.
+    isAccountOnly?: boolean
 }
 
 // Pair with `robots: { index: false }` on the page so a private route stays uncrawlable.
-export function PrivateRoute({ children }: IProps) {
+export function PrivateRoute({ children, isAccountOnly }: IProps) {
     const { styles } = useStyles()
-    const { isInitializing, isSignedIn } = useAuth()
+    const { isInitializing, isSignedIn, isAnonymous } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
 
     if (isInitializing) {
@@ -33,6 +35,23 @@ export function PrivateRoute({ children }: IProps) {
                     <br className={styles.phoneBreak} /> to access this page
                 </h2>
                 <Button type="primary" size="large" onClick={() => setView('signin')}>
+                    Sign In
+                </Button>
+            </div>
+        )
+    }
+
+    if (isAccountOnly && isAnonymous) {
+        return (
+            <div className={styles.gate}>
+                <h2 className={styles.gateTitle}>
+                    Sign up
+                    <br className={styles.phoneBreak} /> to manage your account
+                </h2>
+                <Button type="primary" size="large" onClick={() => setView('signup')}>
+                    Sign Up
+                </Button>
+                <Button size="large" onClick={() => setView('signin')}>
                     Sign In
                 </Button>
             </div>

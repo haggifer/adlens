@@ -20,7 +20,7 @@ enum AccountMenuKey {
 export function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
-    const { isSignedIn, user } = useAuth()
+    const { isSignedIn, isAnonymous, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
@@ -31,6 +31,17 @@ export function AccountMenu() {
             <Button type="primary" onClick={() => setView('signin')}>
                 Sign In
             </Button>
+        )
+    }
+
+    if (isAnonymous) {
+        return (
+            <span className="d-flex gap-2">
+                <Button onClick={() => setView('signin')}>Sign In</Button>
+                <Button type="primary" onClick={() => setView('signup')}>
+                    Sign up to keep your history
+                </Button>
+            </span>
         )
     }
 

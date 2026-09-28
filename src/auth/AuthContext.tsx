@@ -6,13 +6,16 @@ import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 
 export interface AuthUser {
     id: string
-    email: string
+    // null for an anonymous user: their address is Better Auth's placeholder and must never be shown.
+    email: string | null
     name: string
 }
 
 export interface AuthContextValue {
     isInitializing: boolean
+    // Any session, anonymous ones included, so their history, quota and live updates work unchanged.
     isSignedIn: boolean
+    isAnonymous: boolean
     user: AuthUser | null
     signOut: () => Promise<void>
 }
@@ -29,11 +32,13 @@ export function AuthProvider({ children }: IProps) {
 
     const value = useMemo<AuthContextValue>(() => {
         const user = session?.user
+        const isAnonymous = Boolean(user?.isAnonymous)
 
         return {
             isInitializing: isPending,
             isSignedIn: Boolean(user),
-            user: user ? { id: user.id, email: user.email, name: user.name } : null,
+            isAnonymous,
+            user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
             // Cached server data belongs to the signed-in user, so it goes with the session.
             signOut: async () => {
                 await signOutRequest()

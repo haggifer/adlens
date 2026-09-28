@@ -15,13 +15,15 @@ export function SetPasswordSection() {
     const [isSending, setIsSending] = useState(false)
 
     const handleSendLink = async () => {
-        if (!user) {
+        const email = user?.email
+
+        if (!email) {
             return
         }
 
         setIsSending(true)
 
-        const error = await runAuthRequest(() => requestPasswordReset({ email: user.email }))
+        const error = await runAuthRequest(() => requestPasswordReset({ email }))
 
         setIsSending(false)
 
@@ -30,7 +32,7 @@ export function SetPasswordSection() {
             return
         }
 
-        notification.success({ title: `Check your inbox at ${user.email}`, placement: 'bottomRight' })
+        notification.success({ title: `Check your inbox at ${email}`, placement: 'bottomRight' })
     }
 
     return (
