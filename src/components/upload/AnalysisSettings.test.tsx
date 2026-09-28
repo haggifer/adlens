@@ -115,6 +115,27 @@ describe('AnalysisSettings', () => {
         expect(signIn.anonymous).not.toHaveBeenCalled()
     })
 
+    it('doesn’t sign in anonymously when the session check itself fails, and lets the visitor retry', async () => {
+        auth = { user: null, isAnonymous: false }
+        jest.mocked(authClient.getSession).mockRejectedValueOnce(new Error('network down'))
+        renderSettings()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+        await userEvent.click(runButton())
+
+        await waitFor(() =>
+            expect(screen.getByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument(),
+        )
+        expect(signIn.anonymous).not.toHaveBeenCalled()
+        expect(createSampleJob).not.toHaveBeenCalled()
+        expect(runButton()).toBeDisabled()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+        await userEvent.click(runButton())
+
+        await waitFor(() => expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ sampleId: 's1' })))
+    })
+
     it('lets a member run without waiting for the check, and never signs them in again', async () => {
         auth = { user: { id: 'u1' }, isAnonymous: false }
         renderSettings()

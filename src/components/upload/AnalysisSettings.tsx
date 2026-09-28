@@ -66,17 +66,25 @@ const formatNextFree = (nextFreeAt: string) =>
 
 const TOO_MANY_REQUESTS = 429
 
-// A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
-// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie.
-const hasActiveSession = async (): Promise<boolean> => {
-    try {
-        const { data } = await authClient.getSession()
+type SessionCheck = 'active' | 'none' | 'unknown'
 
-        return Boolean(data?.user)
+// A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
+// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Better
+// Auth throws on a network failure instead of returning `{ error }` (the same fold `runAuthRequest` does), so a
+// thrown error and a returned one both count as "couldn't tell" — only a clean response with no user may proceed.
+const checkSession = async (): Promise<SessionCheck> => {
+    try {
+        const { data, error } = await authClient.getSession()
+
+        if (error) {
+            return 'unknown'
+        }
+
+        return data?.user ? 'active' : 'none'
     } catch (err) {
         console.error(err)
 
-        return false
+        return 'unknown'
     }
 }
 
@@ -146,8 +154,16 @@ export function AnalysisSettings({ source }: IProps) {
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
-            if (!user && !(await hasActiveSession())) {
-                await startAnonymousSession()
+            if (!user) {
+                const sessionCheck = await checkSession()
+
+                if (sessionCheck === 'unknown') {
+                    throw new ApiRequestError(RequestErrorCode.Unavailable)
+                }
+
+                if (sessionCheck === 'none') {
+                    await startAnonymousSession()
+                }
             }
 
             const token = challengeToken ?? undefined
