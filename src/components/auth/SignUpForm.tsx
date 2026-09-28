@@ -67,7 +67,6 @@ export function SignUpForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <SocialButtons />
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Name" error={errors.name?.message}>
                 <Controller
@@ -132,6 +131,7 @@ export function SignUpForm() {
             <Button type="primary" htmlType="submit" size="large" block loading={isSubmitting}>
                 Create account
             </Button>
+            <SocialButtons />
             <div className={styles.switcher}>
                 <span>Already have an account?</span>
                 <Button className={styles.switchAction} onClick={() => setView('signin')}>

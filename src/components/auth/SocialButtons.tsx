@@ -57,6 +57,7 @@ export function SocialButtons() {
 
     return (
         <>
+            <Divider plain>or</Divider>
             <div className="d-flex flex-column gap-2">
                 {PROVIDERS.map((provider) => (
                     <Button
@@ -72,7 +73,6 @@ export function SocialButtons() {
                     </Button>
                 ))}
             </div>
-            <Divider plain>or</Divider>
         </>
     )
 }
