@@ -7,7 +7,7 @@ import SamplesModal from './SamplesModal'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 import UploadIntro from './UploadIntro'
-import UploadPanel, { type VideoMetadata } from './UploadPanel'
+import UploadPanel, { type AcceptedVideo } from './UploadPanel'
 
 const releasePreview = (source: AnalysisSource | null) => {
     if (source?.kind === 'file') {
@@ -40,9 +40,9 @@ export default function AdWorkspace() {
         return () => observer.disconnect()
     }, [])
 
-    const selectFile = (file: File, { width, height }: VideoMetadata) => {
+    const selectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
         releasePreview(source)
-        setSource({ kind: 'file', file, url: URL.createObjectURL(file), width, height })
+        setSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
     }
 
     const selectSample = (sample: Sample) => {
@@ -67,7 +67,7 @@ export default function AdWorkspace() {
             return { url: previewUrl, type: contentType, sampleTitle: title, width: media.width, height: media.height }
         }
 
-        return { url: source.url, type: source.file.type, width: source.width, height: source.height }
+        return { url: source.url, type: source.contentType, width: source.width, height: source.height }
     }
 
     return (

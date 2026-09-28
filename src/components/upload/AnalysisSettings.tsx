@@ -12,7 +12,6 @@ import {
     PLACEMENT_PLATFORM,
     Platform,
     QUOTA_WINDOW_MS,
-    type VideoMimeType,
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
@@ -102,10 +101,10 @@ export default function AnalysisSettings({ source }: IProps) {
                 return job.id
             }
 
-            const { file } = source
+            const { file, contentType } = source
             const { job, upload } = await createJob({
                 settings,
-                file: { name: file.name, contentType: file.type as VideoMimeType, size: file.size },
+                file: { name: file.name, contentType, size: file.size },
             })
 
             setStage(RunStage.Uploading)

@@ -3,13 +3,14 @@
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
-import { MAX_DURATION_S, MAX_UPLOAD_BYTES, VideoMimeType } from 'adlens-shared'
+import { MAX_DURATION_S, MAX_UPLOAD_BYTES, type VideoMimeType } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, useMemo, useState } from 'react'
 import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
+import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
 
@@ -24,7 +25,7 @@ export interface SelectedVideo {
 
 interface IProps {
     video: SelectedVideo | null
-    onSelect: (file: File, metadata: VideoMetadata) => void
+    onSelect: (file: File, video: AcceptedVideo) => void
     onClear: () => void
     onBrowseSamples: () => void
 }
@@ -33,14 +34,14 @@ const { Dragger } = Upload
 
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1000 * 1000)
 
-const VIDEO_MIME_TYPES = Object.values(VideoMimeType) as string[]
-
-const ACCEPT = [...VIDEO_MIME_TYPES, '.mp4', '.mov', '.webm', '.mpeg', '.mpg', '.3gp', '.flv'].join(',')
-
 export interface VideoMetadata {
     durationS: number
     width: number
     height: number
+}
+
+export interface AcceptedVideo extends VideoMetadata {
+    contentType: VideoMimeType
 }
 
 // Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
@@ -72,8 +73,10 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
 
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
-    const acceptFile = async (file: File): Promise<VideoMetadata | null> => {
-        if (!VIDEO_MIME_TYPES.includes(file.type)) {
+    const acceptFile = async (file: File): Promise<AcceptedVideo | null> => {
+        const contentType = toVideoMimeType(file.type)
+
+        if (!contentType) {
             notification.error({
                 title: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
                 placement: 'bottomRight',
@@ -106,14 +109,14 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
             return null
         }
 
-        return metadata
+        return { ...metadata, contentType }
     }
 
     const selectIfAccepted = async (file: File) => {
-        const metadata = await acceptFile(file)
+        const accepted = await acceptFile(file)
 
-        if (metadata) {
-            onSelect(file, metadata)
+        if (accepted) {
+            onSelect(file, accepted)
         }
     }
 
@@ -188,7 +191,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 )}
                 <div data-overlay className={styles.overlay}>
                     <Upload
-                        accept={ACCEPT}
+                        accept={VIDEO_FILE_ACCEPT}
                         maxCount={1}
                         showUploadList={false}
                         beforeUpload={async (incoming) => {
@@ -221,7 +224,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
         >
             <Dragger
                 className={styles.dragger}
-                accept={ACCEPT}
+                accept={VIDEO_FILE_ACCEPT}
                 maxCount={1}
                 showUploadList={false}
                 beforeUpload={async (incoming) => {
