@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
-import { InitialScheme, SYSTEM_DARK_QUERY, writeSchemeCookie } from '@/design/scheme-cookie'
-import { ColorScheme } from '@/design/types'
+import { SYSTEM_DARK_QUERY, writeSchemeCookie } from '@/design/scheme-cookie'
+import { ColorScheme, InitialScheme } from '@/design/types'
 
 interface ThemeContextValue {
     scheme: ColorScheme

@@ -1,4 +1,4 @@
-import { ColorScheme } from '@/design/types'
+import { ColorScheme, InitialScheme } from '@/design/types'
 
 export const SCHEME_COOKIE = 'adlens_scheme'
 
@@ -10,12 +10,6 @@ export const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)'
 const FALLBACK_SCHEME: ColorScheme = 'light'
 
 const toScheme = (raw?: string): ColorScheme | null => (raw === 'light' || raw === 'dark' ? raw : null)
-
-export interface InitialScheme {
-    scheme: ColorScheme
-    // Whether the user picked the scheme; otherwise the app keeps following the system preference.
-    isStored: boolean
-}
 
 export const resolveInitialScheme = (cookieValue?: string, hintValue?: string): InitialScheme => {
     const stored = toScheme(cookieValue)
