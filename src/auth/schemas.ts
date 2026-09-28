@@ -1,7 +1,5 @@
+import { MIN_PASSWORD_LENGTH } from 'adlens-shared'
 import { z } from 'zod'
-
-// Mirrors the API's Better Auth `minPasswordLength`.
-export const MIN_PASSWORD_LENGTH = 8
 
 // Doubles as the too-short error, so the hint and the error always agree.
 export const NEW_PASSWORD_HINT = `At least ${MIN_PASSWORD_LENGTH} characters`
