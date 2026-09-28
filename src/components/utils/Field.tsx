@@ -13,7 +13,7 @@ interface IProps {
     children: ReactNode
 }
 
-export default function Field({ label, htmlFor, hint, error, children }: IProps) {
+export function Field({ label, htmlFor, hint, error, children }: IProps) {
     const { styles } = useStyles()
 
     return (

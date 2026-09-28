@@ -23,7 +23,7 @@ interface IProps {
     children: ReactNode
 }
 
-export default function AuthProvider({ children }: IProps) {
+export function AuthProvider({ children }: IProps) {
     const queryClient = useQueryClient()
     const { data: session, isPending } = useSession()
 

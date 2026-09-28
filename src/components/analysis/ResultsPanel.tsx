@@ -28,7 +28,7 @@ interface IProps {
     onSeek?: (seconds: number) => void
 }
 
-export default function ResultsPanel({ analysis, onSeek }: IProps) {
+export function ResultsPanel({ analysis, onSeek }: IProps) {
     const { styles } = useStyles()
     const { compliance, bestPractice, placementIssues, passedChecks } = splitResults(analysis)
     const { blockers, warnings } = countIssues(analysis)

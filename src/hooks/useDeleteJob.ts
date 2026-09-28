@@ -8,7 +8,7 @@ export interface UseDeleteJobResult {
     isDeleting: boolean
 }
 
-export default function useDeleteJob(): UseDeleteJobResult {
+export function useDeleteJob(): UseDeleteJobResult {
     const { user } = useAuth()
     const queryClient = useQueryClient()
     const userId = user?.id

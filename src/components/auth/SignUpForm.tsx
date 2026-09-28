@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { signUp } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -22,7 +22,7 @@ const signUpSchema = z
 
 type SignUpValues = z.infer<typeof signUpSchema>
 
-export default function SignUpForm() {
+export function SignUpForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
     const [formError, setFormError] = useState<string | null>(null)

@@ -14,10 +14,10 @@ import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
-import ThemeSwitch from '@/components/layout/ThemeSwitch'
+import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import useQuota from '@/hooks/useQuota'
-import useSignOut from '@/hooks/useSignOut'
+import { useQuota } from '@/hooks/useQuota'
+import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
 const DRAWER_WIDTH = 300
@@ -35,7 +35,7 @@ const MENU_LINKS: MenuLink[] = [
     { href: '/account', label: 'Account', icon: <SettingOutlined />, isPrivate: true },
 ]
 
-export default function MobileMenu() {
+export function MobileMenu() {
     const { styles } = useStyles()
     const pathname = usePathname()
     const { isSignedIn, user } = useAuth()

@@ -4,7 +4,7 @@ import { App } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 
-export default function useSignOut(): () => Promise<void> {
+export function useSignOut(): () => Promise<void> {
     const router = useRouter()
     const { signOut } = useAuth()
     const { notification } = App.useApp()

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import Field from './Field'
+import { Field } from './Field'
 
 describe('Field', () => {
     it('shows the hint while there is no error', () => {

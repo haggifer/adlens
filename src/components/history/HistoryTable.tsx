@@ -5,8 +5,8 @@ import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MouseEvent } from 'react'
-import DeleteJobButton from '@/components/analysis/DeleteJobButton'
-import useJobs from '@/hooks/useJobs'
+import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
+import { useJobs } from '@/hooks/useJobs'
 import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
@@ -68,7 +68,7 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
     },
 ]
 
-export default function HistoryTable() {
+export function HistoryTable() {
     const { styles } = useStyles()
     const router = useRouter()
     const { jobs, isLoading, error, hasMore, isLoadingMore, loadMore } = useJobs()

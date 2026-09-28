@@ -4,7 +4,7 @@ import type { Sample } from 'adlens-shared'
 import { Alert, Empty, Modal, Skeleton, type SkeletonProps, Tag } from 'antd'
 import { KeyboardEvent, SyntheticEvent } from 'react'
 import { formatSeconds } from '@/components/analysis/results'
-import useSamples from '@/hooks/useSamples'
+import { useSamples } from '@/hooks/useSamples'
 import { PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
@@ -64,7 +64,7 @@ interface IProps {
     onSelect: (sample: Sample) => void
 }
 
-export default function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
+export function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
     const { styles } = useStyles()
     const { samples, isLoading, error } = useSamples(isOpen)
 

@@ -4,7 +4,7 @@ import { MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { Switch } from 'antd'
 import { useTheme } from '@/design/ThemeContext'
 
-export default function ThemeSwitch() {
+export function ThemeSwitch() {
     const { isDark, setScheme } = useTheme()
 
     return (

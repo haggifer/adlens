@@ -22,7 +22,7 @@ interface IProps {
     initial: InitialScheme
 }
 
-export default function ThemeProvider({ children, initial }: IProps) {
+export function ThemeProvider({ children, initial }: IProps) {
     // Seeded from what the server rendered (cookie, or the system-preference client hint), so the first client render
     // matches the HTML.
     const [scheme, setSchemeState] = useState<ColorScheme>(initial.scheme)

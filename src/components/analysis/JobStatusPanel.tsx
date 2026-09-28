@@ -16,7 +16,7 @@ interface IProps {
     job: Job
 }
 
-export default function JobStatusPanel({ job }: IProps) {
+export function JobStatusPanel({ job }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
 

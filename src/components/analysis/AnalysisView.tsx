@@ -6,14 +6,14 @@ import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
-import BackButton from '@/components/utils/BackButton'
+import { BackButton } from '@/components/utils/BackButton'
 import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
-import useJob from '@/hooks/useJob'
-import useJobVideo from '@/hooks/useJobVideo'
+import { useJob } from '@/hooks/useJob'
+import { useJobVideo } from '@/hooks/useJobVideo'
 import { PLATFORM_LABELS } from '@/labels'
-import DeleteJobButton from './DeleteJobButton'
-import JobStatusPanel from './JobStatusPanel'
-import ResultsPanel from './ResultsPanel'
+import { DeleteJobButton } from './DeleteJobButton'
+import { JobStatusPanel } from './JobStatusPanel'
+import { ResultsPanel } from './ResultsPanel'
 import { useStyles } from './styles'
 import '@vidstack/react/player/styles/default/theme.css'
 import '@vidstack/react/player/styles/default/layouts/video.css'
@@ -22,7 +22,7 @@ interface IProps {
     jobId: string
 }
 
-export default function AnalysisView({ jobId }: IProps) {
+export function AnalysisView({ jobId }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
     const { job, isLoading, error } = useJob(jobId)

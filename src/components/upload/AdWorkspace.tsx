@@ -2,12 +2,12 @@
 
 import type { Sample } from 'adlens-shared'
 import { useEffect, useRef, useState } from 'react'
-import AnalysisSettings from './AnalysisSettings'
-import SamplesModal from './SamplesModal'
+import { AnalysisSettings } from './AnalysisSettings'
+import { SamplesModal } from './SamplesModal'
 import { useStyles } from './styles'
 import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
-import UploadIntro from './UploadIntro'
-import UploadPanel from './UploadPanel'
+import { UploadIntro } from './UploadIntro'
+import { UploadPanel } from './UploadPanel'
 
 const releasePreview = (source: AnalysisSource | null) => {
     if (source?.kind === 'file') {
@@ -15,7 +15,7 @@ const releasePreview = (source: AnalysisSource | null) => {
     }
 }
 
-export default function AdWorkspace() {
+export function AdWorkspace() {
     const { styles } = useStyles()
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)

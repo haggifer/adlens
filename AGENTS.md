@@ -34,6 +34,8 @@ npm test             # Jest + React Testing Library
 
 ## Conventions
 
+- Named exports only (`export function Header`, `export function useJob`). Default exports only where Next.js
+  requires them: `page.tsx` and `layout.tsx` under `src/app/`, and the root config files.
 - Client providers are composed in `src/app/Providers.tsx`; add new global providers there.
 - UI state lives in Zustand stores under `src/contexts/stores/`; server state in TanStack Query hooks under
   `src/hooks/`.

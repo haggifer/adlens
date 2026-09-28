@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import BackButton from '@/components/utils/BackButton'
+import { BackButton } from '@/components/utils/BackButton'
 import { useStyles } from './styles'
 
 interface IProps {
@@ -10,7 +10,7 @@ interface IProps {
     children: ReactNode
 }
 
-export default function LegalPage({ title, lastUpdated, children }: IProps) {
+export function LegalPage({ title, lastUpdated, children }: IProps) {
     const { styles } = useStyles()
 
     return (

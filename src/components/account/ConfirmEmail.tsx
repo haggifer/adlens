@@ -14,7 +14,7 @@ interface IProps {
     token: string | null
 }
 
-export default function ConfirmEmail({ token }: IProps) {
+export function ConfirmEmail({ token }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
     const { notification } = App.useApp()

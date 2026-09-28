@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { resetPassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -18,7 +18,7 @@ interface IProps {
     token: string | null
 }
 
-export default function ResetPasswordForm({ token }: IProps) {
+export function ResetPasswordForm({ token }: IProps) {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
     const [formError, setFormError] = useState<string | null>(null)

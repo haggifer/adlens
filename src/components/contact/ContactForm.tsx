@@ -15,7 +15,7 @@ import type { z } from 'zod'
 import { sendContactMessage } from '@/api/contact'
 import { toApiRequestError } from '@/api/errors'
 import { useAuth } from '@/auth/AuthContext'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 
 // The rules come from the shared schema; only the wording is the form's own.
 const describeIssue: z.core.$ZodErrorMap = (issue) => {
@@ -38,7 +38,7 @@ interface IProps {
     onDone?: () => void
 }
 
-export default function ContactForm({ onDone }: IProps) {
+export function ContactForm({ onDone }: IProps) {
     const { user } = useAuth()
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)

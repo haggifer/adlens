@@ -8,7 +8,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { authClient, deleteUser } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useStyles } from './styles'
 
@@ -16,7 +16,7 @@ const deleteAccountSchema = z.object({ password: z.string().min(1, 'Enter your p
 
 type DeleteAccountValues = z.infer<typeof deleteAccountSchema>
 
-export default function DeleteAccountForm() {
+export function DeleteAccountForm() {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()

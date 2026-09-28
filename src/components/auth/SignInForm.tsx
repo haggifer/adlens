@@ -7,7 +7,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -18,7 +18,7 @@ const signInSchema = z.object({
 
 type SignInValues = z.infer<typeof signInSchema>
 
-export default function SignInForm() {
+export function SignInForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
     const { notification } = App.useApp()

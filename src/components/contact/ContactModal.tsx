@@ -3,9 +3,9 @@
 import { Modal } from 'antd'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
-import ContactForm from './ContactForm'
+import { ContactForm } from './ContactForm'
 
-export default function ContactModal() {
+export function ContactModal() {
     const isOpen = useContactModalStore((s) => s.isOpen)
     const setIsOpen = useContactModalStore((s) => s.setIsOpen)
 

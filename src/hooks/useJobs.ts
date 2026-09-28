@@ -13,7 +13,7 @@ export interface UseJobsResult {
     loadMore: () => void
 }
 
-export default function useJobs(): UseJobsResult {
+export function useJobs(): UseJobsResult {
     const { user } = useAuth()
     const { data, isLoading, error, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
         queryKey: ['jobs', user?.id],

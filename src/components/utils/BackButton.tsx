@@ -10,7 +10,7 @@ interface IProps {
     fallbackHref: string
 }
 
-export default function BackButton({ fallbackHref }: IProps) {
+export function BackButton({ fallbackHref }: IProps) {
     const router = useRouter()
     const hasNavigated = useNavigationStore((s) => s.hasNavigated)
 

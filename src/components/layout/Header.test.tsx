@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { App } from 'antd'
-import Header from './Header'
+import { Header } from './Header'
 
 let quota: Quota | undefined
 let isSignedIn = true
@@ -10,7 +10,7 @@ jest.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => (
 jest.mock('@/auth/AuthContext', () => ({
     useAuth: () => ({ isSignedIn, user: isSignedIn ? { id: 'u1', name: 'Ann', email: 'ann@example.com' } : null }),
 }))
-jest.mock('@/hooks/useQuota', () => () => ({ quota }))
+jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota }) }))
 jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, setScheme: jest.fn() }) }))
 
 const renderHeader = () =>

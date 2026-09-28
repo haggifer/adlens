@@ -17,7 +17,7 @@ export interface UseJobResult {
 
 // Reads the job once, then keeps it live over Socket.IO (fed by the API's Mongo change stream) by writing pushed
 // updates into the query cache. Every (re)connect refetches, because updates emitted while disconnected are lost.
-export default function useJob(jobId: string): UseJobResult {
+export function useJob(jobId: string): UseJobResult {
     const { user } = useAuth()
     const queryClient = useQueryClient()
     const userId = user?.id

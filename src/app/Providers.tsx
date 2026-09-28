@@ -9,11 +9,11 @@ import { useServerInsertedHTML } from 'next/navigation'
 import { ReactNode, useRef, useState } from 'react'
 import { ApiRequestError } from '@/api/errors'
 import { authClient } from '@/auth/authClient'
-import AuthProvider from '@/auth/AuthContext'
-import AppShell from '@/components/layout/AppShell'
+import { AuthProvider } from '@/auth/AuthContext'
+import { AppShell } from '@/components/layout/AppShell'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { ANTD_THEME } from '@/design/theme'
-import ThemeProvider, { useTheme } from '@/design/ThemeContext'
+import { ThemeProvider, useTheme } from '@/design/ThemeContext'
 import { InitialScheme } from '@/design/types'
 
 const MAX_QUERY_RETRIES = 2
@@ -100,7 +100,7 @@ interface IProps {
     initialScheme: InitialScheme
 }
 
-export default function Providers({ children, initialScheme }: IProps) {
+export function Providers({ children, initialScheme }: IProps) {
     const [queryClient] = useState(createQueryClient)
 
     return (

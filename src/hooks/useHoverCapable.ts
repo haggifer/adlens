@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 const HOVER_QUERY = '(hover: hover) and (pointer: fine)'
 
-export default function useHoverCapable(): boolean {
+export function useHoverCapable(): boolean {
     const [hoverCapable, setHoverCapable] = useState<boolean>(() => {
         if (typeof window === 'undefined') {
             return true

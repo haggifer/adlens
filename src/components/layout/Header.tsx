@@ -4,12 +4,12 @@ import { Divider } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
-import Logo from '@/components/brand/Logo'
-import AccountMenu from '@/components/layout/AccountMenu'
-import MobileMenu from '@/components/layout/MobileMenu'
+import { Logo } from '@/components/brand/Logo'
+import { AccountMenu } from '@/components/layout/AccountMenu'
+import { MobileMenu } from '@/components/layout/MobileMenu'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
-import ThemeSwitch from '@/components/layout/ThemeSwitch'
-import useQuota from '@/hooks/useQuota'
+import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
+import { useQuota } from '@/hooks/useQuota'
 import { useStyles } from './styles'
 
 const NAV_LINKS = [
@@ -17,7 +17,7 @@ const NAV_LINKS = [
     { href: '/history', label: 'History' },
 ]
 
-export default function Header() {
+export function Header() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
     const { isSignedIn } = useAuth()

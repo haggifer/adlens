@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { sendContactMessage } from '@/api/contact'
-import ContactForm from './ContactForm'
+import { ContactForm } from './ContactForm'
 
 jest.mock('@/api/contact', () => ({ sendContactMessage: jest.fn(async () => undefined) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => ({ user: { email: 'member@example.com' } }) }))

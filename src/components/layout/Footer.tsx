@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useStyles } from './styles'
 
-export default function Footer() {
+export function Footer() {
     const { styles, cx } = useStyles()
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
 

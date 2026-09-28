@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useNavigationStore } from '@/contexts/stores/navigationStore'
-import BackButton from './BackButton'
+import { BackButton } from './BackButton'
 
 const back = jest.fn()
 const push = jest.fn()

@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import useHoverCapable from '@/hooks/useHoverCapable'
-import useSignOut from '@/hooks/useSignOut'
+import { useHoverCapable } from '@/hooks/useHoverCapable'
+import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
 enum AccountMenuKey {
@@ -17,7 +17,7 @@ enum AccountMenuKey {
     SignOut = 'signout',
 }
 
-export default function AccountMenu() {
+export function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
     const { isSignedIn, user } = useAuth()

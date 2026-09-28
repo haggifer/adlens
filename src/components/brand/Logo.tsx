@@ -2,7 +2,7 @@
 
 import { useStyles } from './styles'
 
-export default function Logo() {
+export function Logo() {
     const { styles } = useStyles()
 
     return (

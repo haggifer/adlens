@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { type Job, JobStatus, VideoMimeType } from 'adlens-shared'
 import { App } from 'antd'
 import { deleteJob } from '@/api/jobs'
-import DeleteJobButton from './DeleteJobButton'
+import { DeleteJobButton } from './DeleteJobButton'
 
 jest.mock('@/api/jobs', () => ({ deleteJob: jest.fn(async () => undefined) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }))

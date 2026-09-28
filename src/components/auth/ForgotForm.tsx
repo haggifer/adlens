@@ -8,7 +8,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { requestPasswordReset } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -18,7 +18,7 @@ const forgotSchema = z.object({
 
 type ForgotValues = z.infer<typeof forgotSchema>
 
-export default function ForgotForm() {
+export function ForgotForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
     const [formError, setFormError] = useState<string | null>(null)

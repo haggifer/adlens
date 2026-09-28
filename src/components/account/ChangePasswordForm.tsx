@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { changePassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
-import Field from '@/components/utils/Field'
+import { Field } from '@/components/utils/Field'
 import { useStyles } from './styles'
 
 const changePasswordSchema = z
@@ -18,7 +18,7 @@ type ChangePasswordValues = z.infer<typeof changePasswordSchema>
 
 const DEFAULT_VALUES: ChangePasswordValues = { currentPassword: '', password: '', confirm: '' }
 
-export default function ChangePasswordForm() {
+export function ChangePasswordForm() {
     const { styles } = useStyles()
     const { notification } = App.useApp()
     const {

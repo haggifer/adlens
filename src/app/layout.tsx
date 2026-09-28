@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { config } from '@/config'
 import { resolveInitialScheme, SCHEME_COOKIE, SCHEME_HINT_HEADER } from '@/design/scheme-cookie'
 import { FONT_VARIABLE_CLASSES } from '@/fonts'
-import Providers from './Providers'
+import { Providers } from './Providers'
 import 'bootstrap/dist/css/bootstrap-utilities.min.css'
 import './globals.css'
 

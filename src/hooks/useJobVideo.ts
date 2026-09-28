@@ -10,7 +10,7 @@ export interface UseJobVideoResult {
     url: string | undefined
 }
 
-export default function useJobVideo(jobId: string, isEnabled: boolean): UseJobVideoResult {
+export function useJobVideo(jobId: string, isEnabled: boolean): UseJobVideoResult {
     const { user } = useAuth()
     const { data } = useQuery({
         queryKey: ['jobVideo', user?.id, jobId],

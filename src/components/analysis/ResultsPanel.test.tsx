@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type Analysis, type Finding, type MetadataCheck, RulePlatform } from 'adlens-shared'
-import ResultsPanel from './ResultsPanel'
+import { ResultsPanel } from './ResultsPanel'
 
 const finding = (overrides: Partial<Finding>): Finding => ({
     id: 'rule',

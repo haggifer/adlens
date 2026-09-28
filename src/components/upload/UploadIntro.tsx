@@ -10,7 +10,7 @@ const FEATURES = [
     'Every finding timestamped and linked to the policy or guide it comes from',
 ]
 
-export default function UploadIntro() {
+export function UploadIntro() {
     const { styles } = useStyles()
 
     return (

@@ -5,11 +5,11 @@ import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { revokeOtherSessions } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import ChangePasswordForm from './ChangePasswordForm'
-import DeleteAccountForm from './DeleteAccountForm'
+import { ChangePasswordForm } from './ChangePasswordForm'
+import { DeleteAccountForm } from './DeleteAccountForm'
 import { useStyles } from './styles'
 
-export default function AccountSettings() {
+export function AccountSettings() {
     const { styles } = useStyles()
     const { user } = useAuth()
     const { notification } = App.useApp()

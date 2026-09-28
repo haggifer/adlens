@@ -3,9 +3,9 @@
 import { Modal } from 'antd'
 import { AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
-import ForgotForm from './ForgotForm'
-import SignInForm from './SignInForm'
-import SignUpForm from './SignUpForm'
+import { ForgotForm } from './ForgotForm'
+import { SignInForm } from './SignInForm'
+import { SignUpForm } from './SignUpForm'
 import { useStyles } from './styles'
 
 const TITLES: Record<AuthView, string> = {
@@ -20,7 +20,7 @@ const SUBTITLES: Record<AuthView, string> = {
     forgot: 'Enter your email and we’ll send you a reset link.',
 }
 
-export default function AuthModal() {
+export function AuthModal() {
     const { styles } = useStyles()
     const view = useAuthModalStore((s) => s.view)
     const setView = useAuthModalStore((s) => s.setView)

@@ -13,7 +13,7 @@ export interface UseSamplesResult {
 }
 
 // Public data, so the key isn't user-scoped; it loads only once the picker opens.
-export default function useSamples(isEnabled: boolean): UseSamplesResult {
+export function useSamples(isEnabled: boolean): UseSamplesResult {
     const { data, isLoading, error } = useQuery<Sample[], ApiRequestError>({
         queryKey: ['samples'],
         queryFn: listSamples,

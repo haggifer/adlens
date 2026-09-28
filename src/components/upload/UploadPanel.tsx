@@ -52,7 +52,7 @@ const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
         video.src = url
     })
 
-export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
+export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
     const theme = useTheme()
     const { styles, cx } = useStyles()
     const { notification } = App.useApp()

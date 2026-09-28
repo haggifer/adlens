@@ -9,7 +9,7 @@ export interface UseQuotaResult {
     quota: Quota | undefined
 }
 
-export default function useQuota(): UseQuotaResult {
+export function useQuota(): UseQuotaResult {
     const { user } = useAuth()
     const { data } = useQuery({ queryKey: quotaKey(user?.id), queryFn: getQuota, enabled: Boolean(user) })
 

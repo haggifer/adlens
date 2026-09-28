@@ -3,19 +3,21 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type Job, JobStatus, VideoMimeType } from 'adlens-shared'
 import { App } from 'antd'
-import HistoryTable from './HistoryTable'
+import { HistoryTable } from './HistoryTable'
 
 const push = jest.fn()
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }))
-jest.mock('@/hooks/useJobs', () => () => ({
-    jobs: [JOB],
-    isLoading: false,
-    error: null,
-    hasMore: false,
-    isLoadingMore: false,
-    loadMore: jest.fn(),
+jest.mock('@/hooks/useJobs', () => ({
+    useJobs: () => ({
+        jobs: [JOB],
+        isLoading: false,
+        error: null,
+        hasMore: false,
+        isLoadingMore: false,
+        loadMore: jest.fn(),
+    }),
 }))
 
 const JOB: Job = {

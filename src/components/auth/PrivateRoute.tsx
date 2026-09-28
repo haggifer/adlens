@@ -11,7 +11,7 @@ interface IProps {
 }
 
 // Pair with `robots: { index: false }` on the page so a private route stays uncrawlable.
-export default function PrivateRoute({ children }: IProps) {
+export function PrivateRoute({ children }: IProps) {
     const { styles } = useStyles()
     const { isInitializing, isSignedIn } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)

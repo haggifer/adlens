@@ -21,7 +21,7 @@ import { toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import useQuota, { quotaKey } from '@/hooks/useQuota'
+import { quotaKey, useQuota } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { useStyles } from './styles'
@@ -69,7 +69,7 @@ interface IProps {
     source: AnalysisSource
 }
 
-export default function AnalysisSettings({ source }: IProps) {
+export function AnalysisSettings({ source }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
