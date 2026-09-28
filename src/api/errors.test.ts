@@ -39,6 +39,18 @@ describe('toApiRequestError', () => {
         expect(toApiRequestError(original)).toBe(original)
         expect(toApiRequestError(new Error('boom')).code).toBe(RequestErrorCode.Internal)
     })
+
+    it('explains the network limits and where they lead', () => {
+        expect(new ApiRequestError(RequestErrorCode.SignUpRequired).message).toBe(
+            'You’ve used the analyses available without an account. Sign up to keep analysing.',
+        )
+        expect(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded).message).toBe(
+            'Too many analyses from your network this week. Contact us if you need more.',
+        )
+        expect(new ApiRequestError(RequestErrorCode.ChallengeRequired).message).toBe(
+            'Complete the security check, then run the analysis again.',
+        )
+    })
 })
 
 describe('describeJobError', () => {

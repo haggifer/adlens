@@ -11,18 +11,23 @@ import {
     Placement,
     PLACEMENT_PLATFORM,
     Platform,
+    RequestErrorCode,
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
-import { toApiRequestError } from '@/api/errors'
+import { ApiRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
+import { signIn } from '@/auth/authClient'
+import { runAuthRequest } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { quotaKey, useQuota } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
+import { HumanCheck } from './HumanCheck'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -59,6 +64,23 @@ const formatNextFree = (nextFreeAt: string) =>
         minute: '2-digit',
     })
 
+const TOO_MANY_REQUESTS = 429
+
+// Visitors get an anonymous session only when they start an analysis, so crawlers and passers-by create no users.
+const startAnonymousSession = async (): Promise<void> => {
+    const error = await runAuthRequest(() => signIn.anonymous())
+
+    if (!error) {
+        return
+    }
+
+    if (error.status === TOO_MANY_REQUESTS) {
+        throw new ApiRequestError(RequestErrorCode.RateLimited)
+    }
+
+    throw new ApiRequestError(error.code === 'NETWORK_ERROR' ? RequestErrorCode.Unavailable : RequestErrorCode.Internal)
+}
+
 enum RunStage {
     Idle = 'idle',
     Creating = 'creating',
@@ -74,11 +96,15 @@ export function AnalysisSettings({ source }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { isSignedIn, user } = useAuth()
+    const { user, isAnonymous, isInitializing } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
+    const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const { quota } = useQuota()
     const [stage, setStage] = useState<RunStage>(RunStage.Idle)
     const [uploadProgress, setUploadProgress] = useState(0)
+    const [challengeToken, setChallengeToken] = useState<string | null>(null)
+    // A Turnstile token works once; a new key remounts the check for a fresh one.
+    const [checkKey, setCheckKey] = useState(0)
     const { control, handleSubmit, getValues, setValue } = useForm<
         AnalysisSettingsInput,
         unknown,
@@ -91,14 +117,23 @@ export function AnalysisSettings({ source }: IProps) {
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
+    // Without an account the API always asks for the check, so there's no point starting before it passes. Waiting
+    // out `isInitializing` keeps a member's still-loading session from being replaced by an anonymous one.
+    const isWaitingForCheck = isInitializing || ((!user || isAnonymous) && !challengeToken)
 
     const run = useMutation({
         mutationFn: async (settings: AnalysisSettingsValues) => {
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
+            if (!user) {
+                await startAnonymousSession()
+            }
+
+            const token = challengeToken ?? undefined
+
             if (source.kind === 'sample') {
-                const job = await createSampleJob({ sampleId: source.sample.id, settings })
+                const job = await createSampleJob({ sampleId: source.sample.id, settings, challengeToken: token })
 
                 setStage(RunStage.Starting)
                 await startAnalysis(job.id)
@@ -110,6 +145,7 @@ export function AnalysisSettings({ source }: IProps) {
             const { job, upload } = await createJob({
                 settings,
                 file: { name: file.name, contentType, size: file.size },
+                challengeToken: token,
             })
 
             setStage(RunStage.Uploading)
@@ -124,7 +160,15 @@ export function AnalysisSettings({ source }: IProps) {
             void queryClient.invalidateQueries({ queryKey: ['jobs', user?.id] })
             router.push(`/analyses/${jobId}`)
         },
-        onError: () => setStage(RunStage.Idle),
+        onError: (error) => {
+            setStage(RunStage.Idle)
+            setChallengeToken(null)
+            setCheckKey((key) => key + 1)
+
+            if (toApiRequestError(error).code === RequestErrorCode.SignUpRequired) {
+                setView('signup')
+            }
+        },
     })
 
     const handlePlatformsChange = (next: Platform[]) => {
@@ -135,20 +179,28 @@ export function AnalysisSettings({ source }: IProps) {
         )
     }
 
-    const onSubmit = (settings: AnalysisSettingsValues) => {
-        if (!isSignedIn) {
-            setView('signin')
-            return
-        }
-
-        run.mutate(settings)
-    }
+    const onSubmit = (settings: AnalysisSettingsValues) => run.mutate(settings)
 
     const isRunning = run.isPending || run.isSuccess
 
     const renderStatus = () => {
         if (run.error) {
-            return <Alert type="error" showIcon title={toApiRequestError(run.error).message} />
+            const error = toApiRequestError(run.error)
+
+            return (
+                <Alert
+                    type="error"
+                    showIcon
+                    title={error.message}
+                    action={
+                        error.code === RequestErrorCode.NetworkQuotaExceeded ? (
+                            <Button size="small" onClick={() => setIsContactOpen(true)}>
+                                Contact us
+                            </Button>
+                        ) : undefined
+                    }
+                />
+            )
         }
 
         if (stage === RunStage.Uploading) {
@@ -246,6 +298,7 @@ export function AnalysisSettings({ source }: IProps) {
                     <Controller name="markets" control={control} render={renderMarketsSelect} />
                 </div>
             </div>
+            <HumanCheck key={checkKey} onToken={setChallengeToken} />
             {renderQuota()}
             <Button
                 type="primary"
@@ -255,7 +308,7 @@ export function AnalysisSettings({ source }: IProps) {
                 className={styles.runButton}
                 icon={<ThunderboltOutlined />}
                 loading={isRunning}
-                disabled={isRunning || !hasQuotaLeft}
+                disabled={isRunning || !hasQuotaLeft || isWaitingForCheck}
             >
                 Run Analysis
             </Button>
