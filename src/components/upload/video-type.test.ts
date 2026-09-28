@@ -10,8 +10,10 @@ describe('toVideoMimeType', () => {
         expect(toVideoMimeType('video/x-m4v')).toBe(VideoMimeType.Mp4)
     })
 
-    it('rejects types Gemini can’t read, and an unknown type', () => {
+    it('rejects types Gemini can’t read or browsers can’t play, and an unknown type', () => {
         expect(toVideoMimeType('video/x-matroska')).toBeNull()
+        expect(toVideoMimeType('video/mpeg')).toBeNull()
+        expect(toVideoMimeType('video/x-flv')).toBeNull()
         expect(toVideoMimeType('')).toBeNull()
     })
 

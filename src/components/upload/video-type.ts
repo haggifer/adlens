@@ -5,7 +5,7 @@ const MIME_ALIASES: Record<string, VideoMimeType> = {
     'video/x-m4v': VideoMimeType.Mp4,
 }
 
-const EXTENSIONS = ['.mp4', '.m4v', '.mov', '.webm', '.mpeg', '.mpg', '.3gp', '.flv']
+const EXTENSIONS = ['.mp4', '.m4v', '.mov', '.webm', '.3gp']
 
 export const VIDEO_FILE_ACCEPT = [...Object.values(VideoMimeType), ...Object.keys(MIME_ALIASES), ...EXTENSIONS].join(
     ',',
