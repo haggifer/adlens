@@ -7,7 +7,7 @@ import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
 import BackButton from '@/components/utils/BackButton'
-import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
+import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import useJob from '@/hooks/useJob'
 import useJobVideo from '@/hooks/useJobVideo'
 import { PLATFORM_LABELS } from '@/labels'
@@ -118,7 +118,7 @@ export default function AnalysisView({ jobId }: IProps) {
                             <DefaultVideoLayout
                                 icons={defaultLayoutIcons}
                                 smallLayoutWhen={false}
-                                slots={{ googleCastButton: null, airPlayButton: null }}
+                                slots={NO_CAST_SLOTS}
                             />
                         </MediaPlayer>
                     ) : (

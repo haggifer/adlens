@@ -104,7 +104,7 @@ export default function ContactForm({ onDone }: IProps) {
                             rows={6}
                             maxLength={CONTACT_MESSAGE_MAX_LENGTH}
                             showCount
-                            style={{ marginBottom: '0.5rem' }}
+                            className="mb-2"
                             placeholder="Questions, feedback, bug reports..."
                             status={errors.message ? 'error' : undefined}
                         />

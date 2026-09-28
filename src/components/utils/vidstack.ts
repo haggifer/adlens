@@ -1,3 +1,4 @@
+import type { DefaultVideoLayoutSlots } from '@vidstack/react/player/layouts/default'
 import type { CSSProperties } from 'react'
 
 // The MIME types Vidstack recognises as video. Neither a blob: object URL nor a signed GCS URL has a file extension,
@@ -7,6 +8,8 @@ import type { CSSProperties } from 'react'
 const VIDSTACK_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/3gp', 'video/ogg', 'video/avi', 'video/mpeg'] as const
 
 type VidstackVideoType = (typeof VIDSTACK_VIDEO_TYPES)[number]
+
+export const NO_CAST_SLOTS: DefaultVideoLayoutSlots = { googleCastButton: null, airPlayButton: null }
 
 export const toVidstackType = (mime: string): VidstackVideoType =>
     (VIDSTACK_VIDEO_TYPES as readonly string[]).includes(mime) ? (mime as VidstackVideoType) : 'video/mp4'

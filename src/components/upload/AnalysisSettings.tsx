@@ -16,7 +16,7 @@ import {
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
 import { toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
@@ -47,6 +47,10 @@ const getPlacementOptions = (platforms: Platform[]) =>
             .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
             .map((value) => ({ value, label: `${platform} · ${PLACEMENT_LABELS[value]}` })),
     }))
+
+const renderMarketsSelect = ({ field }: { field: ControllerRenderProps<AnalysisSettingsInput, 'markets'> }) => (
+    <Select {...field} mode="multiple" placeholder="Adds local advertising rules" options={MARKET_OPTIONS} allowClear />
+)
 
 const formatResetDate = (windowStart: string) =>
     new Date(new Date(windowStart).getTime() + QUOTA_WINDOW_MS).toLocaleDateString(undefined, {
@@ -238,19 +242,7 @@ export default function AnalysisSettings({ source }: IProps) {
                 </div>
                 <div className={styles.field}>
                     <label className={styles.fieldLabel}>Markets</label>
-                    <Controller
-                        name="markets"
-                        control={control}
-                        render={({ field }) => (
-                            <Select
-                                {...field}
-                                mode="multiple"
-                                placeholder="Adds local advertising rules"
-                                options={MARKET_OPTIONS}
-                                allowClear
-                            />
-                        )}
-                    />
+                    <Controller name="markets" control={control} render={renderMarketsSelect} />
                 </div>
             </div>
             {renderQuota()}

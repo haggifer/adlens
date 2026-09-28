@@ -1,7 +1,7 @@
 'use client'
 
 import type { Sample } from 'adlens-shared'
-import { Alert, Empty, Modal, Skeleton, Tag } from 'antd'
+import { Alert, Empty, Modal, Skeleton, type SkeletonProps, Tag } from 'antd'
 import { KeyboardEvent, SyntheticEvent } from 'react'
 import { formatSeconds } from '@/components/analysis/results'
 import useSamples from '@/hooks/useSamples'
@@ -9,6 +9,10 @@ import { PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
 const SKELETON_ROWS = 3
+
+const SKELETON_AVATAR: SkeletonProps['avatar'] = { shape: 'square', size: 96 }
+
+const SKELETON_PARAGRAPH: SkeletonProps['paragraph'] = { rows: 2 }
 
 // The preview's own controls must work without selecting the row around it.
 const stopPropagation = (event: SyntheticEvent) => event.stopPropagation()
@@ -71,7 +75,7 @@ export default function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
 
         if (isLoading) {
             return Array.from({ length: SKELETON_ROWS }).map((_, index) => (
-                <Skeleton key={index} active avatar={{ shape: 'square', size: 96 }} paragraph={{ rows: 2 }} />
+                <Skeleton key={index} active avatar={SKELETON_AVATAR} paragraph={SKELETON_PARAGRAPH} />
             ))
         }
 

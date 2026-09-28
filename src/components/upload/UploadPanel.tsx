@@ -4,10 +4,10 @@ import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, 
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
-import { App, Button, Divider, Tag, Tooltip, Upload } from 'antd'
+import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, SyntheticEvent, useMemo, useState } from 'react'
-import { toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
+import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
 import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
@@ -26,8 +26,13 @@ const { Dragger } = Upload
 
 const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1000 * 1000)
 
+const REQUIREMENTS_TRIGGER: TooltipProps['trigger'] = ['hover', 'click']
+
 // For the controls inside the Dragger: their clicks and keys must not reach it and open the file dialog.
 const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()
+
+// A drop target must cancel dragover, or the browser never fires drop on it.
+const allowDrop = (event: DragEvent<HTMLDivElement>) => event.preventDefault()
 
 // Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
 // the browser can't decode) surface as an error so a doomed upload is stopped client-side.
@@ -106,7 +111,6 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
     }
 
     const handleDragEnter = () => setIsDragging(true)
-    const handleDragOver = (event: DragEvent<HTMLDivElement>) => event.preventDefault()
     const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
             setIsDragging(false)
@@ -147,7 +151,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                 data-video="true"
                 data-dragging={isDragging}
                 onDragEnter={handleDragEnter}
-                onDragOver={handleDragOver}
+                onDragOver={allowDrop}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDropReplace}
             >
@@ -163,11 +167,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                     {/* Force the large layout so every control lives in the bottom bar, leaving the
                         top-right corner free for the Replace/Remove overlay. Cast/AirPlay are removed —
                         they can't target a local blob URL anyway. */}
-                    <DefaultVideoLayout
-                        icons={defaultLayoutIcons}
-                        smallLayoutWhen={false}
-                        slots={{ googleCastButton: null, airPlayButton: null }}
-                    />
+                    <DefaultVideoLayout icons={defaultLayoutIcons} smallLayoutWhen={false} slots={NO_CAST_SLOTS} />
                 </MediaPlayer>
                 {video.sampleTitle && (
                     <div className={styles.sampleBadge}>
@@ -203,7 +203,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
             className={styles.frame}
             data-dragging={isDragging}
             onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
+            onDragOver={allowDrop}
             onDragLeave={handleDragLeave}
             onDrop={() => setIsDragging(false)}
         >
@@ -225,7 +225,7 @@ export default function UploadPanel({ video, onSelect, onClear, onBrowseSamples 
                     <span className={styles.touchOnly}>Tap to upload your video ad</span>
                 </p>
                 <p className={cx(styles.hint, styles.pointerOnly)}>Click or drag to upload</p>
-                <Tooltip placement="bottom" title={requirements} trigger={['hover', 'click']}>
+                <Tooltip placement="bottom" title={requirements} trigger={REQUIREMENTS_TRIGGER}>
                     <Button
                         size="small"
                         icon={<InfoCircleOutlined />}
