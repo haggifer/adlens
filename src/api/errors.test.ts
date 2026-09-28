@@ -50,6 +50,12 @@ describe('toApiRequestError', () => {
         expect(new ApiRequestError(RequestErrorCode.ChallengeRequired).message).toBe(
             'Complete the security check, then run the analysis again.',
         )
+        expect(new ApiRequestError(RequestErrorCode.ChallengeFailed).message).toBe(
+            'The security check didn’t pass. Try it again, then run the analysis.',
+        )
+        expect(new ApiRequestError(RequestErrorCode.DisposableEmail).message).toBe(
+            'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
+        )
     })
 })
 

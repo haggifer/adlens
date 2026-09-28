@@ -22,12 +22,19 @@ export function HumanCheck({ onToken }: IProps) {
         onToken(null)
     }
 
+    // Turnstile's defaults re-issue a token on its own after a routine expiry (refresh-expired: 'auto',
+    // retry: 'auto'), so a later success must clear the hint left by an earlier failure.
+    const handleSuccess = (token: string) => {
+        setHasFailed(false)
+        onToken(token)
+    }
+
     return (
         <div>
             <Turnstile
                 siteKey={config.turnstileSiteKey}
                 options={{ theme: isDark ? 'dark' : 'light', size: 'flexible' }}
-                onSuccess={onToken}
+                onSuccess={handleSuccess}
                 onExpire={handleUnavailable}
                 onError={handleUnavailable}
             />

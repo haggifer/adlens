@@ -20,11 +20,11 @@ import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react
 import { ApiRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
-import { signIn } from '@/auth/authClient'
+import { authClient, signIn } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { quotaKey, useQuota } from '@/hooks/useQuota'
+import { useQuota } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { HumanCheck } from './HumanCheck'
@@ -65,6 +65,20 @@ const formatNextFree = (nextFreeAt: string) =>
     })
 
 const TOO_MANY_REQUESTS = 429
+
+// A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
+// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie.
+const hasActiveSession = async (): Promise<boolean> => {
+    try {
+        const { data } = await authClient.getSession()
+
+        return Boolean(data?.user)
+    } catch (err) {
+        console.error(err)
+
+        return false
+    }
+}
 
 // Visitors get an anonymous session only when they start an analysis, so crawlers and passers-by create no users.
 const startAnonymousSession = async (): Promise<void> => {
@@ -122,11 +136,17 @@ export function AnalysisSettings({ source }: IProps) {
     const isWaitingForCheck = isInitializing || ((!user || isAnonymous) && !challengeToken)
 
     const run = useMutation({
-        mutationFn: async (settings: AnalysisSettingsValues) => {
+        mutationFn: async (settings: AnalysisSettingsValues): Promise<string | undefined> => {
+            // Belt and braces: the disabled Run button already keeps this from firing while the session is still
+            // loading, but a still-loading session must never reach the anonymous sign-in below either way.
+            if (isInitializing) {
+                return undefined
+            }
+
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
-            if (!user) {
+            if (!user && !(await hasActiveSession())) {
                 await startAnonymousSession()
             }
 
@@ -156,8 +176,14 @@ export function AnalysisSettings({ source }: IProps) {
             return job.id
         },
         onSuccess: (jobId) => {
-            void queryClient.invalidateQueries({ queryKey: quotaKey(user?.id) })
-            void queryClient.invalidateQueries({ queryKey: ['jobs', user?.id] })
+            if (!jobId) {
+                return
+            }
+
+            // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
+            // invalidating by prefix catches the new user's queries too, not just the one active before the run.
+            void queryClient.invalidateQueries({ queryKey: ['quota'] })
+            void queryClient.invalidateQueries({ queryKey: ['jobs'] })
             router.push(`/analyses/${jobId}`)
         },
         onError: (error) => {

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { Platform, RequestErrorCode, type Sample, VideoMimeType } from 'adlens-shared'
 import { ApiRequestError } from '@/api/errors'
 import { createSampleJob } from '@/api/jobs'
-import { signIn } from '@/auth/authClient'
+import { authClient, signIn } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { AnalysisSettings } from './AnalysisSettings'
@@ -12,22 +12,23 @@ import { AnalysisSettings } from './AnalysisSettings'
 interface MockAuth {
     user: { id: string } | null
     isAnonymous: boolean
+    isInitializing?: boolean
 }
 
 let auth: MockAuth = { user: null, isAnonymous: false }
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => auth }))
-jest.mock('@/auth/authClient', () => ({ signIn: { anonymous: jest.fn(async () => ({ error: null })) } }))
+jest.mock('@/auth/authClient', () => ({
+    authClient: { getSession: jest.fn(async () => ({ data: null })) },
+    signIn: { anonymous: jest.fn(async () => ({ error: null })) },
+}))
 jest.mock('@/api/jobs', () => ({
     createJob: jest.fn(),
     createSampleJob: jest.fn(async () => ({ id: 'j1' })),
     startAnalysis: jest.fn(async () => ({ id: 'j1' })),
 }))
-jest.mock('@/hooks/useQuota', () => ({
-    quotaKey: (userId?: string) => ['quota', userId],
-    useQuota: () => ({ quota: undefined }),
-}))
+jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; a button stands in for a passed check.
 jest.mock('./HumanCheck', () => ({
@@ -92,6 +93,28 @@ describe('AnalysisSettings', () => {
         )
     })
 
+    it('keeps Run disabled while the session is still loading, and never signs in anonymously', async () => {
+        auth = { user: null, isAnonymous: false, isInitializing: true }
+        renderSettings()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+
+        expect(runButton()).toBeDisabled()
+        expect(signIn.anonymous).not.toHaveBeenCalled()
+    })
+
+    it('confirms there is no active session before signing in anonymously', async () => {
+        auth = { user: null, isAnonymous: false }
+        jest.mocked(authClient.getSession).mockResolvedValueOnce({ data: { user: { id: 'member-1' } } })
+        renderSettings()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+        await userEvent.click(runButton())
+
+        await waitFor(() => expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ sampleId: 's1' })))
+        expect(signIn.anonymous).not.toHaveBeenCalled()
+    })
+
     it('lets a member run without waiting for the check, and never signs them in again', async () => {
         auth = { user: { id: 'u1' }, isAnonymous: false }
         renderSettings()
@@ -112,6 +135,7 @@ describe('AnalysisSettings', () => {
 
         await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signup'))
         expect(signIn.anonymous).not.toHaveBeenCalled()
+        expect(runButton()).toBeDisabled()
     })
 
     it('offers the Contact form when the network hit its hard limit', async () => {
