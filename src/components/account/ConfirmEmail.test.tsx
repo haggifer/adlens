@@ -21,7 +21,10 @@ const renderConfirmEmail = (token: string | null) =>
     )
 
 describe('ConfirmEmail', () => {
-    beforeEach(() => jest.clearAllMocks())
+    beforeEach(() => {
+        jest.clearAllMocks()
+        signOut.mockResolvedValue(undefined)
+    })
 
     it('signs back out and asks the visitor to sign in when the history could not be moved', async () => {
         jest.mocked(verifyEmail).mockResolvedValueOnce({
@@ -38,6 +41,23 @@ describe('ConfirmEmail', () => {
         )
         expect(signOut).toHaveBeenCalled()
         expect(push).not.toHaveBeenCalled()
+    })
+
+    it('still asks the visitor to sign in when signing out keeps failing, after one retry', async () => {
+        signOut.mockRejectedValue(new Error('network down'))
+        jest.mocked(verifyEmail).mockResolvedValueOnce({
+            error: { status: 403, code: 'ACCOUNT_LINK_FAILED', message: 'nope' },
+        })
+        renderConfirmEmail('a-token')
+
+        await waitFor(() =>
+            expect(
+                screen.getByText(
+                    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up stay in the browser where you started them.',
+                ),
+            ).toBeInTheDocument(),
+        )
+        expect(signOut).toHaveBeenCalledTimes(2)
     })
 
     it('keeps the existing behaviour for other failures', async () => {
