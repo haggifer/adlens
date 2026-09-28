@@ -13,8 +13,10 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
 - **Ant Design 6** (`antd`, `antd-style`) with `@ant-design/nextjs-registry` for SSR; Bootstrap 5 utility classes
   for layout
 - **Better Auth** React client: email and password with email verification and password reset, plus Google and GitHub
-  sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`). The
-  session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
+  sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
+  anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
+  analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
+- **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode) on the analysis form
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
   cache
 - **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
@@ -46,24 +48,26 @@ Open [http://localhost:3000](http://localhost:3000). It expects the API at `NEXT
 
 ## Environment
 
-Both variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set them per environment in Vercel.
+All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; set them per environment in Vercel.
 
 - `NEXT_PUBLIC_API_BASE_URL` — origin of the AdLens API (`https://api.useadlens.com` in production).
 - `NEXT_PUBLIC_SITE_URL` — origin of this app (`https://www.useadlens.com` in production). Used for page metadata;
   the links in emails are built by the API from its `WEB_ORIGIN`.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: the Turnstile widget's site key. Unset, it is Cloudflare's always-pass test key
+  `1x00000000000000000000AA`, which works only with the API's test secret; `2x00000000000000000000AB` always fails.
 
 ## Routes
 
-| Route             | What it does                                                                          |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| `/`               | Upload a video and choose the analysis settings                                       |
-| `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video              |
-| `/history`        | Every analysis, newest first                                                          |
-| `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account |
-| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home                 |
-| `/reset-password` | Landing page of the password-reset link                                               |
-| `/terms`          | Terms of Use                                                                          |
-| `/privacy`        | Privacy Policy                                                                        |
+| Route             | What it does                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/`               | Upload a video and choose the analysis settings                                                                                 |
+| `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video                                                        |
+| `/history`        | Every analysis, newest first                                                                                                    |
+| `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt) |
+| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home                                                           |
+| `/reset-password` | Landing page of the password-reset link                                                                                         |
+| `/terms`          | Terms of Use                                                                                                                    |
+| `/privacy`        | Privacy Policy                                                                                                                  |
 
 ## Structure
 
@@ -113,3 +117,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **Legal documents are MDX in the repo**, rendered in the app's layout and theme, not Termly's embed script. They
   are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.
+- **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
+  crawlers create no users, and their history, quota and live updates work as for anyone. The header offers "Sign up
+  to keep your history"; signing up (confirming the email in the same browser) or signing in moves the analyses to the
+  account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`).
+- **Turnstile is rendered for everyone, verified only when needed.** The token rides along with every job creation; the
+  API checks it for anonymous users and for busy networks. The Run button waits for it only without an account, so a
+  blocked widget doesn't stop members.

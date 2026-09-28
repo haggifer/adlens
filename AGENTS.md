@@ -31,6 +31,9 @@ npm test             # Jest + React Testing Library
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency (`npm run check:deps` fails on it).
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
+- An anonymous session counts as signed in (`isSignedIn`), so its history, quota and live updates work. Gate
+  account-only UI on `isAnonymous`, and never show an anonymous user's email (`AuthContext` gives `null`).
+- A Turnstile token is single-use: remount `HumanCheck` (a new `key`) after every analysis attempt.
 
 ## Conventions
 
