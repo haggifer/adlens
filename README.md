@@ -124,6 +124,6 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
   (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer; its
   analyses stay in the database but can no longer be reached.
-- **Turnstile is rendered for everyone, verified only when needed.** A job creation carries the token when the widget has
-  produced one; the API checks it only for anonymous users and for busy networks. The Run button waits for it only without an account, so a
-  blocked widget doesn't stop members.
+- **Turnstile is rendered for everyone, verified only when needed.** A job creation carries the token when the
+  widget has produced one; the API checks it only for anonymous users and for busy networks. The Run button waits for
+  it only without an account, so a blocked widget doesn't stop members.
