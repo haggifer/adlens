@@ -31,7 +31,17 @@ const renderTable = (auth: AuthContextValue = memberAuth()) => {
 const waitForLoaded = () =>
     waitFor(() => expect(screen.getByRole('table').closest('[aria-busy]')).toHaveAttribute('aria-busy', 'false'))
 
-const rowOf = (fileName: string) => screen.findByRole('row', { name: new RegExp(fileName) })
+// Via the file-name cell rather than findByRole('row', { name }): computing every row's accessible name in an antd table
+// takes seconds, enough to time out under a full test run.
+const rowOf = async (fileName: string): Promise<HTMLElement> => {
+    const row = (await screen.findByText(fileName)).closest('tr')
+
+    if (!row) {
+        throw new Error(`No table row holds ${fileName}`)
+    }
+
+    return row
+}
 
 describe('HistoryTable', () => {
     beforeEach(() => {
