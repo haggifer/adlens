@@ -13,6 +13,7 @@ const INVALID_LINK = 'This link is invalid or has expired'
 const ACCOUNT_LINK_FAILED_STATUS = 403
 const NEEDS_SIGN_IN_MESSAGE =
     'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.'
+const STILL_SIGNED_IN_MESSAGE = 'We couldn’t sign you out of this account. Sign out from the menu before continuing.'
 const SIGN_OUT_ATTEMPTS = 2
 
 // signOut already rejects on any failure (network or refused). One retry gives a blip a second chance, but the
@@ -48,6 +49,9 @@ export function ConfirmEmail({ token }: IProps) {
     // Better Auth signs the browser into the confirmed account before this outcome fires (its autoSignIn runs
     // before the after-hook), even though the anonymous history it was supposed to carry over never moved.
     const [needsSignIn, setNeedsSignIn] = useState(false)
+    // Both sign-out attempts failed, so the browser is still signed into the token's account (Better Auth
+    // autoSignIn) rather than genuinely needing to sign back in.
+    const [hasSignOutFailed, setHasSignOutFailed] = useState(false)
     // A token confirms once; the guard keeps React's development double-run of effects from sending it twice.
     const hasStarted = useRef(false)
 
@@ -66,6 +70,10 @@ export function ConfirmEmail({ token }: IProps) {
 
                 if (signOutError) {
                     notification.error({ title: describeError(signOutError), placement: 'bottomRight' })
+                    // The account is still signed in as far as Better Auth's client is concerned; let the header
+                    // reflect that instead of the sign-in prompt implying it doesn't know who's signed in.
+                    authClient.$store.notify('$sessionSignal')
+                    setHasSignOutFailed(true)
                 }
 
                 setNeedsSignIn(true)
@@ -87,6 +95,10 @@ export function ConfirmEmail({ token }: IProps) {
     }, [token, notification, router, signOut])
 
     const renderResult = () => {
+        if (needsSignIn && hasSignOutFailed) {
+            return <Result status="warning" title="Your email is confirmed." subTitle={STILL_SIGNED_IN_MESSAGE} />
+        }
+
         if (needsSignIn) {
             return (
                 <Result

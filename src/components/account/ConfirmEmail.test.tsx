@@ -98,7 +98,7 @@ describe('ConfirmEmail', () => {
         expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
-    it('retries a failed sign-out once, then reports it along with asking the visitor to sign in', async () => {
+    it('says the account is still signed in and refreshes the session when both sign-out attempts fail', async () => {
         const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
         const auth = memberAuth()
 
@@ -106,12 +106,17 @@ describe('ConfirmEmail', () => {
         jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
         renderConfirmEmail(TOKEN, auth)
 
-        expect(await screen.findByText(NEEDS_SIGN_IN_MESSAGE)).toBeInTheDocument()
+        expect(await screen.findByText('Your email is confirmed.')).toBeInTheDocument()
+        expect(
+            screen.getByText('We couldn’t sign you out of this account. Sign out from the menu before continuing.'),
+        ).toBeInTheDocument()
+        expect(screen.queryByText(NEEDS_SIGN_IN_MESSAGE)).not.toBeInTheDocument()
         expect(auth.signOut).toHaveBeenCalledTimes(2)
         expect(consoleError).toHaveBeenCalledTimes(2)
         expect(
             await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
         ).toBeInTheDocument()
+        expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
     })
 
     it('shows no failure notice once a retried sign-out succeeds', async () => {
