@@ -98,17 +98,36 @@ describe('ConfirmEmail', () => {
         expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
-    it('retries a failed sign-out once, then asks the visitor to sign in anyway', async () => {
+    it('retries a failed sign-out once, then reports it along with asking the visitor to sign in', async () => {
         const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
         const auth = memberAuth()
 
-        jest.mocked(auth.signOut).mockRejectedValue(new TypeError('Failed to fetch'))
+        jest.mocked(auth.signOut).mockRejectedValue({ code: 'NETWORK_ERROR' })
         jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
         renderConfirmEmail(TOKEN, auth)
 
         expect(await screen.findByText(NEEDS_SIGN_IN_MESSAGE)).toBeInTheDocument()
         expect(auth.signOut).toHaveBeenCalledTimes(2)
         expect(consoleError).toHaveBeenCalledTimes(2)
+        expect(
+            await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
+        ).toBeInTheDocument()
+    })
+
+    it('shows no failure notice once a retried sign-out succeeds', async () => {
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+        const auth = memberAuth()
+
+        jest.mocked(auth.signOut).mockRejectedValueOnce({ code: 'NETWORK_ERROR' }).mockResolvedValueOnce(undefined)
+        jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
+        renderConfirmEmail(TOKEN, auth)
+
+        expect(await screen.findByText(NEEDS_SIGN_IN_MESSAGE)).toBeInTheDocument()
+        expect(auth.signOut).toHaveBeenCalledTimes(2)
+        expect(consoleError).toHaveBeenCalledTimes(1)
+        expect(
+            screen.queryByText('Couldn’t reach AdLens. Check your connection and try again.'),
+        ).not.toBeInTheDocument()
     })
 
     it('treats a 403 with another code as an ordinary failure', async () => {

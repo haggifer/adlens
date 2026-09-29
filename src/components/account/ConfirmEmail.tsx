@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { authClient, verifyEmail } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -15,19 +15,23 @@ const NEEDS_SIGN_IN_MESSAGE =
     'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.'
 const SIGN_OUT_ATTEMPTS = 2
 
-// Better Auth's signOut throws on a network failure rather than returning an error; one retry gives a blip a second
-// chance, but the token's user must never be left looking signed in, so the sign-in prompt still follows either way.
-const signOutBeforeSignIn = async (signOut: () => Promise<void>): Promise<void> => {
-    for (let attempt = 1; attempt <= SIGN_OUT_ATTEMPTS; attempt += 1) {
-        const error = await runAuthRequest(async () => {
-            await signOut()
-            return { error: null }
-        })
+// signOut already rejects on any failure (network or refused). One retry gives a blip a second chance, but the
+// token's user must never be left looking signed in, so the sign-in prompt still follows even if both attempts
+// fail — the caller then also reports the last error instead of silently pretending it worked.
+const signOutBeforeSignIn = async (signOut: () => Promise<void>): Promise<AuthError | null> => {
+    let lastError: AuthError | null = null
 
-        if (!error) {
-            return
+    for (let attempt = 1; attempt <= SIGN_OUT_ATTEMPTS; attempt += 1) {
+        try {
+            await signOut()
+            return null
+        } catch (error) {
+            console.error(error)
+            lastError = error as AuthError
         }
     }
+
+    return lastError
 }
 
 interface IProps {
@@ -58,7 +62,12 @@ export function ConfirmEmail({ token }: IProps) {
             const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
 
             if (error?.status === ACCOUNT_LINK_FAILED_STATUS && error.code === 'ACCOUNT_LINK_FAILED') {
-                await signOutBeforeSignIn(signOut)
+                const signOutError = await signOutBeforeSignIn(signOut)
+
+                if (signOutError) {
+                    notification.error({ title: describeError(signOutError), placement: 'bottomRight' })
+                }
+
                 setNeedsSignIn(true)
                 return
             }
