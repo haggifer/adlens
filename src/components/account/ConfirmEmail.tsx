@@ -12,7 +12,7 @@ import { useStyles } from './styles'
 const INVALID_LINK = 'This link is invalid or has expired'
 const ACCOUNT_LINK_FAILED_STATUS = 403
 const NEEDS_SIGN_IN_MESSAGE =
-    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up stay in the browser where you started them.'
+    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.'
 const SIGN_OUT_ATTEMPTS = 2
 
 // Better Auth's signOut throws on a network failure rather than returning an error; one retry gives a blip a second

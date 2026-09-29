@@ -35,7 +35,7 @@ describe('ConfirmEmail', () => {
         await waitFor(() =>
             expect(
                 screen.getByText(
-                    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up stay in the browser where you started them.',
+                    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.',
                 ),
             ).toBeInTheDocument(),
         )
@@ -53,7 +53,7 @@ describe('ConfirmEmail', () => {
         await waitFor(() =>
             expect(
                 screen.getByText(
-                    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up stay in the browser where you started them.',
+                    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.',
                 ),
             ).toBeInTheDocument(),
         )
