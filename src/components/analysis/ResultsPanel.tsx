@@ -107,7 +107,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 {compliance.length ? (
                     compliance.map(renderFinding)
                 ) : (
-                    <Alert type="success" showIcon title="No policy risks found for the selected platforms." />
+                    <Alert type="success" showIcon title="No policy risks found." />
                 )}
                 <h3 className={styles.sectionLabel}>What’s holding it back?</h3>
                 {bestPractice.length ? (

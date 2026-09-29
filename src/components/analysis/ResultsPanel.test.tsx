@@ -60,7 +60,7 @@ describe('ResultsPanel', () => {
     it('says so when a section has nothing to report, and leaves out the specs without placements', () => {
         render(<ResultsPanel analysis={buildAnalysis()} />)
 
-        expect(screen.getByText('No policy risks found for the selected platforms.')).toBeInTheDocument()
+        expect(screen.getByText('No policy risks found.')).toBeInTheDocument()
         expect(screen.getByText('No gaps against the platforms’ best practices.')).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: SPECS_HEADING })).not.toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: ADVISORIES_HEADING })).not.toBeInTheDocument()
