@@ -1,62 +1,52 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { type Analysis, type Finding, type MetadataCheck, RulePlatform } from 'adlens-shared'
+import { RulePlatform } from 'adlens-shared'
+import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { ResultsPanel } from './ResultsPanel'
 
-const finding = (overrides: Partial<Finding>): Finding => ({
-    id: 'rule',
-    platform: [RulePlatform.Meta],
-    topic: 'Topic',
-    scope: 'compliance',
-    severity: 'warning',
-    verdict: 'fail',
-    evidence: 'Evidence',
-    quote: 'Quote',
-    ref: 'https://example.com/policy',
-    ...overrides,
-})
+const APPROVAL_HEADING = 'Will it be approved?'
+const BEST_PRACTICE_HEADING = 'What’s holding it back?'
+const SPECS_HEADING = 'Placement specs'
+const ADVISORIES_HEADING = 'Confirm in your campaign setup'
 
-const check = (overrides: Partial<MetadataCheck>): MetadataCheck => ({
-    id: 'spec',
-    topic: 'Spec',
-    severity: 'blocker',
-    verdict: 'fail',
-    detail: 'Detail',
-    quote: 'Quote',
-    ref: 'https://example.com/spec',
-    ...overrides,
-})
-
-const ANALYSIS: Analysis = {
-    model: 'gemini',
-    promptVersion: '2',
-    rulesetVersion: '1.1.0',
-    transcript: 'Buy now',
+const ANALYSIS = buildAnalysis({
     findings: [
-        finding({ id: 'claims', topic: 'Misleading claims', severity: 'blocker', time: { startS: 12.4, endS: 15 } }),
-        finding({ id: 'hook', topic: 'Weak hook', scope: 'best_practice', time: { startS: 0 } }),
+        buildFinding({
+            id: 'claims',
+            topic: 'Misleading claims',
+            severity: 'blocker',
+            time: { startS: 12.4, endS: 15 },
+        }),
+        buildFinding({ id: 'hook', topic: 'Weak hook', scope: 'best_practice', time: { startS: 0 } }),
     ],
     metadataChecks: [
-        check({ id: 'duration', topic: 'Bumper duration' }),
-        check({ id: 'ratio', topic: 'Aspect ratio', verdict: 'unknown' }),
-        check({ id: 'size', topic: 'File size', verdict: 'pass' }),
+        buildCheck({ id: 'duration', topic: 'Bumper duration' }),
+        buildCheck({ id: 'ratio', topic: 'Aspect ratio', verdict: 'unknown' }),
+        buildCheck({ id: 'size', topic: 'File size', verdict: 'pass' }),
     ],
-    advisories: [],
-    completedAt: '2026-09-23T10:00:00.000Z',
+})
+
+const heading = (name: string) => screen.getByRole('heading', { name })
+
+// The sections are flat siblings, so a result belongs to the last heading rendered before it.
+const expectBetween = (text: string, start: HTMLElement, end: HTMLElement) => {
+    const element = screen.getByText(text)
+
+    expect(start.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(element.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 }
 
 describe('ResultsPanel', () => {
-    it('groups findings into approval, best-practice and placement sections', () => {
+    it('puts each finding under its section, and lists only the specs that didn’t pass', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
-        expect(screen.getByText('Will it be approved?')).toBeInTheDocument()
-        expect(screen.getByText('Misleading claims')).toBeInTheDocument()
-        expect(screen.getByText('What’s holding it back?')).toBeInTheDocument()
-        expect(screen.getByText('Weak hook')).toBeInTheDocument()
-        expect(screen.getByText('Bumper duration')).toBeInTheDocument()
-        expect(screen.getByText('Aspect ratio')).toBeInTheDocument()
+        const passedSpecs = screen.getByText('1 spec passes.')
+
+        expectBetween('Misleading claims', heading(APPROVAL_HEADING), heading(BEST_PRACTICE_HEADING))
+        expectBetween('Weak hook', heading(BEST_PRACTICE_HEADING), heading(SPECS_HEADING))
+        expectBetween('Bumper duration', heading(SPECS_HEADING), passedSpecs)
+        expectBetween('Aspect ratio', heading(SPECS_HEADING), passedSpecs)
         expect(screen.queryByText('File size')).not.toBeInTheDocument()
-        expect(screen.getByText('1 spec passes.')).toBeInTheDocument()
     })
 
     it('counts failed spec blockers but not specs that could not be checked', () => {
@@ -64,6 +54,60 @@ describe('ResultsPanel', () => {
 
         expect(screen.getByText('2 blockers')).toBeInTheDocument()
         expect(screen.getByText('1 warning')).toBeInTheDocument()
+        expect(screen.getByText('0 to confirm')).toBeInTheDocument()
+    })
+
+    it('says so when a section has nothing to report, and leaves out the specs without placements', () => {
+        render(<ResultsPanel analysis={buildAnalysis()} />)
+
+        expect(screen.getByText('No policy risks found for the selected platforms.')).toBeInTheDocument()
+        expect(screen.getByText('No gaps against the platforms’ best practices.')).toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: SPECS_HEADING })).not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: ADVISORIES_HEADING })).not.toBeInTheDocument()
+    })
+
+    it('counts passing specs in the plural', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    metadataChecks: [buildCheck({ verdict: 'pass' }), buildCheck({ id: 'other', verdict: 'pass' })],
+                })}
+            />,
+        )
+
+        expect(heading(SPECS_HEADING)).toBeInTheDocument()
+        expect(screen.getByText('2 specs pass.')).toBeInTheDocument()
+    })
+
+    it('lists the rules to confirm in the campaign setup', () => {
+        const analysis = buildAnalysis({
+            advisories: [
+                {
+                    id: 'alcohol',
+                    platform: [RulePlatform.Meta],
+                    topic: 'Alcohol targeting',
+                    severity: 'blocker',
+                    check: 'Target only people of legal drinking age.',
+                    quote: 'Quote',
+                    ref: 'https://example.com/alcohol',
+                },
+            ],
+        })
+
+        render(<ResultsPanel analysis={analysis} />)
+
+        expect(screen.getByText('1 to confirm')).toBeInTheDocument()
+        expect(heading(ADVISORIES_HEADING)).toBeInTheDocument()
+        expect(screen.getByText('Target only people of legal drinking age.')).toBeInTheDocument()
+    })
+
+    it('links each finding to its source in a new tab', () => {
+        render(<ResultsPanel analysis={buildAnalysis({ findings: [buildFinding()] })} />)
+
+        const link = screen.getByRole('link', { name: /Source/ })
+
+        expect(link).toHaveAttribute('href', 'https://example.com/policy')
+        expect(link).toHaveAttribute('target', '_blank')
     })
 
     it('seeks the video to the start of a finding when its timestamp is clicked', async () => {
@@ -73,5 +117,13 @@ describe('ResultsPanel', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Play from 0:12–0:15' }))
 
         expect(onSeek).toHaveBeenCalledWith(12.4)
+    })
+
+    it('shows the transcript on request, or says there was no speech', async () => {
+        render(<ResultsPanel analysis={buildAnalysis({ transcript: '' })} />)
+
+        await userEvent.click(screen.getByRole('button', { name: /Transcript/ }))
+
+        expect(await screen.findByText('No speech detected.')).toBeInTheDocument()
     })
 })
