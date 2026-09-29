@@ -55,6 +55,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
   the links in emails are built by the API from its `WEB_ORIGIN`.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: the Turnstile widget's site key. Unset, it is Cloudflare's always-pass test key
   `1x00000000000000000000AA`, which works only with the API's test secret; `2x00000000000000000000AB` always fails.
+  A production build (`VERCEL_ENV=production`) fails without it rather than ship the test key.
 
 ## Routes
 
