@@ -3,6 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { createContext, ReactNode, useContext, useMemo } from 'react'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
+import { runAuthRequest } from '@/auth/errors'
 
 export interface AuthUser {
     id: string
@@ -39,9 +40,15 @@ export function AuthProvider({ children }: IProps) {
             isSignedIn: Boolean(user),
             isAnonymous,
             user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
-            // Cached server data belongs to the signed-in user, so it goes with the session.
+            // Cached server data belongs to the signed-in user, so it goes with the session. A refused or
+            // unreachable sign-out must not clear it or leave the caller thinking the user is signed out.
             signOut: async () => {
-                await signOutRequest()
+                const error = await runAuthRequest(() => signOutRequest())
+
+                if (error) {
+                    throw error
+                }
+
                 queryClient.clear()
             },
         }

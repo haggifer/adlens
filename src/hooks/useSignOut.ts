@@ -3,6 +3,7 @@
 import { App } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
+import { type AuthError, describeError } from '@/auth/errors'
 
 export function useSignOut(): () => Promise<void> {
     const router = useRouter()
@@ -15,7 +16,7 @@ export function useSignOut(): () => Promise<void> {
             router.push('/')
         } catch (error) {
             console.error(error)
-            notification.error({ title: 'Could not sign out. Please try again.', placement: 'bottomRight' })
+            notification.error({ title: describeError(error as AuthError), placement: 'bottomRight' })
         }
     }
 }

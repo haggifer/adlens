@@ -37,6 +37,8 @@ describe('AuthProvider', () => {
         jest.mocked(signOutRequest).mockClear()
     })
 
+    afterEach(() => jest.restoreAllMocks())
+
     it('is initializing and signed out until the session has loaded', () => {
         mockUseSession.mockReturnValue({ data: null, isPending: true })
 
@@ -98,22 +100,22 @@ describe('AuthProvider', () => {
 
     it('keeps the cache and reports the failure when the sign-out request never reaches the API', async () => {
         mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
-        jest.mocked(signOutRequest).mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+        const failure = new TypeError('Failed to fetch')
+
+        jest.mocked(signOutRequest).mockRejectedValueOnce(failure)
         const queryClient = createTestQueryClient()
 
         queryClient.setQueryData(JOBS_KEY, { pages: [] })
 
         const { result } = renderAuth(queryClient)
 
-        await expect(result.current.signOut()).rejects.toThrow('Failed to fetch')
+        await expect(result.current.signOut()).rejects.toEqual({ code: 'NETWORK_ERROR' })
         expect(queryClient.getQueryData(JOBS_KEY)).toEqual({ pages: [] })
+        expect(consoleError).toHaveBeenCalledWith(failure)
     })
 
-    // BUG: signOut awaits Better Auth's signOut without runAuthRequest, so a sign-out the API refuses (it answers
-    // `{ error }` instead of throwing) counts as a success: the cache is cleared and useSignOut sends the user home as
-    // if signed out, while the session cookie is still valid. AGENTS.md requires Better Auth calls to go through
-    // runAuthRequest; a returned error should reject like a thrown one, so useSignOut shows its failure notice.
-    it.skip('reports a sign-out the API refused instead of treating it as done', async () => {
+    it('reports a sign-out the API refused instead of treating it as done', async () => {
         mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
         jest.mocked(signOutRequest).mockResolvedValueOnce({
             data: null,
