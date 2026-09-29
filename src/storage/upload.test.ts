@@ -35,7 +35,13 @@ class FakeXhr {
         this.status = status
         this.onload?.()
     }
+
+    failNetwork() {
+        this.onerror?.()
+    }
 }
+
+const FILE_BYTES = 'abcd'
 
 const TARGET = {
     url: 'https://storage.googleapis.com/bucket/video?X-Goog-Signature=abc',
@@ -54,7 +60,7 @@ describe('uploadToSignedUrl', () => {
     })
 
     it('PUTs the file with exactly the signed headers and reports progress', async () => {
-        const file = new File(['abcd'], 'ad.mp4', { type: 'video/mp4' })
+        const file = new File([FILE_BYTES], 'ad.mp4', { type: 'video/mp4' })
         const onProgress = jest.fn()
         const upload = uploadToSignedUrl({ target: TARGET, file, onProgress })
         const xhr = FakeXhr.last
@@ -70,10 +76,37 @@ describe('uploadToSignedUrl', () => {
         expect(onProgress).toHaveBeenCalledWith(0.5)
     })
 
-    it('rejects with UPLOAD_INCOMPLETE when storage refuses the upload', async () => {
-        const upload = uploadToSignedUrl({ target: TARGET, file: new File(['abcd'], 'ad.mp4') })
+    it('skips progress events that carry no total', async () => {
+        const onProgress = jest.fn()
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4'), onProgress })
 
-        FakeXhr.last.respond(403)
+        FakeXhr.last.upload.onprogress?.({ lengthComputable: false, loaded: 2, total: 0 })
+        FakeXhr.last.respond(200)
+        await upload
+
+        expect(onProgress).not.toHaveBeenCalled()
+    })
+
+    it.each([199, 300, 403])('rejects with UPLOAD_INCOMPLETE when storage answers %i', async (status) => {
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+
+        FakeXhr.last.respond(status)
+
+        await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
+    })
+
+    it('accepts any 2xx answer', async () => {
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+
+        FakeXhr.last.respond(299)
+
+        await expect(upload).resolves.toBeUndefined()
+    })
+
+    it('rejects with UPLOAD_INCOMPLETE when the connection drops', async () => {
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+
+        FakeXhr.last.failNetwork()
 
         await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
     })

@@ -1,4 +1,80 @@
-import { formatCount } from './results'
+import type { Analysis, Finding, MetadataCheck } from 'adlens-shared'
+import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
+import { countIssues, formatCount, formatSeconds, formatTimeRange, splitResults } from './results'
+
+const analysis = (findings: Finding[], metadataChecks: MetadataCheck[]): Analysis =>
+    buildAnalysis({ findings, metadataChecks })
+
+const ids = (items: { id: string }[]) => items.map((item) => item.id)
+
+describe('splitResults', () => {
+    it('splits findings by scope, most severe first', () => {
+        const { compliance, bestPractice } = splitResults(
+            analysis(
+                [
+                    buildFinding({ id: 'claims-info', severity: 'info' }),
+                    buildFinding({ id: 'hook', scope: 'best_practice', severity: 'warning' }),
+                    buildFinding({ id: 'claims-blocker', severity: 'blocker' }),
+                    buildFinding({ id: 'captions', scope: 'best_practice', severity: 'blocker' }),
+                    buildFinding({ id: 'claims-warning', severity: 'warning' }),
+                ],
+                [],
+            ),
+        )
+
+        expect(ids(compliance)).toEqual(['claims-blocker', 'claims-warning', 'claims-info'])
+        expect(ids(bestPractice)).toEqual(['captions', 'hook'])
+    })
+
+    it('lists specs that failed or couldn’t be measured, and only counts the ones that passed', () => {
+        const { placementIssues, passedChecks } = splitResults(
+            analysis(
+                [],
+                [
+                    buildCheck({ id: 'ratio', severity: 'warning', verdict: 'unknown' }),
+                    buildCheck({ id: 'size', verdict: 'pass' }),
+                    buildCheck({ id: 'duration', severity: 'blocker', verdict: 'fail' }),
+                    buildCheck({ id: 'audio', verdict: 'pass' }),
+                ],
+            ),
+        )
+
+        expect(ids(placementIssues)).toEqual(['duration', 'ratio'])
+        expect(passedChecks).toBe(2)
+    })
+})
+
+describe('countIssues', () => {
+    it('counts blocker and warning findings, but not info ones', () => {
+        const counts = countIssues(
+            analysis(
+                [
+                    buildFinding({ severity: 'blocker' }),
+                    buildFinding({ severity: 'warning', verdict: 'warning' }),
+                    buildFinding({ severity: 'info' }),
+                ],
+                [],
+            ),
+        )
+
+        expect(counts).toEqual({ blockers: 1, warnings: 1 })
+    })
+
+    it('counts a spec only once it has failed, not when it passed or couldn’t be measured', () => {
+        const counts = countIssues(
+            analysis(
+                [],
+                [
+                    buildCheck({ severity: 'blocker', verdict: 'fail' }),
+                    buildCheck({ severity: 'blocker', verdict: 'unknown' }),
+                    buildCheck({ severity: 'warning', verdict: 'pass' }),
+                ],
+            ),
+        )
+
+        expect(counts).toEqual({ blockers: 1, warnings: 0 })
+    })
+})
 
 describe('formatCount', () => {
     it('uses the singular for exactly one', () => {
@@ -8,5 +84,27 @@ describe('formatCount', () => {
     it('uses the plural otherwise', () => {
         expect(formatCount(0, 'blocker', 'blockers')).toBe('0 blockers')
         expect(formatCount(3, 'warning', 'warnings')).toBe('3 warnings')
+    })
+})
+
+describe('formatSeconds', () => {
+    it('shows minutes and zero-padded seconds, dropping the fraction', () => {
+        expect(formatSeconds(0)).toBe('0:00')
+        expect(formatSeconds(12.9)).toBe('0:12')
+        expect(formatSeconds(59.99)).toBe('0:59')
+        expect(formatSeconds(60)).toBe('1:00')
+        expect(formatSeconds(75)).toBe('1:15')
+    })
+})
+
+describe('formatTimeRange', () => {
+    it('shows a range when the finding ends after it starts', () => {
+        expect(formatTimeRange({ startS: 12.4, endS: 15 })).toBe('0:12–0:15')
+    })
+
+    it('shows only the start for a moment, or an end that isn’t after the start', () => {
+        expect(formatTimeRange({ startS: 3 })).toBe('0:03')
+        expect(formatTimeRange({ startS: 3, endS: 3 })).toBe('0:03')
+        expect(formatTimeRange({ startS: 5, endS: 2 })).toBe('0:05')
     })
 })
