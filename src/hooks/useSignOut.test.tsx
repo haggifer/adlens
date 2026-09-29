@@ -30,6 +30,8 @@ const renderProbe = (auth: AuthContextValue) => {
 describe('useSignOut', () => {
     beforeEach(() => mockPush.mockClear())
 
+    afterEach(() => jest.restoreAllMocks())
+
     it('signs out and goes home', async () => {
         const auth = memberAuth()
         const { user } = renderProbe(auth)
@@ -52,11 +54,10 @@ describe('useSignOut', () => {
         expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
         expect(mockPush).not.toHaveBeenCalled()
         expect(consoleError).toHaveBeenCalledTimes(1)
-        consoleError.mockRestore()
     })
 
     it('shows the network-failure copy when the sign-out request never reaches the API', async () => {
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+        jest.spyOn(console, 'error').mockImplementation(() => {})
         const auth = memberAuth()
 
         jest.mocked(auth.signOut).mockRejectedValueOnce({ code: 'NETWORK_ERROR' })
@@ -68,6 +69,5 @@ describe('useSignOut', () => {
             await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
         ).toBeInTheDocument()
         expect(mockPush).not.toHaveBeenCalled()
-        consoleError.mockRestore()
     })
 })

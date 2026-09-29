@@ -18,6 +18,8 @@ export interface AuthContextValue {
     isSignedIn: boolean
     isAnonymous: boolean
     user: AuthUser | null
+    // Rejects with an AuthError (describeError gives its copy) on a refused or unreachable sign-out; clears the
+    // query cache only once it succeeds.
     signOut: () => Promise<void>
 }
 

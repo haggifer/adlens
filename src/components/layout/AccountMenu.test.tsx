@@ -27,6 +27,8 @@ describe('AccountMenu', () => {
         useContactModalStore.setState({ isOpen: false })
     })
 
+    afterEach(() => jest.restoreAllMocks())
+
     it('offers a signed-out visitor Sign In', async () => {
         const { user } = renderMenu(signedOutAuth())
 
@@ -68,6 +70,22 @@ describe('AccountMenu', () => {
 
             expect(auth.signOut).not.toHaveBeenCalled()
             expect(mockPush).not.toHaveBeenCalled()
+        })
+
+        it('shows the error and stays put when forgetting the browser fails', async () => {
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+            const auth = anonymousAuth()
+
+            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
+            const { user } = renderMenu(auth)
+
+            await user.click(screen.getByRole('button', { name: 'Forget this browser' }))
+            await user.click(await screen.findByRole('button', { name: 'Forget' }))
+
+            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
+            expect(mockPush).not.toHaveBeenCalled()
+            expect(consoleError).toHaveBeenCalledTimes(1)
         })
     })
 
