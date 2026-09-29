@@ -1,185 +1,294 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { Platform, RequestErrorCode, type Sample, VideoMimeType } from 'adlens-shared'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import type { UserEvent } from '@testing-library/user-event'
+import { type Job, type Quota, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
+import type { AuthContextValue } from '@/auth/AuthContext'
 import { ApiRequestError } from '@/api/errors'
-import { createSampleJob } from '@/api/jobs'
+import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { authClient, signIn } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { uploadToSignedUrl } from '@/storage/upload'
+import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth } from '@/test/auth'
+import { buildJob, buildSample } from '@/test/fixtures'
+import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import { AnalysisSettings } from './AnalysisSettings'
+import type { AnalysisSource } from './types'
 
-interface MockAuth {
-    user: { id: string } | null
-    isAnonymous: boolean
-    isInitializing?: boolean
-}
+const mockPush = jest.fn()
+const mockChallengeToken = 'challenge-token'
+const mockUseAuth = jest.fn<AuthContextValue, []>()
+let mockQuota: Quota | undefined
 
-let auth: MockAuth = { user: null, isAnonymous: false }
-
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))
-jest.mock('@/auth/AuthContext', () => ({ useAuth: () => auth }))
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({
-    authClient: { getSession: jest.fn(async () => ({ data: null })) },
-    signIn: { anonymous: jest.fn(async () => ({ error: null })) },
+    authClient: { getSession: jest.fn() },
+    signIn: { anonymous: jest.fn() },
 }))
-jest.mock('@/api/jobs', () => ({
-    createJob: jest.fn(),
-    createSampleJob: jest.fn(async () => ({ id: 'j1' })),
-    startAnalysis: jest.fn(async () => ({ id: 'j1' })),
-}))
-jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
+jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(), startAnalysis: jest.fn() }))
+jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: mockQuota }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; a button stands in for a passed check.
 jest.mock('./HumanCheck', () => ({
-    HumanCheck: ({ onToken }: { onToken: (token: string | null) => void }) => {
-        const { createElement } = jest.requireActual('react')
-
-        return createElement('button', { type: 'button', onClick: () => onToken('token-1') }, 'Pass the check')
-    },
+    HumanCheck: ({ onToken }: { onToken: (token: string | null) => void }) => (
+        <button type="button" onClick={() => onToken(mockChallengeToken)}>
+            Pass the check
+        </button>
+    ),
 }))
 
-const SAMPLE: Sample = {
-    id: 's1',
-    title: 'Running shoes',
-    description: 'A 15-second product spot',
-    settings: { platforms: [Platform.Meta], placements: [], markets: [] },
-    media: {
-        durationS: 15,
-        width: 1080,
-        height: 1920,
-        hasAudio: true,
-        sizeBytes: 1000,
-        contentType: VideoMimeType.Mp4,
-    },
-    contentType: VideoMimeType.Mp4,
-    previewUrl: 'https://storage.googleapis.com/bucket/samples/s1.mp4',
+const SAMPLE = buildSample()
+
+const SAMPLE_SOURCE: AnalysisSource = { kind: 'sample', sample: SAMPLE }
+
+const JOB: Job = buildJob({ id: 'job-7' })
+
+const UPLOAD_TARGET: UploadTarget = {
+    url: 'https://storage.googleapis.com/bucket/video?X-Goog-Signature=abc',
+    headers: { 'Content-Type': VideoMimeType.Mp4 },
 }
 
-const renderSettings = () =>
-    render(
-        <QueryClientProvider client={new QueryClient()}>
-            <AnalysisSettings source={{ kind: 'sample', sample: SAMPLE }} />
-        </QueryClientProvider>,
-    )
+const UNAVAILABLE_COPY = 'AdLens is briefly unavailable. Please try again.'
+
+const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
+    mockUseAuth.mockReturnValue(auth)
+
+    return renderWithProviders(<AnalysisSettings source={source} />)
+}
 
 const runButton = () => screen.getByRole('button', { name: /run analysis/i })
+
+const passCheckAndRun = async (user: UserEvent) => {
+    await user.click(screen.getByRole('button', { name: 'Pass the check' }))
+    await user.click(runButton())
+}
 
 describe('AnalysisSettings', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockQuota = undefined
         useAuthModalStore.setState({ view: null })
         useContactModalStore.setState({ isOpen: false })
+        jest.mocked(authClient.getSession).mockResolvedValue({ data: null, error: null } as never)
+        jest.mocked(signIn.anonymous).mockResolvedValue({ data: null, error: null } as never)
+        jest.mocked(createSampleJob).mockResolvedValue(JOB)
+        jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
+        jest.mocked(startAnalysis).mockResolvedValue(JOB)
+        jest.mocked(uploadToSignedUrl).mockResolvedValue(undefined)
     })
 
-    it('signs a visitor in anonymously right before the first analysis, sending the check’s token', async () => {
-        auth = { user: null, isAnonymous: false }
-        renderSettings()
+    afterEach(() => jest.restoreAllMocks())
 
-        expect(runButton()).toBeDisabled()
+    describe('for a visitor without a session', () => {
+        it('waits for the check, signs in anonymously right before the run, and opens the analysis', async () => {
+            const queryClient = createTestQueryClient()
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(runButton())
+            // The run creates a new anonymous user, whose queries the pre-run user id wouldn't match.
+            queryClient.setQueryData(['quota', 'anon-new'], { used: 0, limit: 3, nextFreeAt: null })
+            mockUseAuth.mockReturnValue(signedOutAuth())
+            const { user } = renderWithProviders(<AnalysisSettings source={SAMPLE_SOURCE} />, queryClient)
 
-        await waitFor(() =>
+            expect(runButton()).toBeDisabled()
+
+            await passCheckAndRun(user)
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
             expect(createSampleJob).toHaveBeenCalledWith({
-                sampleId: 's1',
-                settings: expect.any(Object),
-                challengeToken: 'token-1',
-            }),
-        )
-        expect(jest.mocked(signIn.anonymous).mock.invocationCallOrder[0]).toBeLessThan(
-            jest.mocked(createSampleJob).mock.invocationCallOrder[0],
-        )
+                sampleId: SAMPLE.id,
+                settings: SAMPLE.settings,
+                challengeToken: mockChallengeToken,
+            })
+            expect(jest.mocked(signIn.anonymous).mock.invocationCallOrder[0]).toBeLessThan(
+                jest.mocked(createSampleJob).mock.invocationCallOrder[0],
+            )
+            expect(startAnalysis).toHaveBeenCalledWith(JOB.id)
+            expect(queryClient.getQueryState(['quota', 'anon-new'])?.isInvalidated).toBe(true)
+        })
+
+        it('uses the session it finds instead of signing in anonymously over it', async () => {
+            jest.mocked(authClient.getSession).mockResolvedValueOnce({
+                data: { user: { id: 'member-1' } },
+                error: null,
+            } as never)
+            const { user } = renderSettings(signedOutAuth())
+
+            await passCheckAndRun(user)
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+        })
+
+        it('doesn’t sign in anonymously when the session check fails, and lets the visitor retry', async () => {
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+            jest.mocked(authClient.getSession).mockRejectedValueOnce(new TypeError('Failed to fetch'))
+            const { user } = renderSettings(signedOutAuth())
+
+            await passCheckAndRun(user)
+
+            expect(await screen.findByText(UNAVAILABLE_COPY)).toBeInTheDocument()
+            expect(consoleError).toHaveBeenCalled()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+            expect(createSampleJob).not.toHaveBeenCalled()
+            // A Turnstile token works once, so the failed run asks for a new check.
+            expect(runButton()).toBeDisabled()
+
+            await passCheckAndRun(user)
+
+            await waitFor(() => expect(createSampleJob).toHaveBeenCalledTimes(1))
+        })
+
+        it('treats a session check the API answered with an error as unknown', async () => {
+            jest.mocked(authClient.getSession).mockResolvedValueOnce({
+                data: null,
+                error: { status: 500 },
+            } as never)
+            const { user } = renderSettings(signedOutAuth())
+
+            await passCheckAndRun(user)
+
+            expect(await screen.findByText(UNAVAILABLE_COPY)).toBeInTheDocument()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+        })
+
+        it('explains a rate-limited anonymous sign-in and creates no job', async () => {
+            jest.mocked(signIn.anonymous).mockResolvedValueOnce({ data: null, error: { status: 429 } } as never)
+            const { user } = renderSettings(signedOutAuth())
+
+            await passCheckAndRun(user)
+
+            expect(await screen.findByText('Too many requests. Wait a moment and try again.')).toBeInTheDocument()
+            expect(createSampleJob).not.toHaveBeenCalled()
+        })
     })
 
-    it('keeps Run disabled while the session is still loading, and never signs in anonymously', async () => {
-        auth = { user: null, isAnonymous: false, isInitializing: true }
-        renderSettings()
+    describe('while the session is still loading', () => {
+        it('keeps Run disabled even after the check passes, and never signs in anonymously', async () => {
+            const { user } = renderSettings(initializingAuth())
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+            await user.click(screen.getByRole('button', { name: 'Pass the check' }))
 
-        expect(runButton()).toBeDisabled()
-        expect(signIn.anonymous).not.toHaveBeenCalled()
+            expect(runButton()).toBeDisabled()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+        })
+
+        it('fails a run submitted anyway, instead of leaving it loading as a success', async () => {
+            renderSettings(initializingAuth())
+
+            // The Run button is disabled, so only a direct submit (Enter in a field, a script) reaches the handler.
+            fireEvent.submit(runButton().closest('form') as HTMLFormElement)
+
+            expect(await screen.findByText(UNAVAILABLE_COPY)).toBeInTheDocument()
+            expect(authClient.getSession).not.toHaveBeenCalled()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+            expect(createSampleJob).not.toHaveBeenCalled()
+        })
     })
 
-    it('fails a run submitted while the session is still loading, instead of hanging as a success', async () => {
-        auth = { user: null, isAnonymous: false, isInitializing: true }
-        const { container } = renderSettings()
+    describe('for a member', () => {
+        it('runs without waiting for the check, and never signs them in again', async () => {
+            const { user } = renderSettings(memberAuth())
 
-        fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+            await user.click(runButton())
 
-        await waitFor(() =>
-            expect(screen.getByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument(),
-        )
-        expect(signIn.anonymous).not.toHaveBeenCalled()
-        expect(createSampleJob).not.toHaveBeenCalled()
-    })
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+            expect(createSampleJob).toHaveBeenCalledWith({
+                sampleId: SAMPLE.id,
+                settings: SAMPLE.settings,
+                challengeToken: undefined,
+            })
+            expect(authClient.getSession).not.toHaveBeenCalled()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+        })
 
-    it('confirms there is no active session before signing in anonymously', async () => {
-        auth = { user: null, isAnonymous: false }
-        jest.mocked(authClient.getSession).mockResolvedValueOnce({ data: { user: { id: 'member-1' } } })
-        renderSettings()
+        it('offers the contact form when the network hit its hard limit', async () => {
+            jest.mocked(createSampleJob).mockRejectedValueOnce(
+                new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded),
+            )
+            const { user } = renderSettings(memberAuth())
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(runButton())
+            await user.click(runButton())
+            await user.click(await screen.findByRole('button', { name: 'Contact us' }))
 
-        await waitFor(() => expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ sampleId: 's1' })))
-        expect(signIn.anonymous).not.toHaveBeenCalled()
-    })
+            expect(useContactModalStore.getState().isOpen).toBe(true)
+        })
 
-    it('doesn’t sign in anonymously when the session check itself fails, and lets the visitor retry', async () => {
-        auth = { user: null, isAnonymous: false }
-        jest.mocked(authClient.getSession).mockRejectedValueOnce(new Error('network down'))
-        renderSettings()
+        it('shows how many analyses are used while some are left', () => {
+            mockQuota = { used: 2, limit: 3, nextFreeAt: null }
+            renderSettings(memberAuth())
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(runButton())
+            expect(screen.getByText('2 of 3 analyses used in the last 7 days')).toBeInTheDocument()
+            expect(runButton()).toBeEnabled()
+        })
 
-        await waitFor(() =>
-            expect(screen.getByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument(),
-        )
-        expect(signIn.anonymous).not.toHaveBeenCalled()
-        expect(createSampleJob).not.toHaveBeenCalled()
-        expect(runButton()).toBeDisabled()
+        it('disables Run once the quota is used up, and says when the next analysis is free', () => {
+            mockQuota = { used: 3, limit: 3, nextFreeAt: '2026-10-01T09:30:00.000Z' }
+            renderSettings(memberAuth())
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(runButton())
+            expect(
+                screen.getByText(/You’ve used all 3 analyses for the last 7 days. The next one is available on/),
+            ).toBeInTheDocument()
+            expect(runButton()).toBeDisabled()
+        })
 
-        await waitFor(() => expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ sampleId: 's1' })))
-    })
+        it('never disables Run for an unlimited account', () => {
+            mockQuota = { used: 40, limit: null, nextFreeAt: null }
+            renderSettings(memberAuth())
 
-    it('lets a member run without waiting for the check, and never signs them in again', async () => {
-        auth = { user: { id: 'u1' }, isAnonymous: false }
-        renderSettings()
-
-        await userEvent.click(runButton())
-
-        await waitFor(() => expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ sampleId: 's1' })))
-        expect(signIn.anonymous).not.toHaveBeenCalled()
+            expect(screen.getByText('Unlimited analyses')).toBeInTheDocument()
+            expect(runButton()).toBeEnabled()
+        })
     })
 
     it('opens sign-up when the network’s analyses without an account are used up', async () => {
-        auth = { user: { id: 'anon-1' }, isAnonymous: true }
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
-        renderSettings()
+        const { user } = renderSettings(anonymousAuth())
 
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(runButton())
+        await passCheckAndRun(user)
 
         await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signup'))
         expect(signIn.anonymous).not.toHaveBeenCalled()
         expect(runButton()).toBeDisabled()
     })
 
-    it('offers the Contact form when the network hit its hard limit', async () => {
-        auth = { user: { id: 'u1' }, isAnonymous: false }
-        jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded))
-        renderSettings()
+    describe('for an uploaded file', () => {
+        const FILE = new File(['video-bytes'], 'launch.mp4', { type: VideoMimeType.Mp4 })
 
-        await userEvent.click(runButton())
-        await userEvent.click(await screen.findByRole('button', { name: 'Contact us' }))
+        const FILE_SOURCE: AnalysisSource = {
+            kind: 'file',
+            file: FILE,
+            contentType: VideoMimeType.Mp4,
+            url: 'blob:launch',
+        }
 
-        expect(useContactModalStore.getState().isOpen).toBe(true)
+        it('declares the file, uploads it to the signed URL, then starts the analysis', async () => {
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await user.click(runButton())
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+            expect(createJob).toHaveBeenCalledWith({
+                settings: { platforms: [], placements: [], markets: [] },
+                file: { name: 'launch.mp4', contentType: VideoMimeType.Mp4, size: FILE.size },
+                challengeToken: undefined,
+            })
+            expect(uploadToSignedUrl).toHaveBeenCalledWith(
+                expect.objectContaining({ target: UPLOAD_TARGET, file: FILE }),
+            )
+            expect(jest.mocked(uploadToSignedUrl).mock.invocationCallOrder[0]).toBeLessThan(
+                jest.mocked(startAnalysis).mock.invocationCallOrder[0],
+            )
+        })
+
+        it('doesn’t start the analysis when the upload fails', async () => {
+            jest.mocked(uploadToSignedUrl).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.UploadIncomplete))
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await user.click(runButton())
+
+            expect(await screen.findByText("The upload didn't finish. Please try again.")).toBeInTheDocument()
+            expect(startAnalysis).not.toHaveBeenCalled()
+            expect(mockPush).not.toHaveBeenCalled()
+        })
     })
 })

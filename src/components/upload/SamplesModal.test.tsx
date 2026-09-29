@@ -1,56 +1,106 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Placement, Platform, type Sample, VideoMimeType } from 'adlens-shared'
-import { SampleRow } from './SamplesModal'
+import { Placement, Platform, RequestErrorCode } from 'adlens-shared'
+import { ApiRequestError } from '@/api/errors'
+import { listSamples } from '@/api/samples'
+import { buildSample } from '@/test/fixtures'
+import { renderWithProviders } from '@/test/render'
+import { SampleRow, SamplesModal } from './SamplesModal'
 
-const SAMPLE: Sample = {
-    id: 's1',
-    title: 'Running shoes',
-    description: 'A 15-second product spot with a spoken offer',
+jest.mock('@/api/samples', () => ({ listSamples: jest.fn() }))
+
+const SAMPLE = buildSample({
     settings: { platforms: [Platform.YouTube], placements: [Placement.YouTubeShorts], markets: [] },
-    media: {
-        durationS: 15,
-        width: 1080,
-        height: 1920,
-        hasAudio: true,
-        sizeBytes: 5000,
-        contentType: VideoMimeType.Mp4,
-    },
-    contentType: VideoMimeType.Mp4,
-    previewUrl: 'https://storage.googleapis.com/bucket/samples/s1.mp4?X-Goog-Signature=abc',
-}
+})
+
+const ROW_NAME = /use sample ad: running shoes/i
+
+// A <video> has no ARIA role, so the preview is found by its tag.
+const getPreview = (container: HTMLElement) => container.querySelector('video') as HTMLVideoElement
 
 describe('SampleRow', () => {
-    it('shows the preview, platforms and description', () => {
+    it('shows the preview, duration, platforms and description', () => {
         const { container } = render(<SampleRow sample={SAMPLE} onSelect={jest.fn()} />)
 
         expect(screen.getByText('Running shoes')).toBeInTheDocument()
+        expect(screen.getByText('0:15')).toBeInTheDocument()
         expect(screen.getByText('YouTube')).toBeInTheDocument()
-        expect(screen.getByText('A 15-second product spot with a spoken offer')).toBeInTheDocument()
-        expect(container.querySelector('video')).toHaveAttribute('src', SAMPLE.previewUrl)
+        expect(screen.getByText(SAMPLE.description)).toBeInTheDocument()
+        expect(getPreview(container)).toHaveAttribute('src', SAMPLE.previewUrl)
     })
 
-    it('selects the sample when the row is clicked or activated with the keyboard', async () => {
+    it('says a sample without platforms checks the general rules', () => {
+        render(
+            <SampleRow
+                sample={buildSample({ settings: { platforms: [], placements: [], markets: [] } })}
+                onSelect={jest.fn()}
+            />,
+        )
+
+        expect(screen.getByText('General rules')).toBeInTheDocument()
+    })
+
+    it('selects the sample when the row is clicked', async () => {
         const onSelect = jest.fn()
 
         render(<SampleRow sample={SAMPLE} onSelect={onSelect} />)
+        await userEvent.click(screen.getByText(SAMPLE.description))
 
-        const row = screen.getByRole('button', { name: /use sample ad: running shoes/i })
-
-        await userEvent.click(screen.getByText('A 15-second product spot with a spoken offer'))
-        row.focus()
-        await userEvent.keyboard('{Enter}')
-
-        expect(onSelect).toHaveBeenCalledTimes(2)
         expect(onSelect).toHaveBeenCalledWith(SAMPLE)
     })
 
-    it('lets the preview play without selecting the sample', () => {
+    it.each(['{Enter}', ' '])('selects the sample from the keyboard with %p', async (key) => {
+        const onSelect = jest.fn()
+
+        render(<SampleRow sample={SAMPLE} onSelect={onSelect} />)
+        await userEvent.tab()
+
+        expect(screen.getByRole('button', { name: ROW_NAME })).toHaveFocus()
+
+        await userEvent.keyboard(key)
+
+        expect(onSelect).toHaveBeenCalledTimes(1)
+        expect(onSelect).toHaveBeenCalledWith(SAMPLE)
+    })
+
+    it('lets the preview play without selecting the sample', async () => {
         const onSelect = jest.fn()
         const { container } = render(<SampleRow sample={SAMPLE} onSelect={onSelect} />)
 
-        fireEvent.click(container.querySelector('video')!)
+        await userEvent.click(getPreview(container))
 
         expect(onSelect).not.toHaveBeenCalled()
+    })
+})
+
+describe('SamplesModal', () => {
+    beforeEach(() => jest.mocked(listSamples).mockReset())
+
+    it('loads the samples only once the picker opens', async () => {
+        jest.mocked(listSamples).mockResolvedValue([SAMPLE])
+        const { rerender } = renderWithProviders(
+            <SamplesModal isOpen={false} onClose={jest.fn()} onSelect={jest.fn()} />,
+        )
+
+        expect(listSamples).not.toHaveBeenCalled()
+
+        rerender(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
+
+        expect(await screen.findByRole('button', { name: ROW_NAME })).toBeInTheDocument()
+        expect(listSamples).toHaveBeenCalledTimes(1)
+    })
+
+    it('says when there are no samples yet', async () => {
+        jest.mocked(listSamples).mockResolvedValue([])
+        renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
+
+        expect(await screen.findByText('No sample ads are available yet.')).toBeInTheDocument()
+    })
+
+    it('shows the copy for a failed load', async () => {
+        jest.mocked(listSamples).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+        renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
+
+        expect(await screen.findByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument()
     })
 })
