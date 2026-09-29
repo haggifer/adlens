@@ -120,7 +120,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
   crawlers create no users, and their history, quota and live updates work as for anyone. The header offers "Sign up
   to keep your history"; signing up (confirming the email in the same browser) or signing in moves the analyses to the
-  account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`).
+  account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
+  (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer; its
+  analyses stay in the database but can no longer be reached.
 - **Turnstile is rendered for everyone, verified only when needed.** The token rides along with every job creation; the
   API checks it for anonymous users and for busy networks. The Run button waits for it only without an account, so a
   blocked widget doesn't stop members.

@@ -17,6 +17,7 @@ import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { type AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useQuota } from '@/hooks/useQuota'
 import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
@@ -54,6 +55,7 @@ export function MobileMenu() {
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
+    const forgetBrowser = useForgetBrowser()
     const { quota } = useQuota()
     const [isOpen, setIsOpen] = useState(false)
     const hasAccount = isSignedIn && !isAnonymous
@@ -68,6 +70,11 @@ export function MobileMenu() {
     const handleSignOut = () => {
         close()
         void signOut()
+    }
+
+    const handleForgetBrowser = () => {
+        close()
+        forgetBrowser()
     }
 
     const handleAuth = (view: AuthView) => {
@@ -137,6 +144,17 @@ export function MobileMenu() {
                     <button type="button" className={styles.drawerItem} data-danger="true" onClick={handleSignOut}>
                         <LogoutOutlined />
                         Sign Out
+                    </button>
+                )}
+                {isAnonymous && (
+                    <button
+                        type="button"
+                        className={styles.drawerItem}
+                        data-danger="true"
+                        onClick={handleForgetBrowser}
+                    >
+                        <LogoutOutlined />
+                        Forget this browser
                     </button>
                 )}
             </Drawer>

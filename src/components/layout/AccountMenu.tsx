@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
 import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
@@ -24,6 +25,7 @@ export function AccountMenu() {
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
+    const forgetBrowser = useForgetBrowser()
     const isHoverCapable = useHoverCapable()
 
     if (!isSignedIn) {
@@ -37,6 +39,9 @@ export function AccountMenu() {
     if (isAnonymous) {
         return (
             <span className="d-flex gap-2">
+                <Button type="text" onClick={forgetBrowser}>
+                    Forget this browser
+                </Button>
                 <Button onClick={() => setView('signin')}>Sign In</Button>
                 <Button type="primary" onClick={() => setView('signup')}>
                     Sign up to keep your history
