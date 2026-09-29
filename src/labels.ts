@@ -3,6 +3,9 @@ import type { SocialProvider } from '@/auth/types'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
 
+// An analysis with no platform chosen is checked against every platform's rules.
+export const ALL_PLATFORMS_LABEL = 'All platforms'
+
 export const PLATFORM_LABELS: Record<Platform, string> = {
     [Platform.Meta]: 'Meta (Facebook, Instagram)',
     [Platform.TikTok]: 'TikTok',

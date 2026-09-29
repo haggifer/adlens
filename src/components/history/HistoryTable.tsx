@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { MouseEvent } from 'react'
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { useJobs } from '@/hooks/useJobs'
-import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
+import { ALL_PLATFORMS_LABEL, JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
 const formatCreatedAt = (job: Job) => new Date(job.createdAt).toLocaleString()
@@ -42,7 +42,7 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
         render: (_, job) =>
             job.settings.platforms.length
                 ? job.settings.platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ')
-                : 'General rules',
+                : ALL_PLATFORMS_LABEL,
     },
     {
         title: 'Status',

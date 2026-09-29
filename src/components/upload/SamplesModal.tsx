@@ -5,7 +5,7 @@ import { Alert, Empty, Modal, Skeleton, type SkeletonProps, Tag } from 'antd'
 import { KeyboardEvent, SyntheticEvent } from 'react'
 import { formatSeconds } from '@/components/analysis/results'
 import { useSamples } from '@/hooks/useSamples'
-import { PLATFORM_LABELS } from '@/labels'
+import { ALL_PLATFORMS_LABEL, PLATFORM_LABELS } from '@/labels'
 import { useStyles } from './styles'
 
 const SKELETON_ROWS = 3
@@ -49,7 +49,7 @@ export const SampleRow = ({ sample, onSelect }: { sample: Sample; onSelect: (sam
                     {platforms.length ? (
                         platforms.map((platform) => <Tag key={platform}>{PLATFORM_LABELS[platform]}</Tag>)
                     ) : (
-                        <Tag>General rules</Tag>
+                        <Tag>{ALL_PLATFORMS_LABEL}</Tag>
                     )}
                 </div>
                 <p className={styles.sampleDescription}>{sample.description}</p>

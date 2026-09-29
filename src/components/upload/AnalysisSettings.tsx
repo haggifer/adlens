@@ -53,7 +53,13 @@ const getPlacementOptions = (platforms: Platform[]) =>
     }))
 
 const renderMarketsSelect = ({ field }: { field: ControllerRenderProps<AnalysisSettingsInput, 'markets'> }) => (
-    <Select {...field} mode="multiple" placeholder="Adds local advertising rules" options={MARKET_OPTIONS} allowClear />
+    <Select
+        {...field}
+        mode="multiple"
+        placeholder="Leave empty to check every market"
+        options={MARKET_OPTIONS}
+        allowClear
+    />
 )
 
 const formatNextFree = (nextFreeAt: string) =>
@@ -306,7 +312,7 @@ export function AnalysisSettings({ source }: IProps) {
                                 onChange={handlePlatformsChange}
                                 onBlur={field.onBlur}
                                 mode="multiple"
-                                placeholder="Leave empty to check general rules only"
+                                placeholder="Leave empty to check every platform"
                                 options={PLATFORM_OPTIONS}
                                 allowClear
                             />

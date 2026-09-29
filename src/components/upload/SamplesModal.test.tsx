@@ -29,7 +29,7 @@ describe('SampleRow', () => {
         expect(getPreview(container)).toHaveAttribute('src', SAMPLE.previewUrl)
     })
 
-    it('says a sample without platforms checks the general rules', () => {
+    it('says a sample without platforms is checked against all of them', () => {
         render(
             <SampleRow
                 sample={buildSample({ settings: { platforms: [], placements: [], markets: [] } })}
@@ -37,7 +37,7 @@ describe('SampleRow', () => {
             />,
         )
 
-        expect(screen.getByText('General rules')).toBeInTheDocument()
+        expect(screen.getByText('All platforms')).toBeInTheDocument()
     })
 
     it('selects the sample when the row is clicked', async () => {

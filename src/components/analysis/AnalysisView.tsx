@@ -10,7 +10,7 @@ import { BackButton } from '@/components/utils/BackButton'
 import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { useJob } from '@/hooks/useJob'
 import { useJobVideo } from '@/hooks/useJobVideo'
-import { PLATFORM_LABELS } from '@/labels'
+import { ALL_PLATFORMS_LABEL, PLATFORM_LABELS } from '@/labels'
 import { DeleteJobButton } from './DeleteJobButton'
 import { JobStatusPanel } from './JobStatusPanel'
 import { ResultsPanel } from './ResultsPanel'
@@ -98,7 +98,7 @@ export function AnalysisView({ jobId }: IProps) {
                         {job.sampleId && <Tag color="processing">Sample ad</Tag>}
                     </div>
                     <p className={styles.pageMeta}>
-                        {platforms || 'General rules'} · {new Date(job.createdAt).toLocaleString()}
+                        {platforms || ALL_PLATFORMS_LABEL} · {new Date(job.createdAt).toLocaleString()}
                     </p>
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
