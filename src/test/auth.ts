@@ -1,6 +1,8 @@
 import type { AuthContextValue, AuthUser } from '@/auth/AuthContext'
 
-export const MEMBER_USER: AuthUser = { id: 'member-1', email: 'ann@example.com', name: 'Ann' }
+export const MEMBER_EMAIL = 'ann@example.com'
+
+export const MEMBER_USER: AuthUser = { id: 'member-1', email: MEMBER_EMAIL, name: 'Ann' }
 
 // AuthContext hides an anonymous user's placeholder address, so the UI only ever sees null.
 export const ANONYMOUS_USER: AuthUser = { id: 'anon-1', email: null, name: 'Anonymous' }

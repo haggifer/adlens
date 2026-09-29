@@ -1,64 +1,128 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { App } from 'antd'
+import { screen, waitFor, within } from '@testing-library/react'
+import type { Quota } from 'adlens-shared'
+import type { AuthContextValue } from '@/auth/AuthContext'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth } from '@/test/auth'
+import { renderWithProviders } from '@/test/render'
 import { MobileMenu } from './MobileMenu'
 
-const signOut = jest.fn(async () => undefined)
-let isAnonymous = true
+const mockUseAuth = jest.fn<AuthContextValue, []>()
+const mockPush = jest.fn()
+let mockQuota: Quota | undefined
 
-jest.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => ({ push: jest.fn() }) }))
-jest.mock('@/auth/AuthContext', () => ({
-    useAuth: () => ({
-        isSignedIn: true,
-        isAnonymous,
-        user: { id: 'u1', name: isAnonymous ? 'Anonymous' : 'Ann', email: isAnonymous ? null : 'ann@example.com' },
-        signOut,
-    }),
-}))
-jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
+jest.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => ({ push: mockPush }) }))
+jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
+jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: mockQuota }) }))
 jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, setScheme: jest.fn() }) }))
 
-const openMenu = async () => {
-    render(
-        <App>
-            <MobileMenu />
-        </App>,
-    )
-    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }))
+const QUOTA: Quota = { used: 1, limit: 3, nextFreeAt: null }
+
+const FORGET_WARNING = 'Analyses you ran here without an account will no longer be reachable.'
+
+const openMenu = async (auth: AuthContextValue) => {
+    mockUseAuth.mockReturnValue(auth)
+
+    const { user } = renderWithProviders(<MobileMenu />)
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }))
+
+    const menu = await screen.findByRole('dialog', { name: 'Menu' })
+
+    return { user, menu: within(menu) }
 }
 
 describe('MobileMenu', () => {
     beforeEach(() => {
-        signOut.mockClear()
-        isAnonymous = true
+        mockPush.mockClear()
+        mockQuota = QUOTA
+        useAuthModalStore.setState({ view: null })
+        useContactModalStore.setState({ isOpen: false })
     })
 
-    it('lets an anonymous visitor forget this browser once they confirm', async () => {
-        await openMenu()
-        await userEvent.click(await screen.findByRole('button', { name: /Forget this browser/ }))
+    describe('for an anonymous visitor', () => {
+        it('shows the count, the sign-up call to action and Forget this browser, but no email or account items', async () => {
+            const { menu } = await openMenu(anonymousAuth())
 
-        expect(
-            await screen.findByText('Analyses you ran here without an account will no longer be reachable.'),
-        ).toBeInTheDocument()
+            expect(menu.getByText('2/3 analyses left')).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: 'Sign up to keep your history' })).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: /Forget this browser/ })).toBeInTheDocument()
+            expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
+            expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()
+            expect(menu.queryByText(/@/)).not.toBeInTheDocument()
+        })
 
-        await userEvent.click(screen.getByRole('button', { name: 'Forget' }))
+        it('opens sign-up from the call to action', async () => {
+            const { user, menu } = await openMenu(anonymousAuth())
 
-        await waitFor(() => expect(signOut).toHaveBeenCalledTimes(1))
+            await user.click(menu.getByRole('button', { name: 'Sign up to keep your history' }))
+
+            expect(useAuthModalStore.getState().view).toBe('signup')
+        })
+
+        it('forgets this browser once the visitor confirms', async () => {
+            const auth = anonymousAuth()
+            const { user, menu } = await openMenu(auth)
+
+            await user.click(menu.getByRole('button', { name: /Forget this browser/ }))
+
+            expect(await screen.findByText(FORGET_WARNING)).toBeInTheDocument()
+
+            await user.click(screen.getByRole('button', { name: 'Forget' }))
+
+            expect(auth.signOut).toHaveBeenCalledTimes(1)
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        })
+
+        it('keeps the anonymous session when the visitor cancels', async () => {
+            const auth = anonymousAuth()
+            const { user, menu } = await openMenu(auth)
+
+            await user.click(menu.getByRole('button', { name: /Forget this browser/ }))
+            await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+            expect(auth.signOut).not.toHaveBeenCalled()
+        })
     })
 
-    it('keeps the anonymous session when the visitor cancels', async () => {
-        await openMenu()
-        await userEvent.click(await screen.findByRole('button', { name: /Forget this browser/ }))
-        await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+    describe('for a member', () => {
+        it('shows the name, email and account page, and Sign Out instead of forgetting the browser', async () => {
+            const { menu } = await openMenu(memberAuth())
 
-        expect(signOut).not.toHaveBeenCalled()
+            expect(menu.getByText('Ann')).toBeInTheDocument()
+            expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
+            expect(menu.getByRole('link', { name: /Account/ })).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: /Forget this browser/ })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: 'Sign up to keep your history' })).not.toBeInTheDocument()
+        })
+
+        it('signs out and goes home', async () => {
+            const auth = memberAuth()
+            const { user, menu } = await openMenu(auth)
+
+            await user.click(menu.getByRole('button', { name: /Sign Out/ }))
+
+            expect(auth.signOut).toHaveBeenCalledTimes(1)
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        })
+
+        it('opens the contact form', async () => {
+            const { user, menu } = await openMenu(memberAuth())
+
+            await user.click(menu.getByRole('button', { name: /Contact support/ }))
+
+            expect(useContactModalStore.getState().isOpen).toBe(true)
+        })
     })
 
-    it('offers a member Sign Out instead of forgetting the browser', async () => {
-        isAnonymous = false
-        await openMenu()
+    it('shows a signed-out visitor only the public pages', async () => {
+        const { menu } = await openMenu(signedOutAuth())
 
-        expect(await screen.findByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
-        expect(screen.queryByRole('button', { name: /Forget this browser/ })).not.toBeInTheDocument()
+        expect(menu.getByRole('link', { name: /Analyze/ })).toBeInTheDocument()
+        expect(menu.queryByRole('link', { name: /History/ })).not.toBeInTheDocument()
+        expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
+        expect(menu.queryByRole('button', { name: /Sign Out|Forget this browser/ })).not.toBeInTheDocument()
     })
 })
