@@ -4,7 +4,7 @@ import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
 import { RULE_PLATFORM_LABELS } from '@/labels'
-import { countIssues, formatCount, formatTimeRange, splitResults } from './results'
+import { countIssues, findingSeverity, formatCount, formatTimeRange, splitResults } from './results'
 import { useStyles } from './styles'
 
 const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'gold', info: 'blue' }
@@ -42,11 +42,12 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
 
     const renderFinding = (finding: Finding) => {
         const { time } = finding
+        const severity = findingSeverity(finding)
 
         return (
             <div key={finding.id} className={styles.findingCard}>
                 <div className={styles.findingHead}>
-                    <Tag color={SEVERITY_COLORS[finding.severity]}>{finding.severity}</Tag>
+                    <Tag color={SEVERITY_COLORS[severity]}>{severity}</Tag>
                     <Tag color={VERDICT_COLORS[finding.verdict]}>{VERDICT_LABELS[finding.verdict]}</Tag>
                     <span className={styles.findingTopic}>{finding.topic}</span>
                 </div>

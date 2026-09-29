@@ -1,6 +1,6 @@
 import type { Analysis, Finding, MetadataCheck } from 'adlens-shared'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
-import { countIssues, formatCount, formatSeconds, formatTimeRange, splitResults } from './results'
+import { countIssues, findingSeverity, formatCount, formatSeconds, formatTimeRange, splitResults } from './results'
 
 const analysis = (findings: Finding[], metadataChecks: MetadataCheck[]): Analysis =>
     buildAnalysis({ findings, metadataChecks })
@@ -44,7 +44,35 @@ describe('splitResults', () => {
     })
 })
 
+describe('findingSeverity', () => {
+    it('keeps the rule’s severity when the model is sure the ad breaks it', () => {
+        expect(findingSeverity(buildFinding({ severity: 'blocker', verdict: 'fail' }))).toBe('blocker')
+        expect(findingSeverity(buildFinding({ severity: 'info', verdict: 'fail' }))).toBe('info')
+    })
+
+    it('never makes a probable or uncertain issue a blocker', () => {
+        expect(findingSeverity(buildFinding({ severity: 'blocker', verdict: 'warning' }))).toBe('warning')
+        expect(findingSeverity(buildFinding({ severity: 'blocker', verdict: 'unknown' }))).toBe('warning')
+        expect(findingSeverity(buildFinding({ severity: 'info', verdict: 'warning' }))).toBe('info')
+    })
+})
+
 describe('countIssues', () => {
+    it('counts a probable or uncertain issue on a blocker rule as a warning', () => {
+        const counts = countIssues(
+            analysis(
+                [
+                    buildFinding({ severity: 'blocker', verdict: 'fail' }),
+                    buildFinding({ severity: 'blocker', verdict: 'warning' }),
+                    buildFinding({ severity: 'blocker', verdict: 'unknown' }),
+                ],
+                [],
+            ),
+        )
+
+        expect(counts).toEqual({ blockers: 1, warnings: 2 })
+    })
+
     it('counts blocker and warning findings, but not info ones', () => {
         const counts = countIssues(
             analysis(

@@ -5,6 +5,15 @@ const SEVERITY_ORDER: Record<Severity, number> = { blocker: 0, warning: 1, info:
 export const bySeverity = (a: { severity: Severity }, b: { severity: Severity }) =>
     SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
 
+// A rule's severity says what a sure violation costs; the verdict says whether the model is sure. Only a `fail` on a
+// blocker rule blocks the ad: a probable (`warning`) or uncertain (`unknown`) issue is at most a warning, so a concern
+// without proof never reads as a rejection.
+export const findingSeverity = ({ severity, verdict }: Finding): Severity =>
+    verdict === 'fail' || severity !== 'blocker' ? severity : 'warning'
+
+const byFindingSeverity = (a: Finding, b: Finding) =>
+    SEVERITY_ORDER[findingSeverity(a)] - SEVERITY_ORDER[findingSeverity(b)]
+
 export interface ResultSections {
     compliance: Finding[]
     bestPractice: Finding[]
@@ -14,8 +23,8 @@ export interface ResultSections {
 }
 
 export const splitResults = ({ findings, metadataChecks }: Analysis): ResultSections => ({
-    compliance: findings.filter((f) => f.scope === 'compliance').sort(bySeverity),
-    bestPractice: findings.filter((f) => f.scope === 'best_practice').sort(bySeverity),
+    compliance: findings.filter((f) => f.scope === 'compliance').sort(byFindingSeverity),
+    bestPractice: findings.filter((f) => f.scope === 'best_practice').sort(byFindingSeverity),
     placementIssues: metadataChecks.filter((c) => c.verdict !== 'pass').sort(bySeverity),
     passedChecks: metadataChecks.filter((c) => c.verdict === 'pass').length,
 })
@@ -27,11 +36,14 @@ export interface IssueCounts {
 
 // A spec check only counts once it has actually failed: `unknown` means it couldn't be measured.
 export const countIssues = ({ findings, metadataChecks }: Analysis): IssueCounts => {
-    const issues = [...findings, ...metadataChecks.filter((c) => c.verdict === 'fail')]
+    const severities = [
+        ...findings.map(findingSeverity),
+        ...metadataChecks.filter((check) => check.verdict === 'fail').map((check) => check.severity),
+    ]
 
     return {
-        blockers: issues.filter((issue) => issue.severity === 'blocker').length,
-        warnings: issues.filter((issue) => issue.severity === 'warning').length,
+        blockers: severities.filter((severity) => severity === 'blocker').length,
+        warnings: severities.filter((severity) => severity === 'warning').length,
     }
 }
 

@@ -101,6 +101,18 @@ describe('ResultsPanel', () => {
         expect(screen.getByText('Target only people of legal drinking age.')).toBeInTheDocument()
     })
 
+    it('shows a probable issue on a blocker rule as a warning, not a blocker', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({ findings: [buildFinding({ severity: 'blocker', verdict: 'warning' })] })}
+            />,
+        )
+
+        expect(screen.getByText('0 blockers')).toBeInTheDocument()
+        expect(screen.getByText('1 warning')).toBeInTheDocument()
+        expect(screen.queryByText('blocker')).not.toBeInTheDocument()
+    })
+
     it('links each finding to its source in a new tab', () => {
         render(<ResultsPanel analysis={buildAnalysis({ findings: [buildFinding()] })} />)
 
