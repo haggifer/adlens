@@ -1,4 +1,4 @@
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { describeError, isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
 
 const GENERIC_COPY = 'Something went wrong. Please try again.'
 const RATE_LIMITED_COPY = 'Too many attempts. Wait a minute and try again.'
@@ -33,6 +33,41 @@ describe('describeError', () => {
         expect(describeError({ code: 'constructor' })).toBe(GENERIC_COPY)
         expect(describeError({ code: 'toString' })).toBe(GENERIC_COPY)
         expect(describeError({ code: '__proto__' })).toBe(GENERIC_COPY)
+    })
+})
+
+describe('runAuthQuery', () => {
+    afterEach(() => jest.restoreAllMocks())
+
+    it('returns the data of a request that succeeds', async () => {
+        const data = { user: { id: 'u1' } }
+
+        await expect(runAuthQuery(async () => ({ data, error: null }))).resolves.toEqual({ data, error: null })
+    })
+
+    it('returns no data with the error Better Auth answered with', async () => {
+        const error = { status: 500 }
+
+        await expect(runAuthQuery(async () => ({ data: null, error }))).resolves.toEqual({ data: null, error })
+    })
+
+    it('turns a request that never reached the API into a network error', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {})
+
+        const result = await runAuthQuery(async () => {
+            throw new TypeError('Failed to fetch')
+        })
+
+        expect(result.data).toBeNull()
+        expect(isNetworkError(result.error)).toBe(true)
+    })
+})
+
+describe('isRateLimited', () => {
+    it('recognises a rate-limited answer by its status alone', () => {
+        expect(isRateLimited({ status: 429, code: 'INVALID_EMAIL_OR_PASSWORD' })).toBe(true)
+        expect(isRateLimited({ status: 400 })).toBe(false)
+        expect(isRateLimited(null)).toBe(false)
     })
 })
 

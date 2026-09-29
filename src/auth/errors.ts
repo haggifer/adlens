@@ -27,6 +27,7 @@ const AUTH_ERROR_COPY: Record<string, string> = {
 }
 
 const RATE_LIMITED_STATUS = 429
+const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
 
 export interface AuthError {
     code?: string
@@ -34,8 +35,12 @@ export interface AuthError {
     status?: number
 }
 
+export const isRateLimited = (error: AuthError | null): boolean => error?.status === RATE_LIMITED_STATUS
+
+export const isNetworkError = (error: AuthError | null): boolean => error?.code === NETWORK_ERROR_CODE
+
 export const describeError = (error: AuthError | null): string => {
-    if (error?.status === RATE_LIMITED_STATUS) {
+    if (isRateLimited(error)) {
         return 'Too many attempts. Wait a minute and try again.'
     }
 
@@ -46,18 +51,32 @@ export const describeError = (error: AuthError | null): string => {
     return 'Something went wrong. Please try again.'
 }
 
+export interface AuthQueryResult<T> {
+    data: T | null
+    error: AuthError | null
+}
+
 // Better Auth returns server-side failures as `{ error }` but throws when the request never reaches the API;
 // this folds both into the returned error.
-export const runAuthRequest = async (
-    request: () => Promise<{ error: AuthError | null }>,
-): Promise<AuthError | null> => {
+export const runAuthQuery = async <T>(
+    request: () => Promise<{ data?: T | null; error: AuthError | null }>,
+): Promise<AuthQueryResult<T>> => {
     try {
-        const { error } = await request()
+        const { data, error } = await request()
 
-        return error
+        return { data: error ? null : (data ?? null), error }
     } catch (err) {
         console.error(err)
 
-        return { code: 'NETWORK_ERROR' }
+        return { data: null, error: { code: NETWORK_ERROR_CODE } }
     }
+}
+
+// For a request whose answer only matters when it fails.
+export const runAuthRequest = async (
+    request: () => Promise<{ error: AuthError | null }>,
+): Promise<AuthError | null> => {
+    const { error } = await runAuthQuery(request)
+
+    return error
 }

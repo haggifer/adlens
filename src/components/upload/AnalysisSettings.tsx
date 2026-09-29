@@ -21,7 +21,7 @@ import { ApiRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { authClient, signIn } from '@/auth/authClient'
-import { runAuthRequest } from '@/auth/errors'
+import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useQuota } from '@/hooks/useQuota'
@@ -70,28 +70,19 @@ const formatNextFree = (nextFreeAt: string) =>
         minute: '2-digit',
     })
 
-const TOO_MANY_REQUESTS = 429
-
 type SessionCheck = 'active' | 'none' | 'unknown'
 
 // A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
-// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Better
-// Auth throws on a network failure instead of returning `{ error }` (the same fold `runAuthRequest` does), so a
-// thrown error and a returned one both count as "couldn't tell" — only a clean response with no user may proceed.
+// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Any
+// error, a network failure included, counts as "couldn't tell": only a clean response with no user may proceed.
 const checkSession = async (): Promise<SessionCheck> => {
-    try {
-        const { data, error } = await authClient.getSession()
+    const { data, error } = await runAuthQuery(() => authClient.getSession())
 
-        if (error) {
-            return 'unknown'
-        }
-
-        return data?.user ? 'active' : 'none'
-    } catch (err) {
-        console.error(err)
-
+    if (error) {
         return 'unknown'
     }
+
+    return data?.user ? 'active' : 'none'
 }
 
 // Visitors get an anonymous session only when they start an analysis, so crawlers and passers-by create no users.
@@ -102,11 +93,11 @@ const startAnonymousSession = async (): Promise<void> => {
         return
     }
 
-    if (error.status === TOO_MANY_REQUESTS) {
+    if (isRateLimited(error)) {
         throw new ApiRequestError(RequestErrorCode.RateLimited)
     }
 
-    throw new ApiRequestError(error.code === 'NETWORK_ERROR' ? RequestErrorCode.Unavailable : RequestErrorCode.Internal)
+    throw new ApiRequestError(isNetworkError(error) ? RequestErrorCode.Unavailable : RequestErrorCode.Internal)
 }
 
 enum RunStage {
