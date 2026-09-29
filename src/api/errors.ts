@@ -14,7 +14,8 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long.`,
     [JobErrorCode.VideoTooLarge]: `Videos can be up to ${MAX_UPLOAD_BYTES / (1000 * 1000)} MB.`,
     [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}.`,
-    [JobErrorCode.AnalysisFailed]: "The analysis failed and your run wasn't counted. Please try again.",
+    // Usually refunded, but not past the network's weekly allowance of refunded failures (API IP_FAILURE_REFUND_LIMIT).
+    [JobErrorCode.AnalysisFailed]: "The analysis failed. Please try again; a failed run usually isn't counted.",
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. Your run wasn't counted.",
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
