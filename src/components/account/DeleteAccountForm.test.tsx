@@ -38,6 +38,8 @@ describe('DeleteAccountForm', () => {
         useAuthModalStore.setState({ view: null })
     })
 
+    afterEach(() => jest.restoreAllMocks())
+
     describe('with a password', () => {
         it('asks for the password before offering to delete', async () => {
             const { user } = renderForm(true)
@@ -141,6 +143,31 @@ describe('DeleteAccountForm', () => {
             await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signin'))
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             expect(mockPush).not.toHaveBeenCalled()
+        })
+
+        it('shows the error and closes the modal instead of hanging when sign-out fails before re-authentication', async () => {
+            const auth = memberAuth()
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+            jest.mocked(deleteUser).mockResolvedValueOnce({
+                data: null,
+                error: { status: 400, code: 'SESSION_EXPIRED' },
+            } as never)
+            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
+            const { user } = renderForm(false, auth)
+
+            await submitAndConfirm(user)
+
+            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            expect(
+                screen.queryByText('For your security, sign in again to delete your account.'),
+            ).not.toBeInTheDocument()
+            await waitFor(() =>
+                expect(screen.queryByRole('button', { name: 'Delete my account' })).not.toBeInTheDocument(),
+            )
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(mockPush).not.toHaveBeenCalled()
+            expect(consoleError).toHaveBeenCalledTimes(1)
         })
     })
 })

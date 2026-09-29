@@ -8,7 +8,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useAuth } from '@/auth/AuthContext'
 import { authClient, deleteUser } from '@/auth/authClient'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
@@ -46,11 +46,18 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
     })
 
     const askToSignInAgain = async () => {
+        try {
+            await signOut()
+        } catch (error) {
+            console.error(error)
+            notification.error({ title: describeError(error as AuthError), placement: 'bottomRight' })
+            return
+        }
+
         notification.info({
             title: 'For your security, sign in again to delete your account.',
             placement: 'bottomRight',
         })
-        await signOut()
         setView('signin')
     }
 
