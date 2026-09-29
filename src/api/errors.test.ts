@@ -21,6 +21,15 @@ describe('toApiRequestError', () => {
         expect(error.message).toBe('You’ve used all your analyses for the last 7 days.')
     })
 
+    it('treats an error code this client doesn’t know yet as an internal error', () => {
+        const error = toApiRequestError(
+            axiosErrorWithResponse(400, { statusCode: 400, errorCode: 'SOME_NEW_CODE', message: 'Raw server text' }),
+        )
+
+        expect(error.code).toBe(RequestErrorCode.Internal)
+        expect(error.message).toBe('Something went wrong on our side. Please try again.')
+    })
+
     it('treats a response without an API error body as an internal error', () => {
         expect(toApiRequestError(axiosErrorWithResponse(502, '<html>Bad gateway</html>')).code).toBe(
             RequestErrorCode.Internal,
@@ -40,7 +49,7 @@ describe('toApiRequestError', () => {
         expect(toApiRequestError(new Error('boom')).code).toBe(RequestErrorCode.Internal)
     })
 
-    it('explains the network limits and where they lead', () => {
+    it('explains the network, challenge and sign-up limits', () => {
         expect(new ApiRequestError(RequestErrorCode.SignUpRequired).message).toBe(
             'You’ve used the analyses available without an account. Sign up to keep analysing.',
         )
