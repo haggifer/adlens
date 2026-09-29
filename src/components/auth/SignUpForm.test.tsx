@@ -1,19 +1,57 @@
 import { screen } from '@testing-library/react'
+import type { AuthContextValue } from '@/auth/AuthContext'
+import { anonymousAuth, signedOutAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { SignUpForm } from './SignUpForm'
 
+const mockUseAuth = jest.fn<AuthContextValue, []>()
+
+jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({
     signIn: { social: jest.fn(async () => ({ error: null })) },
     signUp: { email: jest.fn(async () => ({ error: null })) },
 }))
 
+const KEEP_ANALYSES_COPY = /to keep the analyses you ran here/i
+
+const renderForm = (auth: AuthContextValue) => {
+    mockUseAuth.mockReturnValue(auth)
+
+    return renderWithProviders(<SignUpForm />)
+}
+
+const submitSignUp = async (user: ReturnType<typeof renderForm>['user']) => {
+    await user.type(screen.getByLabelText('Name'), 'Ann')
+    await user.type(screen.getByLabelText('Email'), 'ann@example.com')
+    await user.type(screen.getByLabelText('Password'), 'long-enough-password')
+    await user.type(screen.getByLabelText('Confirm password'), 'long-enough-password')
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+    await screen.findByText('Check your inbox')
+}
+
 describe('SignUpForm', () => {
     it('links every field to its label', () => {
-        renderWithProviders(<SignUpForm />)
+        renderForm(signedOutAuth())
 
         expect(screen.getByLabelText('Name')).toBeInTheDocument()
         expect(screen.getByLabelText('Email')).toBeInTheDocument()
         expect(screen.getByLabelText('Password')).toBeInTheDocument()
         expect(screen.getByLabelText('Confirm password')).toBeInTheDocument()
+    })
+
+    it('tells an anonymous visitor how to keep the analyses they ran in this browser', async () => {
+        const { user } = renderForm(anonymousAuth())
+
+        await submitSignUp(user)
+
+        expect(screen.getByText(KEEP_ANALYSES_COPY)).toBeInTheDocument()
+    })
+
+    it('says nothing about earlier analyses to a visitor who never ran one', async () => {
+        const { user } = renderForm(signedOutAuth())
+
+        await submitSignUp(user)
+
+        expect(screen.queryByText(KEEP_ANALYSES_COPY)).not.toBeInTheDocument()
     })
 })

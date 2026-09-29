@@ -6,6 +6,7 @@ import { Alert, Button, Input, Result } from 'antd'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useAuth } from '@/auth/AuthContext'
 import { signUp } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
@@ -28,8 +29,13 @@ const EMAIL_INPUT_ID = 'signup-email'
 const PASSWORD_INPUT_ID = 'signup-password'
 const CONFIRM_PASSWORD_INPUT_ID = 'signup-confirm'
 
+// The API links an anonymous history only when this browser's anonymous session opens the link or signs in later;
+// a link opened elsewhere activates the account without it.
+const KEEP_ANALYSES_HINT = 'To keep the analyses you ran here, open it in this browser or sign in here afterwards.'
+
 export function SignUpForm() {
     const { styles } = useStyles()
+    const { isAnonymous } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
@@ -60,7 +66,7 @@ export function SignUpForm() {
             <Result
                 icon={<MailOutlined />}
                 title="Check your inbox"
-                subTitle={`We sent a confirmation link to ${sentTo}. Open it to activate your account.`}
+                subTitle={`We sent a confirmation link to ${sentTo}. Open it to activate your account.${isAnonymous ? ` ${KEEP_ANALYSES_HINT}` : ''}`}
                 extra={
                     <Button type="primary" onClick={() => setView('signin')}>
                         Back to sign in
