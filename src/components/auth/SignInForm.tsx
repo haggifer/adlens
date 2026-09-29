@@ -19,6 +19,9 @@ const signInSchema = z.object({
 
 type SignInValues = z.infer<typeof signInSchema>
 
+const EMAIL_INPUT_ID = 'signin-email'
+const PASSWORD_INPUT_ID = 'signin-password'
+
 export function SignInForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
@@ -47,13 +50,14 @@ export function SignInForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
-            <Field label="Email" error={errors.email?.message}>
+            <Field label="Email" htmlFor={EMAIL_INPUT_ID} error={errors.email?.message}>
                 <Controller
                     name="email"
                     control={control}
                     render={({ field }) => (
                         <Input
                             {...field}
+                            id={EMAIL_INPUT_ID}
                             size="large"
                             placeholder="you@company.com"
                             autoComplete="email"
@@ -62,13 +66,14 @@ export function SignInForm() {
                     )}
                 />
             </Field>
-            <Field label="Password" error={errors.password?.message}>
+            <Field label="Password" htmlFor={PASSWORD_INPUT_ID} error={errors.password?.message}>
                 <Controller
                     name="password"
                     control={control}
                     render={({ field }) => (
                         <Input.Password
                             {...field}
+                            id={PASSWORD_INPUT_ID}
                             size="large"
                             placeholder="Your password"
                             autoComplete="current-password"

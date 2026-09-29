@@ -88,11 +88,7 @@ describe('AccountSettings', () => {
         expect(screen.queryByText('Rate limit exceeded')).not.toBeInTheDocument()
     })
 
-    // BUG: ChangePasswordForm renders its Fields without `htmlFor` or an input `id`, so "Current password",
-    // "New password" and "Confirm new password" aren't associated with their inputs: screen readers announce three
-    // unnamed password fields, and clicking a label doesn't focus its input. SignInForm, SignUpForm, ForgotForm and
-    // ResetPasswordForm have the same gap; DeleteAccountForm and ContactForm pass `htmlFor` correctly.
-    it.skip('labels the change-password fields', async () => {
+    it('labels the change-password fields', async () => {
         linkAccounts('credential')
         renderSettings()
 

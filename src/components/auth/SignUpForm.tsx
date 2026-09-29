@@ -23,6 +23,11 @@ const signUpSchema = z
 
 type SignUpValues = z.infer<typeof signUpSchema>
 
+const NAME_INPUT_ID = 'signup-name'
+const EMAIL_INPUT_ID = 'signup-email'
+const PASSWORD_INPUT_ID = 'signup-password'
+const CONFIRM_PASSWORD_INPUT_ID = 'signup-confirm'
+
 export function SignUpForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
@@ -68,13 +73,14 @@ export function SignUpForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
-            <Field label="Name" error={errors.name?.message}>
+            <Field label="Name" htmlFor={NAME_INPUT_ID} error={errors.name?.message}>
                 <Controller
                     name="name"
                     control={control}
                     render={({ field }) => (
                         <Input
                             {...field}
+                            id={NAME_INPUT_ID}
                             size="large"
                             placeholder="Your name"
                             autoComplete="name"
@@ -83,13 +89,14 @@ export function SignUpForm() {
                     )}
                 />
             </Field>
-            <Field label="Email" error={errors.email?.message}>
+            <Field label="Email" htmlFor={EMAIL_INPUT_ID} error={errors.email?.message}>
                 <Controller
                     name="email"
                     control={control}
                     render={({ field }) => (
                         <Input
                             {...field}
+                            id={EMAIL_INPUT_ID}
                             size="large"
                             placeholder="you@company.com"
                             autoComplete="email"
@@ -98,13 +105,19 @@ export function SignUpForm() {
                     )}
                 />
             </Field>
-            <Field label="Password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
+            <Field
+                label="Password"
+                htmlFor={PASSWORD_INPUT_ID}
+                hint={NEW_PASSWORD_HINT}
+                error={errors.password?.message}
+            >
                 <Controller
                     name="password"
                     control={control}
                     render={({ field }) => (
                         <Input.Password
                             {...field}
+                            id={PASSWORD_INPUT_ID}
                             size="large"
                             placeholder="Create a password"
                             autoComplete="new-password"
@@ -113,13 +126,14 @@ export function SignUpForm() {
                     )}
                 />
             </Field>
-            <Field label="Confirm password" error={errors.confirm?.message}>
+            <Field label="Confirm password" htmlFor={CONFIRM_PASSWORD_INPUT_ID} error={errors.confirm?.message}>
                 <Controller
                     name="confirm"
                     control={control}
                     render={({ field }) => (
                         <Input.Password
                             {...field}
+                            id={CONFIRM_PASSWORD_INPUT_ID}
                             size="large"
                             placeholder="Repeat your password"
                             autoComplete="new-password"

@@ -14,6 +14,9 @@ import { useStyles } from './styles'
 
 type ResetPasswordValues = z.infer<typeof newPasswordFieldsSchema>
 
+const PASSWORD_INPUT_ID = 'reset-password-password'
+const CONFIRM_PASSWORD_INPUT_ID = 'reset-password-confirm'
+
 interface IProps {
     token: string | null
 }
@@ -84,13 +87,19 @@ export function ResetPasswordForm({ token }: IProps) {
                 <h1 className={styles.sectionTitle}>Choose a new password</h1>
                 {formError && <Alert className="mt-3" type="error" showIcon title={formError} />}
                 <div className="mt-3">
-                    <Field label="New password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
+                    <Field
+                        label="New password"
+                        htmlFor={PASSWORD_INPUT_ID}
+                        hint={NEW_PASSWORD_HINT}
+                        error={errors.password?.message}
+                    >
                         <Controller
                             name="password"
                             control={control}
                             render={({ field }) => (
                                 <Input.Password
                                     {...field}
+                                    id={PASSWORD_INPUT_ID}
                                     size="large"
                                     autoComplete="new-password"
                                     status={errors.password ? 'error' : undefined}
@@ -98,13 +107,18 @@ export function ResetPasswordForm({ token }: IProps) {
                             )}
                         />
                     </Field>
-                    <Field label="Confirm new password" error={errors.confirm?.message}>
+                    <Field
+                        label="Confirm new password"
+                        htmlFor={CONFIRM_PASSWORD_INPUT_ID}
+                        error={errors.confirm?.message}
+                    >
                         <Controller
                             name="confirm"
                             control={control}
                             render={({ field }) => (
                                 <Input.Password
                                     {...field}
+                                    id={CONFIRM_PASSWORD_INPUT_ID}
                                     size="large"
                                     autoComplete="new-password"
                                     status={errors.confirm ? 'error' : undefined}

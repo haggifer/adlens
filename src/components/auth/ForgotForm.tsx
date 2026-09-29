@@ -18,6 +18,8 @@ const forgotSchema = z.object({
 
 type ForgotValues = z.infer<typeof forgotSchema>
 
+const EMAIL_INPUT_ID = 'forgot-email'
+
 export function ForgotForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
@@ -61,13 +63,14 @@ export function ForgotForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
-            <Field label="Email" error={errors.email?.message}>
+            <Field label="Email" htmlFor={EMAIL_INPUT_ID} error={errors.email?.message}>
                 <Controller
                     name="email"
                     control={control}
                     render={({ field }) => (
                         <Input
                             {...field}
+                            id={EMAIL_INPUT_ID}
                             size="large"
                             placeholder="you@company.com"
                             autoComplete="email"

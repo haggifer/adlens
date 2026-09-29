@@ -18,6 +18,10 @@ type ChangePasswordValues = z.infer<typeof changePasswordSchema>
 
 const DEFAULT_VALUES: ChangePasswordValues = { currentPassword: '', password: '', confirm: '' }
 
+const CURRENT_PASSWORD_INPUT_ID = 'change-password-current'
+const NEW_PASSWORD_INPUT_ID = 'change-password-new'
+const CONFIRM_PASSWORD_INPUT_ID = 'change-password-confirm'
+
 export function ChangePasswordForm() {
     const { styles } = useStyles()
     const { notification } = App.useApp()
@@ -50,39 +54,51 @@ export function ChangePasswordForm() {
         <form className={styles.section} onSubmit={handleSubmit(onSubmit)}>
             <h2 className={styles.sectionTitle}>Change password</h2>
             <div>
-                <Field label="Current password" error={errors.currentPassword?.message}>
+                <Field
+                    label="Current password"
+                    htmlFor={CURRENT_PASSWORD_INPUT_ID}
+                    error={errors.currentPassword?.message}
+                >
                     <Controller
                         name="currentPassword"
                         control={control}
                         render={({ field }) => (
                             <Input.Password
                                 {...field}
+                                id={CURRENT_PASSWORD_INPUT_ID}
                                 autoComplete="current-password"
                                 status={errors.currentPassword ? 'error' : undefined}
                             />
                         )}
                     />
                 </Field>
-                <Field label="New password" hint={NEW_PASSWORD_HINT} error={errors.password?.message}>
+                <Field
+                    label="New password"
+                    htmlFor={NEW_PASSWORD_INPUT_ID}
+                    hint={NEW_PASSWORD_HINT}
+                    error={errors.password?.message}
+                >
                     <Controller
                         name="password"
                         control={control}
                         render={({ field }) => (
                             <Input.Password
                                 {...field}
+                                id={NEW_PASSWORD_INPUT_ID}
                                 autoComplete="new-password"
                                 status={errors.password ? 'error' : undefined}
                             />
                         )}
                     />
                 </Field>
-                <Field label="Confirm new password" error={errors.confirm?.message}>
+                <Field label="Confirm new password" htmlFor={CONFIRM_PASSWORD_INPUT_ID} error={errors.confirm?.message}>
                     <Controller
                         name="confirm"
                         control={control}
                         render={({ field }) => (
                             <Input.Password
                                 {...field}
+                                id={CONFIRM_PASSWORD_INPUT_ID}
                                 autoComplete="new-password"
                                 status={errors.confirm ? 'error' : undefined}
                             />
