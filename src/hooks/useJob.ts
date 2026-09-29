@@ -6,6 +6,7 @@ import { getJob } from '@/api/jobs'
 import type { ApiRequestError } from '@/api/errors'
 import { useAuth } from '@/auth/AuthContext'
 import { config } from '@/config'
+import { isJobInProgress } from '@/job-status'
 
 export const jobKey = (userId: string | undefined, jobId: string) => ['job', userId, jobId]
 
@@ -17,6 +18,8 @@ export interface UseJobResult {
 
 // Reads the job once, then keeps it live over Socket.IO (fed by the API's Mongo change stream) by writing pushed
 // updates into the query cache. Every (re)connect refetches, because updates emitted while disconnected are lost.
+// The socket stays open only while the job is in progress: Cloud Run bills an instance for as long as any WebSocket
+// is open, so a tab left on a finished analysis would otherwise keep one running.
 export function useJob(jobId: string): UseJobResult {
     const { user } = useAuth()
     const queryClient = useQueryClient()
@@ -26,9 +29,10 @@ export function useJob(jobId: string): UseJobResult {
         queryFn: () => getJob(jobId),
         enabled: Boolean(userId),
     })
+    const isLive = Boolean(userId && data && isJobInProgress(data.status))
 
     useEffect(() => {
-        if (!userId) {
+        if (!isLive) {
             return
         }
 
@@ -46,7 +50,7 @@ export function useJob(jobId: string): UseJobResult {
         return () => {
             socket.disconnect()
         }
-    }, [jobId, userId, queryClient])
+    }, [isLive, jobId, userId, queryClient])
 
     return { job: data, isLoading, error }
 }

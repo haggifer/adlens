@@ -1,14 +1,12 @@
 'use client'
 
 import { DeleteOutlined } from '@ant-design/icons'
-import { type Job, JobStatus } from 'adlens-shared'
+import type { Job } from 'adlens-shared'
 import { App, Button, Tooltip } from 'antd'
 import { toApiRequestError } from '@/api/errors'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useDeleteJob } from '@/hooks/useDeleteJob'
-
-// The API refuses to delete a job it is still working on.
-const IN_PROGRESS: JobStatus[] = [JobStatus.Verifying, JobStatus.Queued, JobStatus.Analyzing]
+import { isJobInProgress } from '@/job-status'
 
 interface IProps {
     job: Job
@@ -19,7 +17,7 @@ interface IProps {
 export function DeleteJobButton({ job, isIconOnly, onDeleted }: IProps) {
     const { modal, notification } = App.useApp()
     const { deleteJob } = useDeleteJob()
-    const isRunning = IN_PROGRESS.includes(job.status)
+    const isRunning = isJobInProgress(job.status)
 
     const handleDelete = async () => {
         try {
