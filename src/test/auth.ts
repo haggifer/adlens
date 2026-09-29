@@ -1,0 +1,24 @@
+import type { AuthContextValue, AuthUser } from '@/auth/AuthContext'
+
+export const MEMBER_USER: AuthUser = { id: 'member-1', email: 'ann@example.com', name: 'Ann' }
+
+// AuthContext hides an anonymous user's placeholder address, so the UI only ever sees null.
+export const ANONYMOUS_USER: AuthUser = { id: 'anon-1', email: null, name: 'Anonymous' }
+
+const createAuth = (overrides: Partial<AuthContextValue>): AuthContextValue => ({
+    isInitializing: false,
+    isSignedIn: false,
+    isAnonymous: false,
+    user: null,
+    signOut: jest.fn(async () => undefined),
+    ...overrides,
+})
+
+export const initializingAuth = (): AuthContextValue => createAuth({ isInitializing: true })
+
+export const signedOutAuth = (): AuthContextValue => createAuth({})
+
+export const anonymousAuth = (): AuthContextValue =>
+    createAuth({ isSignedIn: true, isAnonymous: true, user: ANONYMOUS_USER })
+
+export const memberAuth = (): AuthContextValue => createAuth({ isSignedIn: true, user: MEMBER_USER })

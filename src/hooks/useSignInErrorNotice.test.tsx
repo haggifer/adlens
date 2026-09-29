@@ -1,14 +1,14 @@
-import { render, screen } from '@testing-library/react'
-import { App } from 'antd'
+import { screen } from '@testing-library/react'
+import { renderWithProviders } from '@/test/render'
 import { useSignInErrorNotice } from './useSignInErrorNotice'
 
-const replace = jest.fn()
-let search = ''
+const mockReplace = jest.fn()
+let mockSearch = ''
 
 jest.mock('next/navigation', () => ({
     usePathname: () => '/history',
-    useRouter: () => ({ replace }),
-    useSearchParams: () => new URLSearchParams(search),
+    useRouter: () => ({ replace: mockReplace }),
+    useSearchParams: () => new URLSearchParams(mockSearch),
 }))
 
 const Probe = () => {
@@ -17,36 +17,32 @@ const Probe = () => {
     return null
 }
 
-const renderProbe = () =>
-    render(
-        <App>
-            <Probe />
-        </App>,
-    )
+const renderAt = (search: string) => {
+    mockSearch = search
+    renderWithProviders(<Probe />)
+}
 
 describe('useSignInErrorNotice', () => {
-    beforeEach(() => replace.mockClear())
+    beforeEach(() => mockReplace.mockClear())
 
     it('explains a sign-in the provider sent back with an error, then removes it from the address', async () => {
-        search = 'error=access_denied&tab=all'
-        renderProbe()
+        renderAt('error=access_denied&tab=all')
 
         expect(await screen.findByText('Sign-in was cancelled.')).toBeInTheDocument()
-        expect(replace).toHaveBeenCalledWith('/history?tab=all', { scroll: false })
+        expect(mockReplace).toHaveBeenCalledWith('/history?tab=all', { scroll: false })
     })
 
-    it('falls back to a generic line for an unknown code', async () => {
-        search = 'error=state_mismatch'
-        renderProbe()
+    it('falls back to a generic line for an unknown code, and never shows the provider’s own description', async () => {
+        renderAt('error=state_mismatch&error_description=OAuth+state+cookie+missing')
 
         expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
-        expect(replace).toHaveBeenCalledWith('/history', { scroll: false })
+        expect(screen.queryByText(/state cookie/)).not.toBeInTheDocument()
+        expect(mockReplace).toHaveBeenCalledWith('/history', { scroll: false })
     })
 
     it('does nothing without an error', () => {
-        search = 'tab=all'
-        renderProbe()
+        renderAt('tab=all')
 
-        expect(replace).not.toHaveBeenCalled()
+        expect(mockReplace).not.toHaveBeenCalled()
     })
 })
