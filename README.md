@@ -80,8 +80,10 @@ src/
   components/   # UI by feature
   content/      # long-form MDX content (legal documents)
   contexts/     # Zustand stores
+  design/       # antd theme, light/dark scheme and its cookie
   hooks/        # server-state hooks (TanStack Query, realtime)
   storage/      # signed-URL upload
+  test/         # shared test helpers: render with providers, auth states, fixtures
 ```
 
 Imports use the `@/*` alias, which maps to `src/*`.
@@ -98,7 +100,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 
 - **Every analysis has its own page** (`/analyses/[id]`), so a result survives a reload and can be linked. The job is
   loaded once, then kept live by Socket.IO pushes written into the query cache; every (re)connect refetches, because
-  updates sent while disconnected are lost.
+  updates sent while disconnected are lost. The socket is open only while the job is verifying, queued or analyzing:
+  Cloud Run bills an API instance for as long as any socket to it is open.
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache.
 - **The client owns user-facing copy.** The API returns stable error codes and the client maps them to messages, so
