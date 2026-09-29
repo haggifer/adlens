@@ -29,13 +29,10 @@ describe('describeError', () => {
         expect(describeError(null)).toBe(GENERIC_COPY)
     })
 
-    // BUG: AUTH_ERROR_COPY is a plain object literal, so a code naming an Object.prototype member ('constructor',
-    // 'toString', …) returns that function instead of copy. The code of a failed social sign-in comes from the
-    // address (`?error=constructor`), so anyone can send a link that puts a function into the notification title.
-    // Fix: look the code up with Object.hasOwn (or build the map with a null prototype / as a Map).
-    it.skip('doesn’t read a code from the object prototype', () => {
+    it('doesn’t read a code from the object prototype', () => {
         expect(describeError({ code: 'constructor' })).toBe(GENERIC_COPY)
         expect(describeError({ code: 'toString' })).toBe(GENERIC_COPY)
+        expect(describeError({ code: '__proto__' })).toBe(GENERIC_COPY)
     })
 })
 

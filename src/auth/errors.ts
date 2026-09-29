@@ -39,7 +39,11 @@ export const describeError = (error: AuthError | null): string => {
         return 'Too many attempts. Wait a minute and try again.'
     }
 
-    return (error?.code && AUTH_ERROR_COPY[error.code]) || 'Something went wrong. Please try again.'
+    if (error?.code && Object.hasOwn(AUTH_ERROR_COPY, error.code)) {
+        return AUTH_ERROR_COPY[error.code]
+    }
+
+    return 'Something went wrong. Please try again.'
 }
 
 // Better Auth returns server-side failures as `{ error }` but throws when the request never reaches the API;
