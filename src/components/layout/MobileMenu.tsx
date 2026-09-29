@@ -74,7 +74,7 @@ export function MobileMenu() {
 
     const handleForgetBrowser = () => {
         close()
-        forgetBrowser()
+        void forgetBrowser()
     }
 
     const handleAuth = (view: AuthView) => {

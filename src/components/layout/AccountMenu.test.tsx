@@ -72,7 +72,7 @@ describe('AccountMenu', () => {
             expect(mockPush).not.toHaveBeenCalled()
         })
 
-        it('shows the error and stays put when forgetting the browser fails', async () => {
+        it('keeps the confirmation open and says so when forgetting fails, and a second try works', async () => {
             const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
             const auth = anonymousAuth()
 
@@ -83,9 +83,18 @@ describe('AccountMenu', () => {
             await user.click(await screen.findByRole('button', { name: 'Forget' }))
 
             expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
-            await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
+            await waitFor(() =>
+                expect(screen.getByRole('button', { name: 'Forget' })).not.toHaveClass('ant-btn-loading'),
+            )
+            expect(screen.getByText(FORGET_WARNING)).toBeInTheDocument()
             expect(mockPush).not.toHaveBeenCalled()
             expect(consoleError).toHaveBeenCalledTimes(1)
+
+            await user.click(screen.getByRole('button', { name: 'Forget' }))
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+            expect(auth.signOut).toHaveBeenCalledTimes(2)
+            await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
         })
     })
 
@@ -130,6 +139,20 @@ describe('AccountMenu', () => {
 
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        })
+
+        it('shows the error and stays signed in when signing out fails', async () => {
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+            const auth = memberAuth()
+
+            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
+            const user = await openMenu(auth)
+
+            await user.click(await screen.findByRole('menuitem', { name: /Sign Out/ }))
+
+            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            expect(mockPush).not.toHaveBeenCalled()
+            expect(consoleError).toHaveBeenCalledTimes(1)
         })
     })
 })

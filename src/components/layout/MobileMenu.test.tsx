@@ -84,6 +84,33 @@ describe('MobileMenu', () => {
 
             expect(auth.signOut).not.toHaveBeenCalled()
         })
+
+        it('keeps the confirmation open and says so when forgetting fails, and a second try works', async () => {
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+            const auth = anonymousAuth()
+
+            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
+            const { user, menu } = await openMenu(auth)
+
+            await user.click(menu.getByRole('button', { name: /Forget this browser/ }))
+            await user.click(await screen.findByRole('button', { name: 'Forget' }))
+
+            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            await waitFor(() =>
+                expect(screen.getByRole('button', { name: 'Forget' })).not.toHaveClass('ant-btn-loading'),
+            )
+            expect(screen.getByText(FORGET_WARNING)).toBeInTheDocument()
+            expect(mockPush).not.toHaveBeenCalled()
+            expect(consoleError).toHaveBeenCalledTimes(1)
+
+            await user.click(screen.getByRole('button', { name: 'Forget' }))
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+            expect(auth.signOut).toHaveBeenCalledTimes(2)
+            await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
+
+            consoleError.mockRestore()
+        })
     })
 
     describe('for a member', () => {
@@ -106,6 +133,22 @@ describe('MobileMenu', () => {
 
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        })
+
+        it('shows the error and stays signed in when signing out fails', async () => {
+            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+            const auth = memberAuth()
+
+            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
+            const { user, menu } = await openMenu(auth)
+
+            await user.click(menu.getByRole('button', { name: /Sign Out/ }))
+
+            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            expect(mockPush).not.toHaveBeenCalled()
+            expect(consoleError).toHaveBeenCalledTimes(1)
+
+            consoleError.mockRestore()
         })
 
         it('opens the contact form', async () => {

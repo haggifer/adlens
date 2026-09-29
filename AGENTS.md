@@ -28,6 +28,9 @@ npm test             # Jest + React Testing Library
   show raw server or axios messages. Better Auth calls go through `runAuthRequest` in `src/auth/errors.ts`, which also
   turns network failures into an error.
 - Query keys include the user id, and sign-out clears the query cache, so one user's data never shows for another.
+  It clears it only once Better Auth confirms the sign-out: `useAuth().signOut` rejects with an `AuthError`
+  otherwise, and the UI signs out through `useSignOut`, which shows its `describeError` copy and resolves to
+  whether the session ended.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency (`npm run check:deps` fails on it).
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
