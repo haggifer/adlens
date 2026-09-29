@@ -144,11 +144,12 @@ export function AnalysisSettings({ source }: IProps) {
     const isWaitingForCheck = isInitializing || ((!user || isAnonymous) && !challengeToken)
 
     const run = useMutation({
-        mutationFn: async (settings: AnalysisSettingsValues): Promise<string | undefined> => {
+        mutationFn: async (settings: AnalysisSettingsValues): Promise<string> => {
             // Belt and braces: the disabled Run button already keeps this from firing while the session is still
-            // loading, but a still-loading session must never reach the anonymous sign-in below either way.
+            // loading, but a still-loading session must never reach the anonymous sign-in below either way. It fails
+            // the run rather than returning, which would count as a success and leave Run loading for good.
             if (isInitializing) {
-                return undefined
+                throw new ApiRequestError(RequestErrorCode.Unavailable)
             }
 
             setStage(RunStage.Creating)
@@ -192,10 +193,6 @@ export function AnalysisSettings({ source }: IProps) {
             return job.id
         },
         onSuccess: (jobId) => {
-            if (!jobId) {
-                return
-            }
-
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
             // invalidating by prefix catches the new user's queries too, not just the one active before the run.
             void queryClient.invalidateQueries({ queryKey: ['quota'] })

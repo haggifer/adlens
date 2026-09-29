@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Platform, RequestErrorCode, type Sample, VideoMimeType } from 'adlens-shared'
 import { ApiRequestError } from '@/api/errors'
@@ -101,6 +101,19 @@ describe('AnalysisSettings', () => {
 
         expect(runButton()).toBeDisabled()
         expect(signIn.anonymous).not.toHaveBeenCalled()
+    })
+
+    it('fails a run submitted while the session is still loading, instead of hanging as a success', async () => {
+        auth = { user: null, isAnonymous: false, isInitializing: true }
+        const { container } = renderSettings()
+
+        fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+
+        await waitFor(() =>
+            expect(screen.getByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument(),
+        )
+        expect(signIn.anonymous).not.toHaveBeenCalled()
+        expect(createSampleJob).not.toHaveBeenCalled()
     })
 
     it('confirms there is no active session before signing in anonymously', async () => {
