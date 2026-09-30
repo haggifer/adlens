@@ -19,15 +19,14 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     /* Pinned under the header. Its padding, not the page's, spaces it from the header, so it already sits at its
-       sticky offset and doesn't jump when scrolling starts. Frosted like the header so text scrolls under it. */
+       sticky offset and doesn't jump when scrolling starts. Opaque, so the text scrolling under it never shows through
+       behind the Back button. */
     backBar: css`
         position: sticky;
         top: var(--header-h);
         z-index: 5;
         padding: 0.75rem 0;
-        background: color-mix(in srgb, ${token.colorBgLayout} 72%, transparent);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: ${token.colorBgLayout};
     `,
 
     document: css`
