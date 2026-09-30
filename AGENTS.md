@@ -33,6 +33,10 @@ npm test             # Jest + React Testing Library
   whether the session ended.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency (`npm run check:deps` fails on it).
+- The platform, placement and market options (`src/labels.ts`, over the adlens-shared enums) must match the ruleset.
+  Check them **only when a new ruleset version is published**: the API's `npm run rules:publish` writes
+  `rules_current_summary.md` next to the ruleset file, listing which option reaches each rule platform and every
+  placement and region in use (see the API's AGENTS.md). Label an option so users can see which rules it brings.
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
 - An anonymous session counts as signed in (`isSignedIn`), so its history, quota and live updates work. Gate
   account-only UI on `isAnonymous`, and never show an anonymous user's email (`AuthContext` gives `null`).
