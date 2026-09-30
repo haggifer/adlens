@@ -63,9 +63,10 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    // Centred like the right side, so the nav links sit level with the quota label and the buttons across the bar.
     headerLeft: css`
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         gap: 1.75rem;
     `,
 
@@ -77,7 +78,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         align-items: center;
         gap: 1.25rem;
-        margin-bottom: 3px;
     `,
 
     navLink: css`
