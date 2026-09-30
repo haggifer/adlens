@@ -1,7 +1,7 @@
 import { createStyles, keyframes } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
 
-// One cycle per icon: in, hold, out. Its duration is set to the icon interval by AnalysisAnimation.
+// One cycle per icon: in, hold, out. AnalysisAnimation sets the duration and switches the icon between cycles.
 const ICON_FADE = keyframes`
     0% {
         opacity: 0;
@@ -138,6 +138,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-size: 1rem;
         animation-name: ${ICON_FADE};
         animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;
