@@ -302,14 +302,6 @@ export function AnalysisSettings({ source }: IProps) {
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
             <h2 className={styles.panelTitle}>Where will it run?</h2>
-            {source.kind === 'sample' && (
-                <Alert
-                    type="info"
-                    showIcon
-                    title={`Sample ad: ${source.sample.title}`}
-                    description="Its platforms and markets are filled in. Change them to see how the results differ."
-                />
-            )}
             <div className={styles.settingsScroll}>
                 <div className={styles.field}>
                     <label className={styles.fieldLabel}>Platforms</label>
