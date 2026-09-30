@@ -98,11 +98,13 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
     return (
         <div className={styles.panel}>
             <h2 className={styles.panelTitle}>Results</h2>
-            <div className={styles.summaryRow}>
-                <Tag color={blockers ? 'red' : 'green'}>{formatCount(blockers, 'blocker', 'blockers')}</Tag>
-                <Tag color={warnings ? 'gold' : 'default'}>{formatCount(warnings, 'warning', 'warnings')}</Tag>
-                <Tag color="blue">{advisories.length} to confirm</Tag>
-            </div>
+            {blockers + warnings + advisories.length > 0 && (
+                <div className={styles.summaryRow}>
+                    {blockers > 0 && <Tag color="red">{formatCount(blockers, 'blocker', 'blockers')}</Tag>}
+                    {warnings > 0 && <Tag color="gold">{formatCount(warnings, 'warning', 'warnings')}</Tag>}
+                    {advisories.length > 0 && <Tag color="blue">{advisories.length} to confirm</Tag>}
+                </div>
+            )}
             <div className={styles.resultsScroll}>
                 <h3 className={styles.sectionLabel}>Will it be approved?</h3>
                 {compliance.length ? (

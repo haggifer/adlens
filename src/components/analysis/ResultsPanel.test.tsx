@@ -54,7 +54,15 @@ describe('ResultsPanel', () => {
 
         expect(screen.getByText('2 blockers')).toBeInTheDocument()
         expect(screen.getByText('1 warning')).toBeInTheDocument()
-        expect(screen.getByText('0 to confirm')).toBeInTheDocument()
+        expect(screen.queryByText(/to confirm/)).not.toBeInTheDocument()
+    })
+
+    it('shows no count that is zero', () => {
+        render(<ResultsPanel analysis={buildAnalysis()} />)
+
+        expect(screen.queryByText(/blockers?$/)).not.toBeInTheDocument()
+        expect(screen.queryByText(/warnings?$/)).not.toBeInTheDocument()
+        expect(screen.queryByText(/to confirm$/)).not.toBeInTheDocument()
     })
 
     it('says so when a section has nothing to report, and leaves out the specs without placements', () => {
@@ -108,7 +116,7 @@ describe('ResultsPanel', () => {
             />,
         )
 
-        expect(screen.getByText('0 blockers')).toBeInTheDocument()
+        expect(screen.queryByText(/blockers?$/)).not.toBeInTheDocument()
         expect(screen.getByText('1 warning')).toBeInTheDocument()
         expect(screen.queryByText('blocker')).not.toBeInTheDocument()
     })
