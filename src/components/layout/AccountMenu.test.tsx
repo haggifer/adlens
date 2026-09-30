@@ -38,12 +38,14 @@ describe('AccountMenu', () => {
     })
 
     describe('for an anonymous visitor', () => {
-        it('offers to sign up to keep the history', async () => {
+        it('offers Sign In, which also moves the history, and no separate sign-up button', async () => {
             const { user } = renderMenu(anonymousAuth())
 
-            await user.click(screen.getByRole('button', { name: 'Sign up to keep your history' }))
+            expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
 
-            expect(useAuthModalStore.getState().view).toBe('signup')
+            await user.click(screen.getByRole('button', { name: 'Sign In' }))
+
+            expect(useAuthModalStore.getState().view).toBe('signin')
         })
 
         it('forgets this browser and goes home once the visitor confirms', async () => {
@@ -112,7 +114,7 @@ describe('AccountMenu', () => {
 
             expect(await screen.findByText(MEMBER_EMAIL)).toBeInTheDocument()
             expect(screen.queryByRole('button', { name: 'Forget this browser' })).not.toBeInTheDocument()
-            expect(screen.queryByRole('button', { name: 'Sign up to keep your history' })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         })
 
         it('opens the account page', async () => {

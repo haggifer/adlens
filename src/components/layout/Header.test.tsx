@@ -46,10 +46,11 @@ describe('Header', () => {
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
-    it('offers an anonymous visitor to sign up instead of an account menu, and still shows the count', () => {
+    it('offers an anonymous visitor Sign In instead of an account menu, and still shows the count', () => {
         renderHeader(anonymousAuth(), QUOTA)
 
-        expect(screen.getByRole('button', { name: 'Sign up to keep your history' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
         expect(screen.getByText('2/3 analyses left')).toBeInTheDocument()
     })

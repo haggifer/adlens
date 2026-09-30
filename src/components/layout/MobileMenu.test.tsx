@@ -41,11 +41,12 @@ describe('MobileMenu', () => {
     })
 
     describe('for an anonymous visitor', () => {
-        it('shows the count, the sign-up call to action and Forget this browser, but no email or account items', async () => {
+        it('shows the count, Sign In and Forget this browser, but no sign-up button, email or account items', async () => {
             const { menu } = await openMenu(anonymousAuth())
 
             expect(menu.getByText('2/3 analyses left')).toBeInTheDocument()
-            expect(menu.getByRole('button', { name: 'Sign up to keep your history' })).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
             expect(menu.getByRole('button', { name: /Forget this browser/ })).toBeInTheDocument()
             expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
             expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
@@ -53,12 +54,12 @@ describe('MobileMenu', () => {
             expect(menu.queryByText(/@/)).not.toBeInTheDocument()
         })
 
-        it('opens sign-up from the call to action', async () => {
+        it('opens sign-in, which also moves the history', async () => {
             const { user, menu } = await openMenu(anonymousAuth())
 
-            await user.click(menu.getByRole('button', { name: 'Sign up to keep your history' }))
+            await user.click(menu.getByRole('button', { name: 'Sign In' }))
 
-            expect(useAuthModalStore.getState().view).toBe('signup')
+            expect(useAuthModalStore.getState().view).toBe('signin')
         })
 
         it('forgets this browser once the visitor confirms', async () => {
@@ -122,7 +123,7 @@ describe('MobileMenu', () => {
             expect(menu.getByRole('link', { name: /Account/ })).toBeInTheDocument()
             expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
             expect(menu.queryByRole('button', { name: /Forget this browser/ })).not.toBeInTheDocument()
-            expect(menu.queryByRole('button', { name: 'Sign up to keep your history' })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         })
 
         it('signs out and goes home', async () => {

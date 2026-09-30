@@ -42,9 +42,10 @@ export function AccountMenu() {
                 <Button type="text" onClick={forgetBrowser}>
                     Forget this browser
                 </Button>
-                <Button onClick={() => setView('signin')}>Sign In</Button>
-                <Button type="primary" onClick={() => setView('signup')}>
-                    Sign up to keep your history
+                {/* Signing in or up in this browser moves the anonymous history to the account, so one entry point
+                    is enough; the dialog links to sign-up. */}
+                <Button type="primary" onClick={() => setView('signin')}>
+                    Sign In
                 </Button>
             </span>
         )

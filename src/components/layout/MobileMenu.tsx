@@ -15,7 +15,7 @@ import { ReactNode, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
-import { type AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useQuota } from '@/hooks/useQuota'
@@ -77,9 +77,9 @@ export function MobileMenu() {
         void forgetBrowser()
     }
 
-    const handleAuth = (view: AuthView) => {
+    const handleSignIn = () => {
         close()
-        setView(view)
+        setView('signin')
     }
 
     return (
@@ -109,10 +109,7 @@ export function MobileMenu() {
                 {isAnonymous && (
                     <div className={cx(styles.drawerUser, 'gap-2')}>
                         {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
-                        <Button type="primary" block onClick={() => handleAuth('signup')}>
-                            Sign up to keep your history
-                        </Button>
-                        <Button block onClick={() => handleAuth('signin')}>
+                        <Button type="primary" block onClick={handleSignIn}>
                             Sign In
                         </Button>
                     </div>
