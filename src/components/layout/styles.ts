@@ -67,7 +67,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     headerLeft: css`
         display: flex;
         align-items: center;
-        gap: 1.75rem;
+        gap: 3rem;
     `,
 
     logoLink: css`

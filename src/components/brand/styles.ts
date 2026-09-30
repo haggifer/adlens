@@ -6,6 +6,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: inline-flex;
         align-items: flex-start;
         gap: 0.25rem;
+        padding-bottom: 0.5rem;
         color: ${token.colorPrimary};
     `,
 
