@@ -1,7 +1,8 @@
 import { createStyles } from 'antd-style'
+import { ambientBackground } from '@/components/background/ambient'
 import { HEADING_FONT_STACK } from '@/fonts'
 
-export const useStyles = createStyles(({ token, css }) => ({
+export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`
         display: flex;
         justify-content: center;
@@ -19,14 +20,21 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     /* Pinned under the header. Its padding, not the page's, spaces it from the header, so it already sits at its
-       sticky offset and doesn't jump when scrolling starts. Opaque, so the text scrolling under it never shows through
-       behind the Back button. */
+       sticky offset and doesn't jump when scrolling starts. Opaque, so the text scrolling under it never shows through,
+       and painted with the page's own background pinned to the viewport, so it can't be told apart from the page.
+       iOS Safari ignores a fixed attachment and would stretch the glow over the bar alone, so there it's plain. */
     backBar: css`
         position: sticky;
         top: var(--header-h);
         z-index: 5;
         padding: 0.75rem 0;
-        background: ${token.colorBgLayout};
+        background: ${ambientBackground(token, isDarkMode)};
+        background-attachment: fixed;
+        transition: background 0.3s ease;
+
+        @supports (-webkit-touch-callout: none) {
+            background: ${token.colorBgLayout};
+        }
     `,
 
     document: css`
