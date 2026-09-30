@@ -8,7 +8,7 @@ import { useStyles } from './styles'
 
 const PROGRESS_STEPS = [
     { status: JobStatus.Verifying, title: 'Checking the video' },
-    { status: JobStatus.Queued, title: 'Waiting for a worker' },
+    { status: JobStatus.Queued, title: 'Starting the analysis' },
     { status: JobStatus.Analyzing, title: 'Analyzing the ad' },
 ]
 
