@@ -15,7 +15,7 @@ import {
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
 import { ApiRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
@@ -27,7 +27,7 @@ import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useQuota } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
-import { HumanCheck } from './HumanCheck'
+import { HumanCheck, type HumanCheckHandle } from './HumanCheck'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -121,9 +121,7 @@ export function AnalysisSettings({ source }: IProps) {
     const { quota } = useQuota()
     const [stage, setStage] = useState<RunStage>(RunStage.Idle)
     const [uploadProgress, setUploadProgress] = useState(0)
-    const [challengeToken, setChallengeToken] = useState<string | null>(null)
-    // A Turnstile token works once; a new key remounts the check for a fresh one.
-    const [checkKey, setCheckKey] = useState(0)
+    const humanCheck = useRef<HumanCheckHandle>(null)
     const { control, handleSubmit, getValues, setValue } = useForm<
         AnalysisSettingsInput,
         unknown,
@@ -136,9 +134,39 @@ export function AnalysisSettings({ source }: IProps) {
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
-    // Without an account the API always asks for the check, so there's no point starting before it passes. Waiting
-    // out `isInitializing` keeps a member's still-loading session from being replaced by an anonymous one.
-    const isWaitingForCheck = isInitializing || ((!user || isAnonymous) && !challengeToken)
+
+    const getChallengeToken = async (): Promise<string> => {
+        if (!humanCheck.current) {
+            throw new ApiRequestError(RequestErrorCode.ChallengeFailed)
+        }
+
+        return humanCheck.current.getToken()
+    }
+
+    const startRun = async (settings: AnalysisSettingsValues, challengeToken?: string): Promise<string> => {
+        if (source.kind === 'sample') {
+            const job = await createSampleJob({ sampleId: source.sample.id, settings, challengeToken })
+
+            setStage(RunStage.Starting)
+            await startAnalysis(job.id)
+
+            return job.id
+        }
+
+        const { file, contentType } = source
+        const { job, upload } = await createJob({
+            settings,
+            file: { name: file.name, contentType, size: file.size },
+            challengeToken,
+        })
+
+        setStage(RunStage.Uploading)
+        await uploadToSignedUrl({ target: upload, file, onProgress: setUploadProgress })
+        setStage(RunStage.Starting)
+        await startAnalysis(job.id)
+
+        return job.id
+    }
 
     const run = useMutation({
         mutationFn: async (settings: AnalysisSettingsValues): Promise<string> => {
@@ -152,6 +180,11 @@ export function AnalysisSettings({ source }: IProps) {
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
+            // Without an account the API always asks for the check, so it runs first: a visitor who can't pass
+            // it creates no anonymous user. Members skip it until the API asks (past the network's soft limit).
+            const needsCheck = !user || isAnonymous
+            const token = needsCheck ? await getChallengeToken() : undefined
+
             if (!user) {
                 const sessionCheck = await checkSession()
 
@@ -164,30 +197,18 @@ export function AnalysisSettings({ source }: IProps) {
                 }
             }
 
-            const token = challengeToken ?? undefined
+            try {
+                return await startRun(settings, token)
+            } catch (err) {
+                if (needsCheck || toApiRequestError(err).code !== RequestErrorCode.ChallengeRequired) {
+                    throw err
+                }
 
-            if (source.kind === 'sample') {
-                const job = await createSampleJob({ sampleId: source.sample.id, settings, challengeToken: token })
+                // The token is only read when a job is created, so the retry starts over with a new job.
+                const retryToken = await getChallengeToken()
 
-                setStage(RunStage.Starting)
-                await startAnalysis(job.id)
-
-                return job.id
+                return startRun(settings, retryToken)
             }
-
-            const { file, contentType } = source
-            const { job, upload } = await createJob({
-                settings,
-                file: { name: file.name, contentType, size: file.size },
-                challengeToken: token,
-            })
-
-            setStage(RunStage.Uploading)
-            await uploadToSignedUrl({ target: upload, file, onProgress: setUploadProgress })
-            setStage(RunStage.Starting)
-            await startAnalysis(job.id)
-
-            return job.id
         },
         onSuccess: (jobId) => {
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
@@ -198,8 +219,6 @@ export function AnalysisSettings({ source }: IProps) {
         },
         onError: (error) => {
             setStage(RunStage.Idle)
-            setChallengeToken(null)
-            setCheckKey((key) => key + 1)
 
             if (toApiRequestError(error).code === RequestErrorCode.SignUpRequired) {
                 setView('signup')
@@ -334,7 +353,7 @@ export function AnalysisSettings({ source }: IProps) {
                     <Controller name="markets" control={control} render={renderMarketsSelect} />
                 </div>
             </div>
-            <HumanCheck key={checkKey} onToken={setChallengeToken} />
+            <HumanCheck ref={humanCheck} />
             {renderQuota()}
             <Button
                 type="primary"
@@ -344,7 +363,9 @@ export function AnalysisSettings({ source }: IProps) {
                 className={styles.runButton}
                 icon={<ThunderboltOutlined />}
                 loading={isRunning}
-                disabled={isRunning || !hasQuotaLeft || isWaitingForCheck}
+                // Waiting out `isInitializing` keeps a member's still-loading session from being replaced by an
+                // anonymous one.
+                disabled={isRunning || !hasQuotaLeft || isInitializing}
             >
                 Run Analysis
             </Button>

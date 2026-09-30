@@ -16,7 +16,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
   anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
   analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
-- **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode) on the analysis form
+- **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts and invisible
+  unless Cloudflare asks for a click
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
   cache
 - **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
@@ -127,6 +128,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
   (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer; its
   analyses stay in the database but can no longer be reached.
-- **Turnstile is rendered for everyone, verified only when needed.** A job creation carries the token when the
-  widget has produced one; the API checks it only for anonymous users and for busy networks. The Run button waits for
-  it only without an account, so a blocked widget doesn't stop members.
+- **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
+  and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors
+  without an account get a token first (the API always checks theirs), before any anonymous user is created.
+  Members skip it; if the API answers `CHALLENGE_REQUIRED` (a busy network), the page runs the check and starts
+  over with a new job, since the token is only read at job creation. A check that doesn't finish within 30 s,
+  unless the visitor is answering a challenge, fails the run with the recovery hint.

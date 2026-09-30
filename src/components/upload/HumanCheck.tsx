@@ -1,43 +1,105 @@
 'use client'
 
-import { Turnstile } from '@marsidev/react-turnstile'
-import { useState } from 'react'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
+import { RequestErrorCode } from 'adlens-shared'
+import { type Ref, useImperativeHandle, useRef, useState } from 'react'
+import { ApiRequestError } from '@/api/errors'
 import { config } from '@/config'
 import { useTheme } from '@/design/ThemeContext'
 import { useStyles } from './styles'
 
-interface IProps {
-    onToken: (token: string | null) => void
+// Long enough for the Cloudflare script to load and a non-interactive check to finish on a slow connection. A visitor
+// answering a challenge gets as long as they need.
+const CHECK_TIMEOUT_MS = 30 * 1000
+
+export interface HumanCheckHandle {
+    // Runs the check and resolves with a fresh token; rejects with CHALLENGE_FAILED when it can't pass.
+    getToken: () => Promise<string>
 }
 
-// Cloudflare Turnstile in Managed mode: most visitors pass without clicking anything. A token works once, so the
-// parent remounts this component (a new `key`) after every attempt.
-export function HumanCheck({ onToken }: IProps) {
+interface PendingCheck {
+    resolve: (token: string) => void
+    reject: (error: Error) => void
+    timer: ReturnType<typeof setTimeout>
+}
+
+interface IProps {
+    ref: Ref<HumanCheckHandle>
+}
+
+// Cloudflare Turnstile in Managed mode, run only when an analysis starts (`execution: 'execute'`) and invisible unless
+// Cloudflare wants the visitor to click something (`appearance: 'interaction-only'`), which most never see.
+export function HumanCheck({ ref }: IProps) {
     const { styles } = useStyles()
     const { isDark } = useTheme()
+    const widget = useRef<TurnstileInstance>(null)
+    // The caller awaits the token across Turnstile's callbacks, which only report what happened.
+    const pending = useRef<PendingCheck | null>(null)
+    const [isInteractive, setIsInteractive] = useState(false)
     const [hasFailed, setHasFailed] = useState(false)
 
-    const handleUnavailable = () => {
+    const settle = (outcome: { token: string } | { error: Error }) => {
+        const check = pending.current
+
+        if (!check) {
+            return
+        }
+
+        clearTimeout(check.timer)
+        pending.current = null
+        setIsInteractive(false)
+
+        if ('token' in outcome) {
+            check.resolve(outcome.token)
+            return
+        }
+
         setHasFailed(true)
-        onToken(null)
+        check.reject(outcome.error)
     }
 
-    // Turnstile's defaults re-issue a token on its own after a routine expiry (refresh-expired: 'auto',
-    // retry: 'auto'), so a later success must clear the hint left by an earlier failure.
-    const handleSuccess = (token: string) => {
-        setHasFailed(false)
-        onToken(token)
+    const fail = () => settle({ error: new ApiRequestError(RequestErrorCode.ChallengeFailed) })
+
+    useImperativeHandle(ref, () => ({
+        getToken: () =>
+            new Promise<string>((resolve, reject) => {
+                pending.current?.reject(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+                pending.current = { resolve, reject, timer: setTimeout(fail, CHECK_TIMEOUT_MS) }
+                setHasFailed(false)
+                // A token works once, so every run starts from a fresh widget.
+                widget.current?.reset()
+                widget.current?.execute()
+            }),
+    }))
+
+    // The visitor is answering a challenge: no time limit while they do.
+    const handleBeforeInteractive = () => {
+        if (pending.current) {
+            clearTimeout(pending.current.timer)
+        }
+
+        setIsInteractive(true)
     }
 
     return (
         <div>
             <Turnstile
+                ref={widget}
                 siteKey={config.turnstileSiteKey}
-                options={{ theme: isDark ? 'dark' : 'light', size: 'flexible' }}
-                onSuccess={handleSuccess}
-                onExpire={handleUnavailable}
-                onError={handleUnavailable}
+                options={{
+                    theme: isDark ? 'dark' : 'light',
+                    size: 'flexible',
+                    execution: 'execute',
+                    appearance: 'interaction-only',
+                }}
+                // Run clicked before Cloudflare's script finished loading: start the check now that it can run.
+                onWidgetLoad={() => pending.current && widget.current?.execute()}
+                onSuccess={(token) => settle({ token })}
+                onError={fail}
+                onBeforeInteractive={handleBeforeInteractive}
+                onAfterInteractive={() => setIsInteractive(false)}
             />
+            {isInteractive && <p className={styles.hint}>Confirm you’re human to start the analysis.</p>}
             {hasFailed && (
                 <p className={styles.hint}>
                     Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.

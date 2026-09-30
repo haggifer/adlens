@@ -1,79 +1,161 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { HumanCheck } from './HumanCheck'
+import { act, render, screen } from '@testing-library/react'
+import { RequestErrorCode } from 'adlens-shared'
+import { createRef } from 'react'
+import { ApiRequestError } from '@/api/errors'
+import { HumanCheck, type HumanCheckHandle } from './HumanCheck'
 
 const mockToken = 'challenge-token'
+const mockExecute = jest.fn()
+const mockReset = jest.fn()
+let mockOptions: Record<string, unknown> = {}
+
+interface MockTurnstileProps {
+    ref: unknown
+    options: Record<string, unknown>
+    onSuccess: (token: string) => void
+    onError: () => void
+    onBeforeInteractive: () => void
+    onAfterInteractive: () => void
+}
 
 // The real widget needs a live Cloudflare script, which jsdom can't load; buttons stand in for its callbacks.
-jest.mock('@marsidev/react-turnstile', () => ({
-    Turnstile: ({
-        onError,
-        onExpire,
-        onSuccess,
-    }: {
-        onError: () => void
-        onExpire: () => void
-        onSuccess: (token: string) => void
-    }) => (
-        <>
-            <button type="button" onClick={onError}>
-                Fail the check
-            </button>
-            <button type="button" onClick={onExpire}>
-                Expire the token
-            </button>
-            <button type="button" onClick={() => onSuccess(mockToken)}>
-                Pass the check
-            </button>
-        </>
-    ),
-}))
+jest.mock('@marsidev/react-turnstile', () => {
+    const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react')
+
+    return {
+        Turnstile: ({
+            ref,
+            options,
+            onSuccess,
+            onError,
+            onBeforeInteractive,
+            onAfterInteractive,
+        }: MockTurnstileProps) => {
+            mockOptions = options
+            useImperativeHandle(ref as never, () => ({ execute: mockExecute, reset: mockReset }))
+
+            return (
+                <>
+                    <button type="button" onClick={() => onSuccess(mockToken)}>
+                        Pass the check
+                    </button>
+                    <button type="button" onClick={onError}>
+                        Fail the check
+                    </button>
+                    <button type="button" onClick={onBeforeInteractive}>
+                        Ask for a click
+                    </button>
+                    <button type="button" onClick={onAfterInteractive}>
+                        Finish the click
+                    </button>
+                </>
+            )
+        },
+    }
+})
 jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, setScheme: jest.fn() }) }))
 
+const INTERACTION_HINT = 'Confirm you’re human to start the analysis.'
 const FAILURE_HINT = 'Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.'
 
-describe('HumanCheck', () => {
-    it('passes the token on once the check passes', async () => {
-        const onToken = jest.fn()
+const renderCheck = () => {
+    const ref = createRef<HumanCheckHandle>()
 
-        render(<HumanCheck onToken={onToken} />)
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+    render(<HumanCheck ref={ref} />)
 
-        expect(onToken).toHaveBeenCalledWith(mockToken)
-        expect(screen.queryByText(FAILURE_HINT)).not.toBeInTheDocument()
+    return ref
+}
+
+const startCheck = (ref: ReturnType<typeof renderCheck>) => {
+    let token: Promise<string> | undefined
+
+    act(() => {
+        token = ref.current?.getToken()
     })
 
-    it('drops the token and hints how to recover when the widget reports an error', async () => {
-        const onToken = jest.fn()
+    return token as Promise<string>
+}
 
-        render(<HumanCheck onToken={onToken} />)
+describe('HumanCheck', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
 
-        expect(screen.queryByText(FAILURE_HINT)).not.toBeInTheDocument()
+    afterEach(() => {
+        jest.useRealTimers()
+    })
 
-        await userEvent.click(screen.getByRole('button', { name: 'Fail the check' }))
+    it('runs only when asked, and stays hidden unless Cloudflare needs a click', () => {
+        renderCheck()
 
-        expect(onToken).toHaveBeenCalledWith(null)
+        expect(mockOptions).toMatchObject({ execution: 'execute', appearance: 'interaction-only' })
+        expect(mockExecute).not.toHaveBeenCalled()
+    })
+
+    it('resolves with a fresh token when asked, resetting the widget first because a token works once', async () => {
+        const ref = renderCheck()
+        const token = startCheck(ref)
+
+        expect(mockReset).toHaveBeenCalled()
+        expect(mockExecute).toHaveBeenCalled()
+        expect(mockReset.mock.invocationCallOrder[0]).toBeLessThan(mockExecute.mock.invocationCallOrder[0])
+
+        act(() => screen.getByRole('button', { name: 'Pass the check' }).click())
+
+        await expect(token).resolves.toBe(mockToken)
+    })
+
+    it('says what to do only while Cloudflare asks for a click', () => {
+        const ref = renderCheck()
+
+        startCheck(ref)
+
+        expect(screen.queryByText(INTERACTION_HINT)).not.toBeInTheDocument()
+
+        act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
+
+        expect(screen.getByText(INTERACTION_HINT)).toBeInTheDocument()
+
+        act(() => screen.getByRole('button', { name: 'Finish the click' }).click())
+
+        expect(screen.queryByText(INTERACTION_HINT)).not.toBeInTheDocument()
+    })
+
+    it('fails the run and says how to recover when the widget reports an error', async () => {
+        const ref = renderCheck()
+        const token = startCheck(ref)
+
+        act(() => screen.getByRole('button', { name: 'Fail the check' }).click())
+
+        await expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
         expect(screen.getByText(FAILURE_HINT)).toBeInTheDocument()
     })
 
-    it('drops an expired token, which the API would refuse', async () => {
-        const onToken = jest.fn()
+    it('fails the run when the check never finishes on its own, e.g. a blocked Cloudflare script', async () => {
+        jest.useFakeTimers()
+        const ref = renderCheck()
+        const token = startCheck(ref)
+        const outcome = expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
 
-        render(<HumanCheck onToken={onToken} />)
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
-        await userEvent.click(screen.getByRole('button', { name: 'Expire the token' }))
+        act(() => {
+            jest.advanceTimersByTime(60 * 1000)
+        })
 
-        expect(onToken).toHaveBeenLastCalledWith(null)
+        await outcome
+        expect(screen.getByText(FAILURE_HINT)).toBeInTheDocument()
     })
 
-    it('clears the hint once the widget recovers on its own', async () => {
-        const onToken = jest.fn()
+    it('waits for a visitor who is answering a challenge, however long it takes', async () => {
+        jest.useFakeTimers()
+        const ref = renderCheck()
+        const token = startCheck(ref)
 
-        render(<HumanCheck onToken={onToken} />)
-        await userEvent.click(screen.getByRole('button', { name: 'Fail the check' }))
-        await userEvent.click(screen.getByRole('button', { name: 'Pass the check' }))
+        act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
+        act(() => {
+            jest.advanceTimersByTime(5 * 60 * 1000)
+        })
+        act(() => screen.getByRole('button', { name: 'Pass the check' }).click())
 
-        expect(onToken).toHaveBeenLastCalledWith(mockToken)
-        expect(screen.queryByText(FAILURE_HINT)).not.toBeInTheDocument()
+        await expect(token).resolves.toBe(mockToken)
     })
 })

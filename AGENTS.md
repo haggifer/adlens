@@ -36,7 +36,8 @@ npm test             # Jest + React Testing Library
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
 - An anonymous session counts as signed in (`isSignedIn`), so its history, quota and live updates work. Gate
   account-only UI on `isAnonymous`, and never show an anonymous user's email (`AuthContext` gives `null`).
-- A Turnstile token is single-use: remount `HumanCheck` (a new `key`) after every analysis attempt.
+- A Turnstile token is single-use: get one from `HumanCheck`'s `getToken()` for every job creation that needs it
+  (it resets the widget each time); never reuse a token.
 
 ## Conventions
 
