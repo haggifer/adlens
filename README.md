@@ -123,9 +123,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
-  crawlers create no users, and their history, quota and live updates work as for anyone. The header offers "Sign up
-  to keep your history"; signing up (confirming the email in the same browser) or signing in moves the analyses to the
-  account. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
+  crawlers create no users, and their history, quota and live updates work as for anyone. The header offers only Sign
+  In (its dialog links to sign-up): signing in, or signing up and confirming the email in the same browser, moves the
+  analyses and runs to the account and deletes the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
   (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer; its
   analyses stay in the database but can no longer be reached.
 - **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
