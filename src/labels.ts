@@ -9,7 +9,8 @@ export const ALL_PLATFORMS_LABEL = 'All platforms'
 export const PLATFORM_LABELS: Record<Platform, string> = {
     [Platform.Meta]: 'Meta (Facebook, Instagram)',
     [Platform.TikTok]: 'TikTok',
-    [Platform.YouTube]: 'YouTube',
+    // Google Ads policies govern YouTube video ads, so its rules come with this option.
+    [Platform.YouTube]: 'YouTube (Google Ads)',
     [Platform.Snapchat]: 'Snapchat',
     [Platform.Pinterest]: 'Pinterest',
     [Platform.LinkedIn]: 'LinkedIn',
