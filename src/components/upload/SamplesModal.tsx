@@ -91,7 +91,7 @@ export function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
             open={isOpen}
             onCancel={onClose}
             footer={null}
-            width={720}
+            width={1000}
             centered
             destroyOnHidden
             title="Try a sample ad"

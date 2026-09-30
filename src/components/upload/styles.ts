@@ -480,15 +480,15 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
     `,
 
-    /* Square, so vertical and horizontal ads both fit; the black letterbox is the video stage, not a theme colour. */
+    /* 16:9, the shape of most ads (vertical ones get side bars); the black letterbox is the video stage, not a theme
+       colour. */
     sampleThumb: css`
         flex-shrink: 0;
-        width: 7.5rem;
-        aspect-ratio: 1 / 1;
+        width: 15rem;
+        aspect-ratio: 16 / 9;
 
         @media (max-width: 575.98px) {
             width: 100%;
-            aspect-ratio: 16 / 9;
         }
         border-radius: ${token.borderRadius}px;
         background: #000000;
