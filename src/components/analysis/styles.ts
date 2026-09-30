@@ -1,5 +1,19 @@
-import { createStyles } from 'antd-style'
+import { createStyles, keyframes } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
+
+// One cycle per icon: in, hold, out. Its duration is set to the icon interval by AnalysisAnimation.
+const ICON_FADE = keyframes`
+    0% {
+        opacity: 0;
+    }
+    25%,
+    75% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+`
 
 export const useStyles = createStyles(({ token, css }) => ({
     page: css`
@@ -112,6 +126,22 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-size: 1.35rem;
         font-weight: 700;
         letter-spacing: -0.01em;
+    `,
+
+    // The running step's icon, switching and fading in its own colour.
+    stepIcon: css`
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 1rem;
+        animation-name: ${ICON_FADE};
+        animation-timing-function: ease-in-out;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
     `,
 
     hint: css`

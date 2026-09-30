@@ -13,4 +13,10 @@ describe('JobStatusPanel', () => {
         expect(screen.getByText('Starting the analysis')).toBeInTheDocument()
         expect(screen.getByText('Analyzing the ad')).toBeInTheDocument()
     })
+
+    it('animates the running step', () => {
+        render(<JobStatusPanel job={buildJob({ status: JobStatus.Analyzing })} />)
+
+        expect(screen.getByRole('img', { name: 'notification', hidden: true })).toBeInTheDocument()
+    })
 })

@@ -1,9 +1,10 @@
 'use client'
 
 import { type Job, JobStatus } from 'adlens-shared'
-import { Button, Result, Spin, Steps } from 'antd'
+import { Button, Result, Steps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { describeJobError } from '@/api/errors'
+import { AnalysisAnimation } from './AnalysisAnimation'
 import { useStyles } from './styles'
 
 const PROGRESS_STEPS = [
@@ -65,7 +66,7 @@ export function JobStatusPanel({ job }: IProps) {
                 current={current}
                 items={PROGRESS_STEPS.map((step, index) => ({
                     title: step.title,
-                    icon: index === current ? <Spin size="small" /> : undefined,
+                    icon: index === current ? <AnalysisAnimation /> : undefined,
                 }))}
             />
         </div>
