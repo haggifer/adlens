@@ -1,7 +1,7 @@
 'use client'
 
 import { PlayCircleOutlined } from '@ant-design/icons'
-import type { Advisory, Analysis, Finding, MetadataCheck, Severity } from 'adlens-shared'
+import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
 import { RULE_PLATFORM_LABELS } from '@/labels'
 import { countIssues, findingSeverity, formatCount, formatTimeRange, splitResults } from './results'
@@ -22,6 +22,10 @@ const VERDICT_LABELS: Record<Finding['verdict'] | MetadataCheck['verdict'], stri
     unknown: 'couldn’t check',
     pass: 'passes',
 }
+
+const renderPlatforms = (platforms: RulePlatform[]) => (
+    <span>{platforms.map((platform) => RULE_PLATFORM_LABELS[platform]).join(', ')}</span>
+)
 
 interface IProps {
     analysis: Analysis
@@ -65,7 +69,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                             {formatTimeRange(time)}
                         </Button>
                     )}
-                    <span>{finding.platform.map((platform) => RULE_PLATFORM_LABELS[platform]).join(', ')}</span>
+                    {renderPlatforms(finding.platform)}
                     {renderSource(finding.ref, finding.quote)}
                 </div>
             </div>
@@ -91,7 +95,10 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 <span className={styles.findingTopic}>{advisory.topic}</span>
             </div>
             <p className={styles.findingEvidence}>{advisory.check}</p>
-            <div className={styles.findingFooter}>{renderSource(advisory.ref, advisory.quote)}</div>
+            <div className={styles.findingFooter}>
+                {renderPlatforms(advisory.platform)}
+                {renderSource(advisory.ref, advisory.quote)}
+            </div>
         </div>
     )
 

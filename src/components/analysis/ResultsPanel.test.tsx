@@ -107,6 +107,7 @@ describe('ResultsPanel', () => {
         expect(screen.getByText('1 to confirm')).toBeInTheDocument()
         expect(heading(ADVISORIES_HEADING)).toBeInTheDocument()
         expect(screen.getByText('Target only people of legal drinking age.')).toBeInTheDocument()
+        expect(screen.getByText('Meta')).toBeInTheDocument()
     })
 
     it('shows a probable issue on a blocker rule as a warning, not a blocker', () => {
