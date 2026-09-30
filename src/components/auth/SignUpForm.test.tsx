@@ -20,11 +20,20 @@ const renderForm = (auth: AuthContextValue) => {
     return renderWithProviders(<SignUpForm />)
 }
 
+const SIGN_UP_FIELDS = [
+    ['Name', 'Ann'],
+    ['Email', 'ann@example.com'],
+    ['Password', 'long-enough-password'],
+    ['Confirm password', 'long-enough-password'],
+]
+
+// Pasted rather than typed: typing each character re-renders the form, which timed out under a full parallel run.
 const submitSignUp = async (user: ReturnType<typeof renderForm>['user']) => {
-    await user.type(screen.getByLabelText('Name'), 'Ann')
-    await user.type(screen.getByLabelText('Email'), 'ann@example.com')
-    await user.type(screen.getByLabelText('Password'), 'long-enough-password')
-    await user.type(screen.getByLabelText('Confirm password'), 'long-enough-password')
+    for (const [label, value] of SIGN_UP_FIELDS) {
+        await user.click(screen.getByLabelText(label))
+        await user.paste(value)
+    }
+
     await user.click(screen.getByRole('button', { name: 'Create account' }))
     await screen.findByText('Check your inbox')
 }
