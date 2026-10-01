@@ -6,7 +6,8 @@ describe('formatQuotaLeft', () => {
         expect(formatQuotaLeft({ used: 3, limit: 3, nextFreeAt: null })).toBe('0/3 analyses left')
     })
 
-    // An account moved to a smaller plan can have more charged runs in the window than its new limit.
+    // A lowered limit, or an admin's uncapped runs once the account is no longer an admin, can leave more charged runs
+    // in the window than the limit.
     it('never shows a negative count when more runs were charged than the limit allows', () => {
         expect(formatQuotaLeft({ used: 5, limit: 3, nextFreeAt: null })).toBe('0/3 analyses left')
     })
