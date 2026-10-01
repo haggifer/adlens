@@ -15,9 +15,10 @@ jest.mock('@/auth/authClient', () => ({
 
 const OTHER_ADDRESS_NOTE = 'The link you opened is for a different address.'
 
-const openConfirmation = (auth: AuthContextValue = memberAuth()) => {
+const openConfirmation = (auth: AuthContextValue = memberAuth(), isOtherAddressLink = false) => {
     mockUseAuth.mockReturnValue(auth)
     useAuthModalStore.getState().setView('confirm')
+    useAuthModalStore.getState().setIsOtherAddressLink(isOtherAddressLink)
 
     return renderWithProviders(<AuthModal />)
 }
@@ -59,8 +60,7 @@ describe('ConfirmEmailNotice', () => {
     })
 
     it('says so when the user opened a link for another address', async () => {
-        openConfirmation()
-        useAuthModalStore.getState().setIsOtherAddressLink(true)
+        openConfirmation(memberAuth(), true)
 
         expect(await screen.findByText(OTHER_ADDRESS_NOTE)).toBeInTheDocument()
     })
