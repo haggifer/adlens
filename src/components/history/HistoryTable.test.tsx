@@ -105,6 +105,17 @@ describe('HistoryTable', () => {
         expect(await screen.findByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument()
     })
 
+    it('does not claim there are no analyses when the list failed to load', async () => {
+        jest.mocked(listJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+        renderTable()
+
+        await screen.findByText('AdLens is briefly unavailable. Please try again.')
+        await waitForLoaded()
+
+        expect(screen.queryByText('No analyses yet')).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Check your first ad' })).not.toBeInTheDocument()
+    })
+
     it('never shows one user’s analyses to the next user of the same browser', async () => {
         const nextUser = { ...MEMBER_USER, id: 'member-2', email: 'bob@example.com', name: 'Bob' }
 

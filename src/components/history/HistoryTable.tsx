@@ -97,7 +97,8 @@ export function HistoryTable() {
                 loading={isLoading}
                 pagination={false}
                 locale={{
-                    emptyText: (
+                    // A failed load says nothing about whether the user has analyses; the alert above explains it.
+                    emptyText: error ? null : (
                         <Empty description="No analyses yet">
                             <Button type="primary" onClick={() => router.push('/')}>
                                 Check your first ad
