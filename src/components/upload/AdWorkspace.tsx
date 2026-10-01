@@ -19,6 +19,7 @@ export function AdWorkspace() {
     const { styles } = useStyles()
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
+    const [isRunning, setIsRunning] = useState(false)
     const workspaceRef = useRef<HTMLDivElement>(null)
 
     // The square and panel size off the flex column height directly (100%). A hugged (fit-content) video
@@ -89,13 +90,16 @@ export function AdWorkspace() {
                         onSelect={selectFile}
                         onClear={clearVideo}
                         onBrowseSamples={() => setIsSamplesOpen(true)}
+                        isDisabled={isRunning}
                     />
                 </div>
                 <div className={styles.right}>
                     {source ? (
+                        // A key per source, so no settings or run error carry over to the next video.
                         <AnalysisSettings
-                            key={source.kind === 'sample' ? `sample-${source.sample.id}` : 'upload'}
+                            key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
                             source={source}
+                            onRunningChange={setIsRunning}
                         />
                     ) : (
                         <UploadIntro />

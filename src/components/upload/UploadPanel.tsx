@@ -20,6 +20,8 @@ interface IProps {
     onSelect: (file: File, video: AcceptedVideo) => void
     onClear: () => void
     onBrowseSamples: () => void
+    // Set while an analysis runs: the video and its source can't change under it.
+    isDisabled?: boolean
 }
 
 const { Dragger } = Upload
@@ -52,7 +54,7 @@ const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
         video.src = url
     })
 
-export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProps) {
+export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisabled = false }: IProps) {
     const theme = useTheme()
     const { styles, cx } = useStyles()
     const { notification } = App.useApp()
@@ -110,7 +112,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
         }
     }
 
-    const handleDragEnter = () => setIsDragging(true)
+    const handleDragEnter = () => setIsDragging(!isDisabled)
     const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
             setIsDragging(false)
@@ -122,7 +124,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
         setIsDragging(false)
         const file = event.dataTransfer.files?.[0]
 
-        if (!file) {
+        if (!file || isDisabled) {
             return
         }
 
@@ -179,12 +181,19 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
                         accept={VIDEO_FILE_ACCEPT}
                         maxCount={1}
                         showUploadList={false}
+                        disabled={isDisabled}
                         beforeUpload={async (incoming) => {
                             await selectIfAccepted(incoming)
                             return false
                         }}
                     >
-                        <Button shape="circle" icon={<SwapOutlined />} aria-label="Replace video" title="Replace" />
+                        <Button
+                            shape="circle"
+                            icon={<SwapOutlined />}
+                            aria-label="Replace video"
+                            title="Replace"
+                            disabled={isDisabled}
+                        />
                     </Upload>
                     <Button
                         shape="circle"
@@ -192,6 +201,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
                         aria-label="Remove video"
                         title="Remove"
                         onClick={onClear}
+                        disabled={isDisabled}
                     />
                 </div>
             </div>
@@ -212,6 +222,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
                 accept={VIDEO_FILE_ACCEPT}
                 maxCount={1}
                 showUploadList={false}
+                disabled={isDisabled}
                 beforeUpload={async (incoming) => {
                     await selectIfAccepted(incoming)
                     return false
@@ -246,7 +257,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples }: IProp
                         or
                     </Divider>
                     <span>No ad at hand?</span>
-                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples}>
+                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples} disabled={isDisabled}>
                         Try a sample ad
                     </Button>
                 </div>

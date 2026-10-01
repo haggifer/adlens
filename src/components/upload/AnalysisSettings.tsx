@@ -16,7 +16,7 @@ import {
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
-import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { ApiRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
@@ -51,16 +51,6 @@ const getPlacementOptions = (platforms: Platform[]) =>
             .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
             .map((value) => ({ value, label: `${platform} · ${PLACEMENT_LABELS[value]}` })),
     }))
-
-const renderMarketsSelect = ({ field }: { field: ControllerRenderProps<AnalysisSettingsInput, 'markets'> }) => (
-    <Select
-        {...field}
-        mode="multiple"
-        placeholder="Leave empty to check every market"
-        options={MARKET_OPTIONS}
-        allowClear
-    />
-)
 
 const formatNextFree = (nextFreeAt: string) =>
     new Date(nextFreeAt).toLocaleString(undefined, {
@@ -109,9 +99,11 @@ enum RunStage {
 
 interface IProps {
     source: AnalysisSource
+    // True from Run until the run fails; a run that succeeds stays locked while the page navigates away.
+    onRunningChange?: (isRunning: boolean) => void
 }
 
-export function AnalysisSettings({ source }: IProps) {
+export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
@@ -210,6 +202,7 @@ export function AnalysisSettings({ source }: IProps) {
                 return startRun(settings, retryToken)
             }
         },
+        onMutate: () => onRunningChange?.(true),
         onSuccess: (jobId) => {
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
             // invalidating by prefix catches the new user's queries too, not just the one active before the run.
@@ -219,6 +212,7 @@ export function AnalysisSettings({ source }: IProps) {
         },
         onError: (error) => {
             setStage(RunStage.Idle)
+            onRunningChange?.(false)
 
             if (toApiRequestError(error).code === RequestErrorCode.SignUpRequired) {
                 setView('signup')
@@ -316,6 +310,7 @@ export function AnalysisSettings({ source }: IProps) {
                                 mode="multiple"
                                 placeholder="Leave empty to check every platform"
                                 options={PLATFORM_OPTIONS}
+                                disabled={isRunning}
                                 allowClear
                             />
                         )}
@@ -334,7 +329,7 @@ export function AnalysisSettings({ source }: IProps) {
                                     platforms.length ? 'Adds the specs of each placement' : 'Pick a platform first'
                                 }
                                 options={getPlacementOptions(platforms)}
-                                disabled={!platforms.length}
+                                disabled={!platforms.length || isRunning}
                                 allowClear
                             />
                         )}
@@ -342,7 +337,20 @@ export function AnalysisSettings({ source }: IProps) {
                 </div>
                 <div className={styles.field}>
                     <label className={styles.fieldLabel}>Markets</label>
-                    <Controller name="markets" control={control} render={renderMarketsSelect} />
+                    <Controller
+                        name="markets"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                {...field}
+                                mode="multiple"
+                                placeholder="Leave empty to check every market"
+                                options={MARKET_OPTIONS}
+                                disabled={isRunning}
+                                allowClear
+                            />
+                        )}
+                    />
                 </div>
             </div>
             <HumanCheck ref={humanCheck} />
