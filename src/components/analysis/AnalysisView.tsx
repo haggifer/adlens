@@ -23,11 +23,13 @@ interface IProps {
 }
 
 export function AnalysisView({ jobId }: IProps) {
-    const { styles } = useStyles()
+    const { styles, cx } = useStyles()
     const router = useRouter()
     const { job, isLoading, error } = useJob(jobId)
-    // A pending job never received its upload, so there is nothing to replay.
-    const { url } = useJobVideo(jobId, Boolean(job) && job?.status !== JobStatus.Pending)
+    // A pending job never received its upload, so there is nothing to replay. A failed job's video backs no results
+    // and is deleted about a day after the failure, so its page never shows a player.
+    const isFailed = job?.status === JobStatus.Error
+    const { url } = useJobVideo(jobId, Boolean(job) && job?.status !== JobStatus.Pending && !isFailed)
     // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
     const playerRef = useRef<MediaPlayerInstance>(null)
 
@@ -103,28 +105,30 @@ export function AnalysisView({ jobId }: IProps) {
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
             </header>
-            <div className={styles.workspace}>
-                <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
-                    {playerSrc ? (
-                        <MediaPlayer
-                            ref={playerRef}
-                            className={styles.player}
-                            src={playerSrc}
-                            viewType="video"
-                            playsInline
-                            aria-label={`Video ad ${job.file.name}`}
-                        >
-                            <MediaProvider />
-                            <DefaultVideoLayout
-                                icons={defaultLayoutIcons}
-                                smallLayoutWhen={false}
-                                slots={NO_CAST_SLOTS}
-                            />
-                        </MediaPlayer>
-                    ) : (
-                        job.status !== JobStatus.Pending && <Spin />
-                    )}
-                </div>
+            <div className={cx(styles.workspace, isFailed && 'justify-content-center align-items-start')}>
+                {!isFailed && (
+                    <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
+                        {playerSrc ? (
+                            <MediaPlayer
+                                ref={playerRef}
+                                className={styles.player}
+                                src={playerSrc}
+                                viewType="video"
+                                playsInline
+                                aria-label={`Video ad ${job.file.name}`}
+                            >
+                                <MediaProvider />
+                                <DefaultVideoLayout
+                                    icons={defaultLayoutIcons}
+                                    smallLayoutWhen={false}
+                                    slots={NO_CAST_SLOTS}
+                                />
+                            </MediaPlayer>
+                        ) : (
+                            job.status !== JobStatus.Pending && <Spin />
+                        )}
+                    </div>
+                )}
                 {job.status === JobStatus.Analyzed && job.analysis ? (
                     <ResultsPanel analysis={job.analysis} onSeek={handleSeek} />
                 ) : (

@@ -34,7 +34,11 @@ export function JobStatusPanel({ job }: IProps) {
                     status="error"
                     title="The analysis failed"
                     subTitle={describeJobError(job.errorCode)}
-                    extra={newAnalysisButton}
+                    extra={
+                        <Button type="primary" onClick={() => router.push('/')}>
+                            Analyze another video
+                        </Button>
+                    }
                 />
             </div>
         )
