@@ -8,7 +8,7 @@ import { authClient, signIn } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { uploadToSignedUrl } from '@/storage/upload'
-import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth } from '@/test/auth'
+import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob, buildSample } from '@/test/fixtures'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import { AnalysisSettings } from './AnalysisSettings'
@@ -53,6 +53,10 @@ const UPLOAD_TARGET: UploadTarget = {
 }
 
 const UNAVAILABLE_COPY = 'AdLens is briefly unavailable. Please try again.'
+
+const CONFIRMATION_REQUIRED_COPY = 'Confirm your email to run more analyses.'
+
+const SIGN_UP_REQUIRED_COPY = 'You’ve used your free analysis. Sign in or create an account to run more.'
 
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)
@@ -276,6 +280,61 @@ describe('AnalysisSettings', () => {
             expect(screen.getByText('Unlimited analyses')).toBeInTheDocument()
             expect(runButton()).toBeEnabled()
         })
+    })
+
+    describe('for an account whose email isn’t confirmed', () => {
+        it('runs the check on every Run, without signing in anonymously', async () => {
+            const { user } = renderSettings(unconfirmedAuth())
+
+            await run(user)
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+            expect(createSampleJob).toHaveBeenCalledWith({
+                sampleId: SAMPLE.id,
+                settings: SAMPLE.settings,
+                challengeToken: mockChallengeToken,
+            })
+            expect(authClient.getSession).not.toHaveBeenCalled()
+            expect(signIn.anonymous).not.toHaveBeenCalled()
+        })
+
+        it('offers Confirm email when the API asks for a confirmed address', async () => {
+            jest.mocked(createSampleJob).mockRejectedValueOnce(
+                new ApiRequestError(RequestErrorCode.EmailConfirmationRequired),
+            )
+            const { user } = renderSettings(unconfirmedAuth())
+
+            await run(user)
+
+            expect(await screen.findByText(CONFIRMATION_REQUIRED_COPY)).toBeInTheDocument()
+
+            await user.click(screen.getByRole('button', { name: 'Confirm email' }))
+
+            expect(useAuthModalStore.getState().view).toBe('confirm')
+        })
+
+        it('asks to confirm the email once its analysis is used, instead of naming a date', () => {
+            mockQuota = { used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+            renderSettings(unconfirmedAuth())
+
+            expect(screen.getByText(CONFIRMATION_REQUIRED_COPY)).toBeInTheDocument()
+            expect(screen.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
+            expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
+            expect(runButton()).toBeDisabled()
+        })
+    })
+
+    it('asks an anonymous visitor to sign up once their analysis is used, instead of naming a date', async () => {
+        mockQuota = { used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+        const { user } = renderSettings(anonymousAuth())
+
+        expect(screen.getByText(SIGN_UP_REQUIRED_COPY)).toBeInTheDocument()
+        expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
+        expect(runButton()).toBeDisabled()
+
+        await user.click(screen.getByRole('button', { name: 'Sign up' }))
+
+        expect(useAuthModalStore.getState().view).toBe('signup')
     })
 
     it('opens sign-up when the network’s analyses without an account are used up', async () => {

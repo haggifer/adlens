@@ -122,12 +122,12 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
-  crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets
-  one analysis; the next asks the visitor to sign in or sign up. The header offers only Sign In (its dialog links to
-  sign-up): signing in or signing up moves the analyses and runs to the account at once and deletes the anonymous
-  user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this browser"
-  (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer; its
-  analyses stay in the database but can no longer be reached.
+  crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
+  analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In
+  (its dialog links to sign-up): signing in or signing up moves the analyses and runs to the account at once and deletes
+  the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this
+  browser" (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
+  its analyses stay in the database but can no longer be reached.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
   is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
@@ -135,8 +135,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   in: it confirms only for a session signed in as its own account, so `/confirm-email` asks a visitor to sign in
   first and then sends the same token again.
 - **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
-  and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors
-  without an account get a token first (the API always checks theirs), before any anonymous user is created.
-  Members skip it; if the API answers `CHALLENGE_REQUIRED` (a busy network), the page runs the check and starts
-  over with a new job, since the token is only read at job creation. A check that doesn't finish within 30 s,
-  unless the visitor is answering a challenge, fails the run with the recovery hint.
+  and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors without
+  an account, and accounts whose email isn't confirmed, get a token first (the API always checks theirs), before any
+  anonymous user is created. Members skip it; if the API answers `CHALLENGE_REQUIRED` (a busy network), the page runs
+  the check and starts over with a new job, since the token is only read at job creation. A check that doesn't finish
+  within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint.

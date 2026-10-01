@@ -7,6 +7,7 @@ import {
     type AnalysisSettings as AnalysisSettingsValues,
     type AnalysisSettingsInput,
     analysisSettingsSchema,
+    type ApiErrorCode,
     Market,
     Placement,
     PLACEMENT_PLATFORM,
@@ -17,7 +18,7 @@ import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import { ApiRequestError, toApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { authClient, signIn } from '@/auth/authClient'
@@ -107,7 +108,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { user, isAnonymous, isInitializing } = useAuth()
+    const { user, isAnonymous, isEmailConfirmed, isInitializing } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const { quota } = useQuota()
@@ -172,9 +173,10 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             setStage(RunStage.Creating)
             setUploadProgress(0)
 
-            // Without an account the API always asks for the check, so it runs first: a visitor who can't pass
-            // it creates no anonymous user. Members skip it until the API asks (past the network's soft limit).
-            const needsCheck = !user || isAnonymous
+            // Without an account, or with one whose email isn't confirmed, the API always asks for the check, so it
+            // runs first: a visitor who can't pass it creates no anonymous user. Members skip it until the API asks
+            // (past the network's soft limit).
+            const needsCheck = !user || isAnonymous || !isEmailConfirmed
             const token = needsCheck ? await getChallengeToken() : undefined
 
             if (!user) {
@@ -232,24 +234,39 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     const isRunning = run.isPending || run.isSuccess
 
+    const renderErrorAction = (code: ApiErrorCode) => {
+        if (code === RequestErrorCode.NetworkQuotaExceeded) {
+            return (
+                <Button size="small" onClick={() => setIsContactOpen(true)}>
+                    Contact us
+                </Button>
+            )
+        }
+
+        if (code === RequestErrorCode.EmailConfirmationRequired) {
+            return (
+                <Button size="small" onClick={() => setView('confirm')}>
+                    Confirm email
+                </Button>
+            )
+        }
+
+        if (code === RequestErrorCode.SignUpRequired) {
+            return (
+                <Button size="small" onClick={() => setView('signup')}>
+                    Sign up
+                </Button>
+            )
+        }
+
+        return undefined
+    }
+
     const renderStatus = () => {
         if (run.error) {
             const error = toApiRequestError(run.error)
 
-            return (
-                <Alert
-                    type="error"
-                    showIcon
-                    title={error.message}
-                    action={
-                        error.code === RequestErrorCode.NetworkQuotaExceeded ? (
-                            <Button size="small" onClick={() => setIsContactOpen(true)}>
-                                Contact us
-                            </Button>
-                        ) : undefined
-                    }
-                />
-            )
+            return <Alert type="error" showIcon title={error.message} action={renderErrorAction(error.code)} />
         }
 
         if (stage === RunStage.Uploading) {
@@ -275,6 +292,13 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
         if (quota.limit === null) {
             return <p className={styles.hint}>Unlimited analyses</p>
+        }
+
+        // Without a confirmed account the one analysis doesn't come back with time: the next needs an account.
+        if (!hasQuotaLeft && !isEmailConfirmed) {
+            const code = isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
+
+            return <Alert type="info" showIcon title={describeRequestError(code)} action={renderErrorAction(code)} />
         }
 
         if (!hasQuotaLeft && quota.nextFreeAt) {

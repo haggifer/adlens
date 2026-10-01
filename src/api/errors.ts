@@ -63,3 +63,5 @@ export const toApiRequestError = (err: unknown): ApiRequestError => {
 
 export const describeJobError = (code: JobErrorCode | undefined): string =>
     ERROR_COPY[code ?? JobErrorCode.AnalysisFailed]
+
+export const describeRequestError = (code: RequestErrorCode): string => ERROR_COPY[code]
