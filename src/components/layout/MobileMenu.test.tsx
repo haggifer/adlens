@@ -3,7 +3,7 @@ import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth } from '@/test/auth'
+import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { MobileMenu } from './MobileMenu'
 
@@ -111,6 +111,30 @@ describe('MobileMenu', () => {
             await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
 
             consoleError.mockRestore()
+        })
+    })
+
+    describe('for an account whose email isn’t confirmed', () => {
+        it('shows the name, email, count, Confirm email and Sign Out, but no account page', async () => {
+            const { menu } = await openMenu(unconfirmedAuth())
+
+            expect(menu.getByText('Ann')).toBeInTheDocument()
+            expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
+            expect(menu.getByText('2/3 analyses left')).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
+            expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
+            expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
+            expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: /Forget this browser/ })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+        })
+
+        it('opens the confirmation dialog', async () => {
+            const { user, menu } = await openMenu(unconfirmedAuth())
+
+            await user.click(menu.getByRole('button', { name: 'Confirm email' }))
+
+            expect(useAuthModalStore.getState().view).toBe('confirm')
         })
     })
 

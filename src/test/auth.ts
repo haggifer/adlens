@@ -11,6 +11,7 @@ const createAuth = (overrides: Partial<AuthContextValue>): AuthContextValue => (
     isInitializing: false,
     isSignedIn: false,
     isAnonymous: false,
+    isEmailConfirmed: false,
     user: null,
     signOut: jest.fn(async () => undefined),
     ...overrides,
@@ -23,4 +24,8 @@ export const signedOutAuth = (): AuthContextValue => createAuth({})
 export const anonymousAuth = (): AuthContextValue =>
     createAuth({ isSignedIn: true, isAnonymous: true, user: ANONYMOUS_USER })
 
-export const memberAuth = (): AuthContextValue => createAuth({ isSignedIn: true, user: MEMBER_USER })
+// Signed up with email and password, but hasn't opened the confirmation link yet.
+export const unconfirmedAuth = (): AuthContextValue => createAuth({ isSignedIn: true, user: MEMBER_USER })
+
+export const memberAuth = (): AuthContextValue =>
+    createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER })

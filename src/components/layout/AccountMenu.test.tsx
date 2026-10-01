@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth } from '@/test/auth'
+import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { AccountMenu } from './AccountMenu'
 
@@ -100,6 +100,29 @@ describe('AccountMenu', () => {
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
             expect(auth.signOut).toHaveBeenCalledTimes(2)
             await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
+        })
+    })
+
+    describe('for an account whose email isn’t confirmed', () => {
+        it('offers Confirm email, which opens the confirmation dialog, and no account menu', async () => {
+            const { user } = renderMenu(unconfirmedAuth())
+
+            expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', { name: 'Forget this browser' })).not.toBeInTheDocument()
+
+            await user.click(screen.getByRole('button', { name: 'Confirm email' }))
+
+            expect(useAuthModalStore.getState().view).toBe('confirm')
+        })
+
+        it('signs out and goes home', async () => {
+            const auth = unconfirmedAuth()
+            const { user } = renderMenu(auth)
+
+            await user.click(screen.getByRole('button', { name: 'Sign Out' }))
+
+            expect(auth.signOut).toHaveBeenCalledTimes(1)
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
         })
     })
 

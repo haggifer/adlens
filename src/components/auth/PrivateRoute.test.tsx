@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth } from '@/test/auth'
+import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { PrivateRoute } from './PrivateRoute'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
@@ -63,6 +63,23 @@ describe('PrivateRoute', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
         expect(useAuthModalStore.getState().view).toBe('signin')
+    })
+
+    it('shows an account whose email isn’t confirmed its own pages, such as History', () => {
+        renderRoute(unconfirmedAuth())
+
+        expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument()
+    })
+
+    it('asks an account whose email isn’t confirmed to confirm it before a page that needs a full account', async () => {
+        renderRoute(unconfirmedAuth(), true)
+
+        expect(screen.queryByText(PAGE_CONTENT)).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Sign Up' })).not.toBeInTheDocument()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Confirm email' }))
+
+        expect(useAuthModalStore.getState().view).toBe('confirm')
     })
 
     it('shows a member a page that needs an account', () => {

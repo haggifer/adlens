@@ -59,16 +59,16 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 
 ## Routes
 
-| Route             | What it does                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `/`               | Upload a video and choose the analysis settings                                                                                 |
-| `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video                                                        |
-| `/history`        | Every analysis, newest first                                                                                                    |
-| `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt) |
-| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home                                                           |
-| `/reset-password` | Landing page of the password-reset link                                                                                         |
-| `/terms`          | Terms of Use                                                                                                                    |
-| `/privacy`        | Privacy Policy                                                                                                                  |
+| Route             | What it does                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`               | Upload a video and choose the analysis settings                                                                                                                           |
+| `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video                                                                                                  |
+| `/history`        | Every analysis, newest first                                                                                                                                              |
+| `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one) |
+| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home                                                                                                     |
+| `/reset-password` | Landing page of the password-reset link                                                                                                                                   |
+| `/terms`          | Terms of Use                                                                                                                                                              |
+| `/privacy`        | Privacy Policy                                                                                                                                                            |
 
 ## Structure
 

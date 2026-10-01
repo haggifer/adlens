@@ -17,6 +17,9 @@ export interface AuthContextValue {
     // Any session, anonymous ones included, so their history, quota and live updates work unchanged.
     isSignedIn: boolean
     isAnonymous: boolean
+    // A non-anonymous account whose email is confirmed. Until then an account is limited like an anonymous session
+    // (one analysis, no account page), so account-only UI checks this rather than isAnonymous.
+    isEmailConfirmed: boolean
     user: AuthUser | null
     // Rejects with an AuthError (describeError gives its copy) on a refused or unreachable sign-out; clears the
     // query cache only once it succeeds.
@@ -41,6 +44,7 @@ export function AuthProvider({ children }: IProps) {
             isInitializing: isPending,
             isSignedIn: Boolean(user),
             isAnonymous,
+            isEmailConfirmed: Boolean(user && !isAnonymous && user.emailVerified),
             user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
             // Cached server data belongs to the signed-in user, so it goes with the session. A refused or
             // unreachable sign-out must not clear it or leave the caller thinking the user is signed out.

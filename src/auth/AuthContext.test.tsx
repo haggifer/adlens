@@ -15,12 +15,22 @@ jest.mock('@/auth/authClient', () => ({
 const JOBS_KEY = ['jobs', 'member-1']
 
 const MEMBER_SESSION = {
-    user: { id: 'member-1', email: 'ann@example.com', name: 'Ann', isAnonymous: false },
+    user: { id: 'member-1', email: 'ann@example.com', name: 'Ann', isAnonymous: false, emailVerified: true },
+}
+
+const UNCONFIRMED_SESSION = {
+    user: { id: 'member-2', email: 'bob@example.com', name: 'Bob', isAnonymous: false, emailVerified: false },
 }
 
 // Better Auth gives an anonymous user a generated placeholder address.
 const ANONYMOUS_SESSION = {
-    user: { id: 'anon-1', email: 'temp-4f2a@anonymous.useadlens.com', name: 'Anonymous', isAnonymous: true },
+    user: {
+        id: 'anon-1',
+        email: 'temp-4f2a@anonymous.useadlens.com',
+        name: 'Anonymous',
+        isAnonymous: true,
+        emailVerified: false,
+    },
 }
 
 const renderAuth = (queryClient: QueryClient = createTestQueryClient()) =>
@@ -56,11 +66,12 @@ describe('AuthProvider', () => {
             isInitializing: false,
             isSignedIn: false,
             isAnonymous: false,
+            isEmailConfirmed: false,
             user: null,
         })
     })
 
-    it('gives a member their email', () => {
+    it('gives a member their email and a confirmed address', () => {
         mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
 
         const { result } = renderAuth()
@@ -68,7 +79,21 @@ describe('AuthProvider', () => {
         expect(result.current).toMatchObject({
             isSignedIn: true,
             isAnonymous: false,
+            isEmailConfirmed: true,
             user: { id: 'member-1', email: 'ann@example.com', name: 'Ann' },
+        })
+    })
+
+    it('signs in an account whose email isn’t confirmed yet, and gives it the address it typed', () => {
+        mockUseSession.mockReturnValue({ data: UNCONFIRMED_SESSION, isPending: false })
+
+        const { result } = renderAuth()
+
+        expect(result.current).toMatchObject({
+            isSignedIn: true,
+            isAnonymous: false,
+            isEmailConfirmed: false,
+            user: { id: 'member-2', email: 'bob@example.com', name: 'Bob' },
         })
     })
 
@@ -80,6 +105,7 @@ describe('AuthProvider', () => {
         expect(result.current).toMatchObject({
             isSignedIn: true,
             isAnonymous: true,
+            isEmailConfirmed: false,
             user: { id: 'anon-1', email: null, name: 'Anonymous' },
         })
     })

@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { anonymousAuth, memberAuth, signedOutAuth } from '@/test/auth'
+import { anonymousAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { Header } from './Header'
 
@@ -53,6 +53,14 @@ describe('Header', () => {
         expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
         expect(screen.getByText('2/3 analyses left')).toBeInTheDocument()
+    })
+
+    it('offers an account whose email isn’t confirmed a Confirm email button instead of the account menu', () => {
+        renderHeader(unconfirmedAuth(), { used: 0, limit: 1, nextFreeAt: null })
+
+        expect(screen.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
+        expect(screen.getByText('1/1 analyses left')).toBeInTheDocument()
     })
 
     it('shows no count before the quota has loaded', () => {

@@ -24,7 +24,7 @@ import { useStyles } from './styles'
 
 const DRAWER_WIDTH = 300
 
-// Who may open a link: anyone, any session (anonymous ones too), or only a real account.
+// Who may open a link: anyone, any session (anonymous ones too), or only an account whose email is confirmed.
 type LinkAccess = 'public' | 'session' | 'account'
 
 interface MenuLink {
@@ -40,24 +40,25 @@ const MENU_LINKS: MenuLink[] = [
     { href: '/account', label: 'Account', icon: <SettingOutlined />, access: 'account' },
 ]
 
-const canOpen = (access: LinkAccess, isSignedIn: boolean, hasAccount: boolean) => {
+const canOpen = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed: boolean) => {
     if (access === 'public') {
         return true
     }
 
-    return access === 'session' ? isSignedIn : hasAccount
+    return access === 'session' ? isSignedIn : isEmailConfirmed
 }
 
 export function MobileMenu() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
-    const { isSignedIn, isAnonymous, user } = useAuth()
+    const { isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
     const forgetBrowser = useForgetBrowser()
     const { quota } = useQuota()
     const [isOpen, setIsOpen] = useState(false)
+    // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
 
     const close = () => setIsOpen(false)
@@ -82,6 +83,11 @@ export function MobileMenu() {
         setView('signin')
     }
 
+    const handleConfirmEmail = () => {
+        close()
+        setView('confirm')
+    }
+
     return (
         <>
             <Button
@@ -104,6 +110,11 @@ export function MobileMenu() {
                         <span className={styles.drawerUserName}>{user.name}</span>
                         <span className={styles.drawerUserEmail}>{user.email}</span>
                         {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
+                        {!isEmailConfirmed && (
+                            <Button type="primary" block className="mt-2" onClick={handleConfirmEmail}>
+                                Confirm email
+                            </Button>
+                        )}
                     </div>
                 )}
                 {isAnonymous && (
@@ -115,7 +126,7 @@ export function MobileMenu() {
                     </div>
                 )}
                 <nav className={styles.drawerNav} aria-label="Main">
-                    {MENU_LINKS.filter((link) => canOpen(link.access, isSignedIn, hasAccount)).map((link) => (
+                    {MENU_LINKS.filter((link) => canOpen(link.access, isSignedIn, isEmailConfirmed)).map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}

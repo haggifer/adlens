@@ -26,7 +26,7 @@ const TOUCH_TRIGGERS: DropdownProps['trigger'] = ['click']
 export function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
-    const { isSignedIn, isAnonymous, user } = useAuth()
+    const { isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
@@ -51,6 +51,20 @@ export function AccountMenu() {
                     is enough; the dialog links to sign-up. */}
                 <Button type="primary" onClick={() => setView('signin')}>
                     Sign In
+                </Button>
+            </span>
+        )
+    }
+
+    // Until the email is confirmed there is no account page to offer, only the way to confirm it.
+    if (!isEmailConfirmed) {
+        return (
+            <span className="d-flex gap-2">
+                <Button type="text" onClick={() => void signOut()}>
+                    Sign Out
+                </Button>
+                <Button type="primary" onClick={() => setView('confirm')}>
+                    Confirm email
                 </Button>
             </span>
         )
