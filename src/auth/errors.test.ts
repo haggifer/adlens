@@ -8,6 +8,9 @@ describe('describeError', () => {
         expect(describeError({ code: 'DISPOSABLE_EMAIL' })).toBe(
             'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
         )
+        expect(describeError({ status: 500, code: 'ACCOUNT_LINK_FAILED' })).toBe(
+            'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
+        )
         expect(describeError({ status: 403, code: 'EMAIL_MISMATCH' })).toBe(
             'This link is for a different account. Sign out, then open it again.',
         )

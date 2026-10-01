@@ -1,13 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Input } from 'antd'
+import { Alert, App, Button, Input } from 'antd'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { signUp } from '@/auth/authClient'
 import { type AuthError, describeError, isEmailInUse, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
+import { checkSignedInDespite } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { SocialButtons } from './SocialButtons'
@@ -30,6 +31,7 @@ const CONFIRM_PASSWORD_INPUT_ID = 'signup-confirm'
 export function SignUpForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
+    const { notification } = App.useApp()
     const [formError, setFormError] = useState<AuthError | null>(null)
     const {
         control,
@@ -46,8 +48,15 @@ export function SignUpForm() {
         const error = await runAuthRequest(() => signUp.email({ name, email, password }))
 
         if (error) {
-            setFormError(error)
-            return
+            const isSignedIn = await checkSignedInDespite(error)
+
+            if (!isSignedIn) {
+                setFormError(error)
+                return
+            }
+
+            // The account was still created and signed in, so the confirmation dialog follows; it can resend the email.
+            notification.error({ title: describeError(error), placement: 'bottomRight' })
         }
 
         // Sign-up signs the new account in (moving any anonymous history to it); only confirming the email is left.

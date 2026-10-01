@@ -10,9 +10,11 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     INVALID_TOKEN: 'This link is invalid or has already been used.',
     TOKEN_EXPIRED: 'This link has expired. Request a new one.',
     SESSION_EXPIRED: 'Your session has expired. Sign in again.',
-    EMAIL_NOT_SENT:
-        'We couldn’t send the email. Try again in a few minutes; if you just signed up, use Confirm email to get a new link.',
+    EMAIL_NOT_SENT: 'We couldn’t send the email. Try again in a few minutes.',
     DISPOSABLE_EMAIL: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
+    // Sign-up or sign-in succeeded, but the anonymous history couldn't be moved to the account.
+    ACCOUNT_LINK_FAILED:
+        'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
     // The confirmation link: it needs a session signed in as its own account.
     SIGN_IN_REQUIRED: 'Sign in to confirm your email.',
     EMAIL_MISMATCH: 'This link is for a different account. Sign out, then open it again.',

@@ -7,6 +7,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
+import { checkSignedInDespite } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { SocialButtons } from './SocialButtons'
@@ -38,12 +39,20 @@ export function SignInForm() {
 
         const error = await runAuthRequest(() => signIn.email(values))
 
-        if (error) {
+        if (!error) {
+            notification.success({ title: 'Signed in', placement: 'bottomRight' })
+            setView(null)
+            return
+        }
+
+        const isSignedIn = await checkSignedInDespite(error)
+
+        if (!isSignedIn) {
             setFormError(describeError(error))
             return
         }
 
-        notification.success({ title: 'Signed in', placement: 'bottomRight' })
+        notification.error({ title: describeError(error), placement: 'bottomRight' })
         setView(null)
     }
 
