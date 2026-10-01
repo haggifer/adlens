@@ -19,8 +19,8 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. Your run wasn't counted.",
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
-    [RequestErrorCode.SignUpRequired]:
-        'You’ve used the analyses available without an account. Sign up to keep analysing.',
+    [RequestErrorCode.SignUpRequired]: 'You’ve used your free analysis. Sign in or create an account to run more.',
+    [RequestErrorCode.EmailConfirmationRequired]: 'Confirm your email to run more analyses.',
     [RequestErrorCode.ChallengeRequired]: 'Complete the security check, then run the analysis again.',
     [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then run the analysis.',
     [RequestErrorCode.NetworkQuotaExceeded]:

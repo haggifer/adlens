@@ -49,9 +49,12 @@ describe('toApiRequestError', () => {
         expect(toApiRequestError(new Error('boom')).code).toBe(RequestErrorCode.Internal)
     })
 
-    it('explains the network, challenge and sign-up limits', () => {
+    it('explains the network, challenge, sign-up and confirmation limits', () => {
         expect(new ApiRequestError(RequestErrorCode.SignUpRequired).message).toBe(
-            'You’ve used the analyses available without an account. Sign up to keep analysing.',
+            'You’ve used your free analysis. Sign in or create an account to run more.',
+        )
+        expect(new ApiRequestError(RequestErrorCode.EmailConfirmationRequired).message).toBe(
+            'Confirm your email to run more analyses.',
         )
         expect(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded).message).toBe(
             'Too many analyses from your network this week. Contact us if you need more.',
