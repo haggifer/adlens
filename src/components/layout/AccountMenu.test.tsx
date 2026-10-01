@@ -143,15 +143,54 @@ describe('AccountMenu', () => {
             expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         })
 
-        it('opens from the keyboard on a device that can hover', async () => {
-            mockIsHoverCapable.mockReturnValue(true)
-            const { user } = renderMenu(memberAuth())
+        describe('on a device that can hover', () => {
+            beforeEach(() => mockIsHoverCapable.mockReturnValue(true))
 
-            await user.tab()
-            expect(screen.getByRole('button', { name: 'Account menu' })).toHaveFocus()
-            await user.keyboard('{Enter}')
+            const focusTrigger = async () => {
+                const { user } = renderMenu(memberAuth())
+                const trigger = screen.getByRole('button', { name: 'Account menu' })
 
-            expect(await screen.findByRole('menuitem', { name: /Account/ })).toBeInTheDocument()
+                await user.tab()
+                expect(trigger).toHaveFocus()
+                expect(trigger).toHaveAttribute('aria-expanded', 'false')
+
+                return { user, trigger }
+            }
+
+            it.each([
+                ['Enter', '{Enter}'],
+                ['Space', ' '],
+                ['the down arrow', '{ArrowDown}'],
+            ])('opens from the keyboard with %s', async (_, key) => {
+                const { user, trigger } = await focusTrigger()
+
+                await user.keyboard(key)
+
+                expect(await screen.findByRole('menuitem', { name: /Account/ })).toBeInTheDocument()
+                expect(trigger).toHaveAttribute('aria-expanded', 'true')
+            })
+
+            it('closes on Escape and returns focus to the trigger', async () => {
+                const { user, trigger } = await focusTrigger()
+
+                await user.keyboard('{Enter}')
+                await screen.findByRole('menuitem', { name: /Account/ })
+                await user.keyboard('{Escape}')
+
+                await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'))
+                expect(trigger).toHaveFocus()
+            })
+
+            it('stays open when the hovered trigger is clicked', async () => {
+                const { user } = renderMenu(memberAuth())
+                const trigger = screen.getByRole('button', { name: 'Account menu' })
+
+                await user.hover(trigger)
+                await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'))
+                await user.click(trigger)
+
+                expect(trigger).toHaveAttribute('aria-expanded', 'true')
+            })
         })
 
         it('opens the account page', async () => {
