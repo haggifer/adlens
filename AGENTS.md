@@ -32,7 +32,7 @@ npm test             # Jest + React Testing Library
   otherwise, and the UI signs out through `useSignOut`, which shows its `describeError` copy and resolves to
   whether the session ended.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
-  enums live in `src/labels.ts`. Never commit a `file:` dependency (`npm run check:deps` fails on it).
+  enums live in `src/labels.ts`. Never commit a `file:` dependency.
 - The platform, placement and market options (`src/labels.ts`, over the adlens-shared enums) must match the ruleset.
   Check them **only when a new ruleset version is published**: the API's `npm run rules:publish` writes
   `rules_current_summary.md` next to the ruleset file, listing which option reaches each rule platform and every

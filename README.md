@@ -45,7 +45,6 @@ Open [http://localhost:3000](http://localhost:3000). It expects the API at `NEXT
 - `npm run lint` — ESLint
 - `npm test` — Jest
 - `npm run format` — Prettier
-- `npm run check:deps` — fails if a dependency points at a local path
 
 ## Environment
 
