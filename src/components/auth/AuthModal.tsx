@@ -3,6 +3,7 @@
 import { Modal } from 'antd'
 import { AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
+import { ConfirmEmailNotice } from './ConfirmEmailNotice'
 import { ForgotForm } from './ForgotForm'
 import { SignInForm } from './SignInForm'
 import { SignUpForm } from './SignUpForm'
@@ -12,12 +13,14 @@ const TITLES: Record<AuthView, string> = {
     signin: 'Sign In',
     signup: 'Create your account',
     forgot: 'Reset your password',
+    confirm: 'Confirm your email',
 }
 
 const SUBTITLES: Record<AuthView, string> = {
     signin: '',
     signup: 'Check your video ads before they go live.',
     forgot: 'Enter your email and we’ll send you a reset link.',
+    confirm: '',
 }
 
 export function AuthModal() {
@@ -32,6 +35,10 @@ export function AuthModal() {
 
         if (view === 'forgot') {
             return <ForgotForm />
+        }
+
+        if (view === 'confirm') {
+            return <ConfirmEmailNotice />
         }
 
         return <SignInForm />
