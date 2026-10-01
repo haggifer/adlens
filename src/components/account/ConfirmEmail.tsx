@@ -1,38 +1,29 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { App, Button, Result, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { authClient, verifyEmail } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
-import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { describeError, runAuthRequest } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
 const INVALID_LINK = 'This link is invalid or has expired'
-const ACCOUNT_LINK_FAILED_STATUS = 403
-const NEEDS_SIGN_IN_MESSAGE =
-    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.'
-const STILL_SIGNED_IN_MESSAGE = 'We couldn’t sign you out of this account. Sign out from the menu before continuing.'
-const SIGN_OUT_ATTEMPTS = 2
 
-// signOut already rejects on any failure (network or refused). One retry gives a blip a second chance, but the
-// token's user must never be left looking signed in, so the sign-in prompt still follows even if both attempts
-// fail — the caller then also reports the last error instead of silently pretending it worked.
-const signOutBeforeSignIn = async (signOut: () => Promise<void>): Promise<AuthError | null> => {
-    let lastError: AuthError | null = null
+// The link never signs anyone in: it confirms only for a session signed in as the link's own account.
+const SIGN_IN_REQUIRED_CODE = 'SIGN_IN_REQUIRED'
+const EMAIL_MISMATCH_CODE = 'EMAIL_MISMATCH'
 
-    for (let attempt = 1; attempt <= SIGN_OUT_ATTEMPTS; attempt += 1) {
-        try {
-            await signOut()
-            return null
-        } catch (error) {
-            console.error(error)
-            lastError = error as AuthError
-        }
-    }
+// Keys the attempts by session, so signing in starts a new one.
+const NO_ACCOUNT = 'none'
 
-    return lastError
+enum LinkOutcome {
+    Confirming = 'confirming',
+    SignInRequired = 'signInRequired',
+    OtherAccount = 'otherAccount',
+    Failed = 'failed',
 }
 
 interface IProps {
@@ -42,83 +33,131 @@ interface IProps {
 export function ConfirmEmail({ token }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
+    const queryClient = useQueryClient()
     const { notification } = App.useApp()
-    const { signOut } = useAuth()
+    const { isInitializing, isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
-    const [failure, setFailure] = useState<string | null>(token ? null : INVALID_LINK)
-    // Better Auth signs the browser into the confirmed account before this outcome fires (its autoSignIn runs
-    // before the after-hook), even though the anonymous history it was supposed to carry over never moved.
-    const [needsSignIn, setNeedsSignIn] = useState(false)
-    // Both sign-out attempts failed, so the browser is still signed into the token's account (Better Auth
-    // autoSignIn) rather than genuinely needing to sign back in.
-    const [hasSignOutFailed, setHasSignOutFailed] = useState(false)
-    // A token confirms once; the guard keeps React's development double-run of effects from sending it twice.
-    const hasStarted = useRef(false)
+    const setIsOtherAddressLink = useAuthModalStore((s) => s.setIsOtherAddressLink)
+    const [outcome, setOutcome] = useState<LinkOutcome>(token ? LinkOutcome.Confirming : LinkOutcome.Failed)
+    const [failure, setFailure] = useState<string>(INVALID_LINK)
+    // The session the token was last sent for. A token confirms once, so this keeps React's development double-run
+    // of effects from sending it twice, and lets a sign-in after SIGN_IN_REQUIRED send it again.
+    const attemptedFor = useRef<string | null>(null)
+
+    const hasAccount = isSignedIn && !isAnonymous
+    const isUnconfirmed = hasAccount && !isEmailConfirmed
+    const sessionKey = hasAccount && user ? user.id : NO_ACCOUNT
+
+    const openOwnConfirmation = () => {
+        setView('confirm')
+        setIsOtherAddressLink(true)
+    }
 
     useEffect(() => {
-        if (!token || hasStarted.current) {
+        if (!token || isInitializing) {
             return
         }
 
-        hasStarted.current = true
+        const isFirstAttempt = attemptedFor.current === null
+        const isRetry = outcome === LinkOutcome.SignInRequired && hasAccount && attemptedFor.current !== sessionKey
+
+        if (!isFirstAttempt && !isRetry) {
+            return
+        }
+
+        attemptedFor.current = sessionKey
 
         const confirm = async () => {
             const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
 
-            if (error?.status === ACCOUNT_LINK_FAILED_STATUS && error.code === 'ACCOUNT_LINK_FAILED') {
-                const signOutError = await signOutBeforeSignIn(signOut)
+            if (!error) {
+                authClient.$store.notify('$sessionSignal')
+                // The quota's limit rises with the confirmation, under the same user id.
+                void queryClient.invalidateQueries({ queryKey: ['quota'] })
+                notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
+                router.replace('/')
+                return
+            }
 
-                if (signOutError) {
-                    notification.error({ title: describeError(signOutError), placement: 'bottomRight' })
-                    // The account is still signed in as far as Better Auth's client is concerned; let the header
-                    // reflect that instead of the sign-in prompt implying it doesn't know who's signed in.
-                    authClient.$store.notify('$sessionSignal')
-                    setHasSignOutFailed(true)
+            // Asked of a signed-in account (a retry included), it can't be met by signing in, so it ends as a failure.
+            if (error.code === SIGN_IN_REQUIRED_CODE && !hasAccount) {
+                setOutcome(LinkOutcome.SignInRequired)
+                setView('signin')
+                return
+            }
+
+            if (error.code === EMAIL_MISMATCH_CODE) {
+                setFailure(describeError(error))
+                setOutcome(LinkOutcome.OtherAccount)
+
+                if (isUnconfirmed) {
+                    setView('confirm')
+                    setIsOtherAddressLink(true)
                 }
 
-                setNeedsSignIn(true)
                 return
             }
 
-            if (error) {
-                setFailure(describeError(error))
-                return
-            }
-
-            // The response set the session cookie; refresh the session so the app shows the user as signed in.
-            authClient.$store.notify('$sessionSignal')
-            notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
-            router.replace('/')
+            setFailure(describeError(error))
+            setOutcome(LinkOutcome.Failed)
         }
 
         void confirm()
-    }, [token, notification, router, signOut])
+    }, [
+        token,
+        isInitializing,
+        outcome,
+        hasAccount,
+        isUnconfirmed,
+        sessionKey,
+        notification,
+        queryClient,
+        router,
+        setView,
+        setIsOtherAddressLink,
+    ])
 
-    const renderResult = () => {
-        if (needsSignIn && hasSignOutFailed) {
-            return <Result status="warning" title="Your email is confirmed." subTitle={STILL_SIGNED_IN_MESSAGE} />
-        }
-
-        if (needsSignIn) {
-            return (
-                <Result
-                    status="info"
-                    title={NEEDS_SIGN_IN_MESSAGE}
-                    extra={
-                        <Button type="primary" onClick={() => setView('signin')}>
-                            Sign in
-                        </Button>
-                    }
-                />
-            )
-        }
-
-        if (failure) {
+    const renderFailure = () => {
+        if (isUnconfirmed) {
             return (
                 <Result
                     status="warning"
                     title={failure}
-                    subTitle="Sign in with your email and password and we’ll send you a new confirmation link."
+                    subTitle="We can send you a new confirmation link."
+                    extra={
+                        <Button type="primary" onClick={() => setView('confirm')}>
+                            Confirm email
+                        </Button>
+                    }
+                />
+            )
+        }
+
+        if (hasAccount) {
+            return <Result status="warning" title={failure} />
+        }
+
+        return (
+            <Result
+                status="warning"
+                title={failure}
+                subTitle="Sign in, then use Confirm email to get a new link."
+                extra={
+                    <Button type="primary" onClick={() => setView('signin')}>
+                        Sign in
+                    </Button>
+                }
+            />
+        )
+    }
+
+    const renderResult = () => {
+        // Once the user has signed in, the token is sent again and the spinner below shows instead.
+        if (outcome === LinkOutcome.SignInRequired && !hasAccount) {
+            return (
+                <Result
+                    status="info"
+                    title={describeError({ code: SIGN_IN_REQUIRED_CODE })}
                     extra={
                         <Button type="primary" onClick={() => setView('signin')}>
                             Sign in
@@ -126,6 +165,26 @@ export function ConfirmEmail({ token }: IProps) {
                     }
                 />
             )
+        }
+
+        if (outcome === LinkOutcome.OtherAccount) {
+            return (
+                <Result
+                    status="warning"
+                    title={failure}
+                    extra={
+                        isUnconfirmed ? (
+                            <Button type="primary" onClick={openOwnConfirmation}>
+                                Check your inbox
+                            </Button>
+                        ) : undefined
+                    }
+                />
+            )
+        }
+
+        if (outcome === LinkOutcome.Failed) {
+            return renderFailure()
         }
 
         return <Result icon={<Spin size="large" />} title="Confirming your email…" />

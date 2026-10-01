@@ -65,7 +65,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video                                                                                                  |
 | `/history`        | Every analysis, newest first                                                                                                                                              |
 | `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one) |
-| `/confirm-email`  | Landing page of the email confirmation link; confirms, then goes home                                                                                                     |
+| `/confirm-email`  | Landing page of the email confirmation link; confirms for the signed-in account, then goes home                                                                           |
 | `/reset-password` | Landing page of the password-reset link                                                                                                                                   |
 | `/terms`          | Terms of Use                                                                                                                                                              |
 | `/privacy`        | Privacy Policy                                                                                                                                                            |
@@ -131,7 +131,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
   is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
-  resend the link. A duplicate sign-up says the address is already in use.
+  resend the link. A duplicate sign-up says the address is already in use. The confirmation link never signs anyone
+  in: it confirms only for a session signed in as its own account, so `/confirm-email` asks a visitor to sign in
+  first and then sends the same token again.
 - **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
   and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors
   without an account get a token first (the API always checks theirs), before any anonymous user is created.

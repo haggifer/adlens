@@ -1,8 +1,9 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { authClient, verifyEmail } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { memberAuth } from '@/test/auth'
+import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { ConfirmEmail } from './ConfirmEmail'
 
@@ -18,58 +19,86 @@ jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 
 const TOKEN = 'a-token'
 
-const NEEDS_SIGN_IN_MESSAGE =
-    'Your email is confirmed. Sign in to continue. Analyses you ran before signing up weren’t moved to this account.'
+const SIGN_IN_REQUIRED = { status: 401, code: 'SIGN_IN_REQUIRED', message: 'Raw server text' }
 
-const ACCOUNT_LINK_FAILED = { status: 403, code: 'ACCOUNT_LINK_FAILED', message: 'Raw server text' }
+const EMAIL_MISMATCH = { status: 403, code: 'EMAIL_MISMATCH', message: 'Raw server text' }
 
-const renderConfirmEmail = (token: string | null, auth: AuthContextValue = memberAuth()) => {
+const SIGN_IN_PROMPT = 'Sign in to confirm your email.'
+
+const MISMATCH_COPY = 'This link is for a different account. Sign out, then open it again.'
+
+const renderConfirmEmail = (token: string | null, auth: AuthContextValue = unconfirmedAuth()) => {
     mockUseAuth.mockReturnValue(auth)
 
     return renderWithProviders(<ConfirmEmail token={token} />)
 }
 
+const answerOnce = (error: object) => jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error } as never)
+
 describe('ConfirmEmail', () => {
     beforeEach(() => {
         jest.clearAllMocks()
-        useAuthModalStore.setState({ view: null })
+        useAuthModalStore.setState({ view: null, isOtherAddressLink: false })
     })
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('confirms the email, refreshes the session and goes home', async () => {
-        renderConfirmEmail(TOKEN)
+    it('confirms the email, refreshes the session and the limits, and goes home', async () => {
+        const { queryClient } = renderConfirmEmail(TOKEN)
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
 
         expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
         expect(verifyEmail).toHaveBeenCalledWith({ query: { token: TOKEN } })
         expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
         expect(mockReplace).toHaveBeenCalledWith('/')
     })
 
-    it('explains a link without a token and never calls the API', async () => {
-        const { user } = renderConfirmEmail(null)
+    it('sends the token once, even when React runs the effect twice', async () => {
+        mockUseAuth.mockReturnValue(unconfirmedAuth())
+        renderWithProviders(
+            <StrictMode>
+                <ConfirmEmail token={TOKEN} />
+            </StrictMode>,
+        )
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'))
+        expect(verifyEmail).toHaveBeenCalledTimes(1)
+    })
+
+    it('waits for the session to load before sending the token', () => {
+        renderConfirmEmail(TOKEN, initializingAuth())
+
+        expect(screen.getByText('Confirming your email…')).toBeInTheDocument()
+        expect(verifyEmail).not.toHaveBeenCalled()
+    })
+
+    it('explains a link without a token and never calls the API', () => {
+        renderConfirmEmail(null, signedOutAuth())
 
         expect(screen.getByText('This link is invalid or has expired')).toBeInTheDocument()
         expect(verifyEmail).not.toHaveBeenCalled()
-
-        await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-        expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
-    it('shows the copy for a refused token, not the server’s message, and stays signed in as it was', async () => {
-        const auth = memberAuth()
-
-        jest.mocked(verifyEmail).mockResolvedValueOnce({
-            data: null,
-            error: { status: 400, code: 'INVALID_TOKEN', message: 'Raw server text' },
-        } as never)
-        renderConfirmEmail(TOKEN, auth)
+    it('shows the copy for a refused token, not the server’s message, and offers a new link', async () => {
+        answerOnce({ status: 400, code: 'INVALID_TOKEN', message: 'Raw server text' })
+        const { user } = renderConfirmEmail(TOKEN)
 
         expect(await screen.findByText('This link is invalid or has already been used.')).toBeInTheDocument()
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
-        expect(auth.signOut).not.toHaveBeenCalled()
         expect(mockReplace).not.toHaveBeenCalled()
+
+        await user.click(screen.getByRole('button', { name: 'Confirm email' }))
+
+        expect(useAuthModalStore.getState().view).toBe('confirm')
+    })
+
+    it('treats a 403 with another code as an ordinary failure', async () => {
+        answerOnce({ status: 403, code: 'INVALID_TOKEN' })
+        renderConfirmEmail(TOKEN)
+
+        expect(await screen.findByText('This link is invalid or has already been used.')).toBeInTheDocument()
+        expect(useAuthModalStore.getState().view).toBeNull()
     })
 
     it('shows a connection problem when the API can’t be reached', async () => {
@@ -83,68 +112,79 @@ describe('ConfirmEmail', () => {
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
-    it('signs back out and asks the visitor to sign in when the history could not be moved', async () => {
-        const auth = memberAuth()
+    describe('without a session that owns the link', () => {
+        it('opens sign-in, then confirms the same token once the user has signed in', async () => {
+            answerOnce(SIGN_IN_REQUIRED)
+            const { rerender } = renderConfirmEmail(TOKEN, signedOutAuth())
 
-        jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
-        const { user } = renderConfirmEmail(TOKEN, auth)
+            expect(await screen.findByText(SIGN_IN_PROMPT)).toBeInTheDocument()
+            expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
+            expect(useAuthModalStore.getState().view).toBe('signin')
 
-        expect(await screen.findByText(NEEDS_SIGN_IN_MESSAGE)).toBeInTheDocument()
-        expect(auth.signOut).toHaveBeenCalledTimes(1)
-        expect(mockReplace).not.toHaveBeenCalled()
+            mockUseAuth.mockReturnValue(unconfirmedAuth())
+            rerender(<ConfirmEmail token={TOKEN} />)
 
-        await user.click(screen.getByRole('button', { name: 'Sign in' }))
+            expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
+            expect(verifyEmail).toHaveBeenCalledTimes(2)
+            expect(verifyEmail).toHaveBeenLastCalledWith({ query: { token: TOKEN } })
+            expect(mockReplace).toHaveBeenCalledWith('/')
+        })
 
-        expect(useAuthModalStore.getState().view).toBe('signin')
+        it('asks an anonymous session to sign in too, and doesn’t retry until it has', async () => {
+            answerOnce(SIGN_IN_REQUIRED)
+            const { rerender } = renderConfirmEmail(TOKEN, anonymousAuth())
+
+            expect(await screen.findByText(SIGN_IN_PROMPT)).toBeInTheDocument()
+
+            rerender(<ConfirmEmail token={TOKEN} />)
+
+            expect(verifyEmail).toHaveBeenCalledTimes(1)
+        })
+
+        it('reopens sign-in from the page after the dialog was closed', async () => {
+            answerOnce(SIGN_IN_REQUIRED)
+            const { user } = renderConfirmEmail(TOKEN, signedOutAuth())
+
+            await screen.findByText(SIGN_IN_PROMPT)
+            useAuthModalStore.getState().setView(null)
+            await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+            expect(useAuthModalStore.getState().view).toBe('signin')
+        })
+
+        it('stops asking when the API still wants a sign-in after one', async () => {
+            answerOnce(SIGN_IN_REQUIRED)
+            answerOnce(SIGN_IN_REQUIRED)
+            const { rerender } = renderConfirmEmail(TOKEN, signedOutAuth())
+
+            await screen.findByText(SIGN_IN_PROMPT)
+            mockUseAuth.mockReturnValue(memberAuth())
+            rerender(<ConfirmEmail token={TOKEN} />)
+
+            expect(await screen.findByText(SIGN_IN_PROMPT)).toBeInTheDocument()
+            expect(screen.queryByText('Confirming your email…')).not.toBeInTheDocument()
+            expect(verifyEmail).toHaveBeenCalledTimes(2)
+        })
     })
 
-    it('says the account is still signed in and refreshes the session when both sign-out attempts fail', async () => {
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-        const auth = memberAuth()
+    describe('signed in as another account', () => {
+        it('reopens an unconfirmed user’s own “Check your inbox”, noting the link is for another address', async () => {
+            answerOnce(EMAIL_MISMATCH)
+            renderConfirmEmail(TOKEN, unconfirmedAuth())
 
-        jest.mocked(auth.signOut).mockRejectedValue({ code: 'NETWORK_ERROR' })
-        jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
-        renderConfirmEmail(TOKEN, auth)
+            expect(await screen.findByText(MISMATCH_COPY)).toBeInTheDocument()
+            expect(useAuthModalStore.getState()).toMatchObject({ view: 'confirm', isOtherAddressLink: true })
+            expect(mockReplace).not.toHaveBeenCalled()
+        })
 
-        expect(await screen.findByText('Your email is confirmed.')).toBeInTheDocument()
-        expect(
-            screen.getByText('We couldn’t sign you out of this account. Sign out from the menu before continuing.'),
-        ).toBeInTheDocument()
-        expect(screen.queryByText(NEEDS_SIGN_IN_MESSAGE)).not.toBeInTheDocument()
-        expect(auth.signOut).toHaveBeenCalledTimes(2)
-        expect(consoleError).toHaveBeenCalledTimes(2)
-        expect(
-            await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
-        ).toBeInTheDocument()
-        expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
-    })
+        it('tells a confirmed member to sign out first, without opening a dialog', async () => {
+            answerOnce(EMAIL_MISMATCH)
+            renderConfirmEmail(TOKEN, memberAuth())
 
-    it('shows no failure notice once a retried sign-out succeeds', async () => {
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-        const auth = memberAuth()
-
-        jest.mocked(auth.signOut).mockRejectedValueOnce({ code: 'NETWORK_ERROR' }).mockResolvedValueOnce(undefined)
-        jest.mocked(verifyEmail).mockResolvedValueOnce({ data: null, error: ACCOUNT_LINK_FAILED } as never)
-        renderConfirmEmail(TOKEN, auth)
-
-        expect(await screen.findByText(NEEDS_SIGN_IN_MESSAGE)).toBeInTheDocument()
-        expect(auth.signOut).toHaveBeenCalledTimes(2)
-        expect(consoleError).toHaveBeenCalledTimes(1)
-        expect(
-            screen.queryByText('Couldn’t reach AdLens. Check your connection and try again.'),
-        ).not.toBeInTheDocument()
-    })
-
-    it('treats a 403 with another code as an ordinary failure', async () => {
-        const auth = memberAuth()
-
-        jest.mocked(verifyEmail).mockResolvedValueOnce({
-            data: null,
-            error: { status: 403, code: 'INVALID_TOKEN' },
-        } as never)
-        renderConfirmEmail(TOKEN, auth)
-
-        expect(await screen.findByText('This link is invalid or has already been used.')).toBeInTheDocument()
-        expect(auth.signOut).not.toHaveBeenCalled()
+            expect(await screen.findByText(MISMATCH_COPY)).toBeInTheDocument()
+            expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(screen.queryByRole('button', { name: 'Check your inbox' })).not.toBeInTheDocument()
+        })
     })
 })

@@ -13,8 +13,9 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     EMAIL_NOT_SENT:
         'We couldn’t send the email. Try again in a few minutes; if you just signed up, use Confirm email to get a new link.',
     DISPOSABLE_EMAIL: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
-    ACCOUNT_LINK_FAILED:
-        'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
+    // The confirmation link: it needs a session signed in as its own account.
+    SIGN_IN_REQUIRED: 'Sign in to confirm your email.',
+    EMAIL_MISMATCH: 'This link is for a different account. Sign out, then open it again.',
     NETWORK_ERROR: 'Couldn’t reach AdLens. Check your connection and try again.',
     // Google / GitHub sign-in: Better Auth sends the user back with ?error=<code>.
     access_denied: 'Sign-in was cancelled.',
