@@ -17,6 +17,9 @@ jest.mock('@/auth/authClient', () => ({
     deleteUser: jest.fn(async () => ({ data: { success: true }, error: null })),
 }))
 
+// Each test types a password and waits for antd's confirmation dialog: seconds of work under a full parallel run.
+jest.setTimeout(20_000)
+
 const PASSWORD = 'correct horse battery staple'
 
 const JOBS_KEY = ['jobs', MEMBER_USER.id]
