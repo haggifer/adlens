@@ -30,7 +30,7 @@ jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: mockQuota }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken resolves with.
-jest.mock('./HumanCheck', () => {
+jest.mock('@/components/human-check/HumanCheck', () => {
     const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react')
 
     return {

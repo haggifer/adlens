@@ -20,7 +20,7 @@ jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn(async () => []) }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn(async () => undefined) }))
-jest.mock('./HumanCheck', () => ({ HumanCheck: () => null }))
+jest.mock('@/components/human-check/HumanCheck', () => ({ HumanCheck: () => null }))
 // Vidstack's custom elements don't run in jsdom; the workspace only needs the player's place in the layout.
 jest.mock('@vidstack/react', () => ({
     MediaPlayer: ({ children, 'aria-label': label }: { children: ReactNode; 'aria-label': string }) => (

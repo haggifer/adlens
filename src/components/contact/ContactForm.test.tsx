@@ -18,7 +18,7 @@ jest.mock('@/api/contact', () => ({
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken resolves with.
-jest.mock('@/components/upload/HumanCheck', () => {
+jest.mock('@/components/human-check/HumanCheck', () => {
     const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react')
 
     return {
