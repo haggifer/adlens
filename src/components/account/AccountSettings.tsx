@@ -1,6 +1,6 @@
 'use client'
 
-import { App, Button } from 'antd'
+import { Alert, App, Button } from 'antd'
 import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { revokeOtherSessions } from '@/auth/authClient'
@@ -22,7 +22,7 @@ const formatMethods = (providers: string[]) =>
 export function AccountSettings() {
     const { styles } = useStyles()
     const { user } = useAuth()
-    const { providers } = useLinkedAccounts()
+    const { providers, error: providersError } = useLinkedAccounts()
     const { notification } = App.useApp()
     const [isRevoking, setIsRevoking] = useState(false)
 
@@ -50,6 +50,7 @@ export function AccountSettings() {
                         {user?.name} · {user?.email}
                     </p>
                 </div>
+                {providersError && <Alert type="error" showIcon title={describeError(providersError)} />}
                 {providers && (
                     <>
                         <div className={styles.section}>

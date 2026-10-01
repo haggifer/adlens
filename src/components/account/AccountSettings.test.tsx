@@ -64,6 +64,31 @@ describe('AccountSettings', () => {
         expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
     })
 
+    it('says the sign-in methods couldn’t load when the server refuses, not the server’s message', async () => {
+        jest.mocked(listAccounts).mockResolvedValue({
+            data: null,
+            error: { status: 500, message: 'Internal adapter failure' },
+        } as never)
+        renderSettings()
+
+        expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
+        expect(screen.queryByText('Internal adapter failure')).not.toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
+    })
+
+    it('says AdLens is unreachable when the sign-in methods request never reaches it', async () => {
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+        jest.mocked(listAccounts).mockRejectedValue(new TypeError('Failed to fetch'))
+        renderSettings()
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Couldn’t reach AdLens. Check your connection and try again.',
+        )
+        expect(screen.getByRole('heading', { name: 'Sessions' })).toBeInTheDocument()
+        expect(consoleError).toHaveBeenCalledTimes(1)
+        consoleError.mockRestore()
+    })
+
     it('signs out every other device', async () => {
         linkAccounts('credential')
         const { user } = renderSettings()
