@@ -21,8 +21,9 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     NETWORK_ERROR: 'Couldn’t reach AdLens. Check your connection and try again.',
     // Google / GitHub sign-in: Better Auth sends the user back with ?error=<code>.
     access_denied: 'Sign-in was cancelled.',
+    // Better Auth links a social sign-in to an existing account only once that account's email is confirmed.
     account_not_linked:
-        'This email already has an AdLens account. Sign in with your email and password, or reset the password if you never confirmed it.',
+        'This email already has an AdLens account. Sign in with your email and password, then confirm your email (Confirm email in the header) to use Google or GitHub with it.',
     unable_to_link_account: 'We couldn’t connect that account. Try again, or sign in with your email.',
     email_not_found: 'GitHub didn’t share your email address. Add a verified email on GitHub, then try again.',
     email_not_verified: 'Confirm your email first — we’ve just sent you a link.',

@@ -26,6 +26,12 @@ describe('describeError', () => {
         expect(describeError({ code: 'access_denied' })).toBe('Sign-in was cancelled.')
     })
 
+    it('tells the owner of an unconfirmed account to sign in with the password and confirm the email', () => {
+        expect(describeError({ code: 'account_not_linked' })).toBe(
+            'This email already has an AdLens account. Sign in with your email and password, then confirm your email (Confirm email in the header) to use Google or GitHub with it.',
+        )
+    })
+
     it('shows a rate limit whatever code comes with it', () => {
         expect(describeError({ status: 429, code: 'INVALID_EMAIL_OR_PASSWORD' })).toBe(RATE_LIMITED_COPY)
     })
