@@ -36,11 +36,7 @@ describe('SetPasswordSection', () => {
 
         await user.click(screen.getByRole('button', { name: /email me a link/i }))
 
-        expect(
-            await screen.findByText(
-                'We couldn’t send the email. Try again in a few minutes; if you just signed up, sign in to get a new link.',
-            ),
-        ).toBeInTheDocument()
+        expect(await screen.findByText('We couldn’t send the email. Try again in a few minutes.')).toBeInTheDocument()
         expect(screen.queryByText(/Check your inbox/)).not.toBeInTheDocument()
         expect(screen.queryByText('SMTP timeout')).not.toBeInTheDocument()
     })
