@@ -25,18 +25,18 @@ npm test             # Jest + React Testing Library
 - Every API call goes through `src/api/client.ts` with credentials; the session is an httpOnly cookie, so never store or
   send a token yourself.
 - API failures become `ApiRequestError` with a stable code, and the user sees the copy from `src/api/errors.ts`. Never
-  show raw server or axios messages. Better Auth calls go through `runAuthRequest` in `src/auth/errors.ts`, which also
-  turns network failures into an error.
-- Query keys include the user id, and sign-out clears the query cache, so one user's data never shows for another.
+  show raw server or axios messages. Better Auth calls go through `runAuthRequest` or `runAuthQuery` in `src/auth/errors.ts`,
+  which also turn network failures into an error.
+- Per-user query keys include the user id, and sign-out clears the query cache, so one user's data never shows for another.
   It clears it only once Better Auth confirms the sign-out: `useAuth().signOut` rejects with an `AuthError`
   otherwise, and the UI signs out through `useSignOut`, which shows its `describeError` copy and resolves to
   whether the session ended.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency.
 - The platform, placement and market options (`src/labels.ts`, over the adlens-shared enums) must match the ruleset.
-  Check them **only when a new ruleset version is published**: the API's `npm run rules:publish` writes
-  `rules_current_summary.md` next to the ruleset file, listing which option reaches each rule platform and every
-  placement and region in use (see the API's AGENTS.md). Label an option so users can see which rules it brings.
+  Check them **only when the maintainer publishes a new ruleset version**: a sync summary then lists which option
+  reaches each rule platform and every placement and region in use. Label an option so users can see which rules it
+  brings.
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
 - An anonymous session counts as signed in (`isSignedIn`), so its history, quota and live updates work. Gate
   account-only UI on `isEmailConfirmed`: an account whose email isn't confirmed yet is limited like an anonymous
@@ -48,7 +48,8 @@ npm test             # Jest + React Testing Library
 ## Conventions
 
 - Named exports only (`export function Header`, `export function useJob`). Default exports only where Next.js
-  requires them: `page.tsx` and `layout.tsx` under `src/app/`, and the root config files.
+  requires them: `page.tsx`, `layout.tsx`, `error.tsx` and `not-found.tsx` under `src/app/`, and the root config
+  files.
 - Client providers are composed in `src/app/Providers.tsx`; add new global providers there.
 - UI state lives in Zustand stores under `src/contexts/stores/`; server state in TanStack Query hooks under
   `src/hooks/`.
@@ -66,4 +67,5 @@ npm test             # Jest + React Testing Library
 - A production build (`VERCEL_ENV=production`) fails without `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: `src/config.ts` checks it
   while `next build` renders the pages. `VERCEL_ENV` isn't inlined, so the check never runs in the browser.
 - Better Auth's client throws on network failure instead of returning `{ error }`.
-- Jest transforms antd's ESM packages (see `jest.config.mjs`), and `jest.setup.ts` polyfills `matchMedia` for antd.
+- Jest transforms antd's ESM packages (see `jest.config.mjs`), and `jest.setup.ts` polyfills `matchMedia`,
+  `ResizeObserver` and `MessageChannel` for antd.

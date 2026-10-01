@@ -81,7 +81,7 @@ src/
   content/      # long-form MDX content (legal documents)
   contexts/     # Zustand stores
   design/       # antd theme, light/dark scheme and its cookie
-  hooks/        # server-state hooks (TanStack Query, realtime)
+  hooks/        # server-state hooks (TanStack Query, realtime), sign-out and other shared UI hooks
   storage/      # signed-URL upload
   test/         # shared test helpers: render with providers, auth states, fixtures
 ```
@@ -91,7 +91,7 @@ Imports use the `@/*` alias, which maps to `src/*`.
 ## Deployment
 
 Vercel builds and deploys every push to `init-setup` to production at `https://www.useadlens.com` (the apex redirects
-to `www`). CI runs lint, types, tests and the build on every push and pull request.
+to `www`). CI runs lint, types, tests and the build on every push to `init-setup` or `main` and on every pull request.
 
 ## Design decisions
 
@@ -127,8 +127,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In
   (its dialog links to sign-up): signing in or signing up moves the analyses and runs to the account at once and deletes
   the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this
-  browser" (account menu and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
-  its analyses stay in the database but can no longer be reached.
+  browser" (header and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
+  its analyses can no longer be reached, and the API deletes them with the anonymous user about a week later.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
   is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
