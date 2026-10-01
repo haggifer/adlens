@@ -3,6 +3,8 @@ import type { SocialProvider } from '@/auth/types'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
 
+export const ATTACHMENT_FORMATS_LABEL = 'PNG, JPEG or WebP'
+
 // An analysis with no platform chosen is checked against every platform's rules.
 export const ALL_PLATFORMS_LABEL = 'All platforms'
 

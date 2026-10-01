@@ -1,6 +1,6 @@
 'use client'
 
-import { MailOutlined } from '@ant-design/icons'
+import { MailOutlined, PaperClipOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
     CONTACT_MESSAGE_MAX_LENGTH,
@@ -9,15 +9,17 @@ import {
     type ContactMessagePayload,
     RequestErrorCode,
 } from 'adlens-shared'
-import { Alert, Button, Input, Result } from 'antd'
+import { Alert, Button, Input, Result, Upload, type UploadFile } from 'antd'
 import { useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { sendContactMessage } from '@/api/contact'
+import { createContactUploads, sendContactMessage } from '@/api/contact'
 import { ApiRequestError, describeContactError } from '@/api/errors'
 import { useAuth } from '@/auth/AuthContext'
 import { HumanCheck, type HumanCheckHandle } from '@/components/upload/HumanCheck'
 import { Field } from '@/components/utils/Field'
+import { uploadToSignedUrl } from '@/storage/upload'
+import { ATTACHMENT_ACCEPT, ATTACHMENTS_HINT, checkAttachments, toAttachmentFile } from './contact-attachments'
 
 // The rules come from the shared schema; only the wording is the form's own.
 const describeIssue: z.core.$ZodErrorMap = (issue) => {
@@ -36,6 +38,12 @@ const describeIssue: z.core.$ZodErrorMap = (issue) => {
     return undefined
 }
 
+// The images are uploaded only when the message is sent, to a draft the API creates for that message.
+const keepForSending = () => false
+
+const getFiles = (attachments: UploadFile[]): File[] =>
+    attachments.flatMap((attachment) => (attachment.originFileObj ? [attachment.originFileObj] : []))
+
 interface IProps {
     onDone?: () => void
 }
@@ -44,6 +52,7 @@ export function ContactForm({ onDone }: IProps) {
     const { user } = useAuth()
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
+    const [attachments, setAttachments] = useState<UploadFile[]>([])
     const humanCheck = useRef<HumanCheckHandle>(null)
     const {
         control,
@@ -63,13 +72,29 @@ export function ContactForm({ onDone }: IProps) {
         return humanCheck.current.getToken()
     }
 
+    const files = getFiles(attachments)
+    const attachmentsError = checkAttachments(files)
+
+    const sendMessage = async (values: ContactMessagePayload): Promise<void> => {
+        const challengeToken = await getChallengeToken()
+
+        if (!files.length) {
+            await sendContactMessage({ ...values, challengeToken })
+            return
+        }
+
+        // The send spends the draft even when it fails, so every attempt starts from a new check, draft and uploads.
+        const { draftId, uploads } = await createContactUploads({ files: files.map(toAttachmentFile), challengeToken })
+
+        await Promise.all(uploads.map((target, index) => uploadToSignedUrl({ target, file: files[index] })))
+        await sendContactMessage({ ...values, draftId })
+    }
+
     const onSubmit = async (values: ContactMessagePayload) => {
         setFormError(null)
 
         try {
-            const challengeToken = await getChallengeToken()
-
-            await sendContactMessage({ ...values, challengeToken })
+            await sendMessage(values)
             setSentTo(values.email)
         } catch (error) {
             setFormError(describeContactError(error))
@@ -128,6 +153,27 @@ export function ContactForm({ onDone }: IProps) {
                     )}
                 />
             </Field>
+            <Field
+                label="Screenshots (optional)"
+                htmlFor="contact-attachments"
+                hint={ATTACHMENTS_HINT}
+                error={attachmentsError}
+            >
+                <Upload
+                    id="contact-attachments"
+                    accept={ATTACHMENT_ACCEPT}
+                    multiple
+                    listType="picture"
+                    fileList={attachments}
+                    beforeUpload={keepForSending}
+                    onChange={({ fileList }) => setAttachments(fileList)}
+                    disabled={isSubmitting}
+                >
+                    <Button icon={<PaperClipOutlined />} disabled={isSubmitting}>
+                        Attach screenshots
+                    </Button>
+                </Upload>
+            </Field>
             {/* A honeypot: hidden from people and assistive tech, so only bots fill it in. */}
             <div className="visually-hidden" aria-hidden="true">
                 <label>
@@ -136,7 +182,14 @@ export function ContactForm({ onDone }: IProps) {
                 </label>
             </div>
             <HumanCheck ref={humanCheck} action="send your message" />
-            <Button type="primary" htmlType="submit" icon={<MailOutlined />} block loading={isSubmitting}>
+            <Button
+                type="primary"
+                htmlType="submit"
+                icon={<MailOutlined />}
+                block
+                loading={isSubmitting}
+                disabled={Boolean(attachmentsError)}
+            >
                 Send message
             </Button>
         </form>

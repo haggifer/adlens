@@ -142,3 +142,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   the check and starts over with a new job, since the token is only read at job creation. A check that doesn't finish
   within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint. The contact form runs
   the same check for every message, signed in or not, since the contact endpoints are public.
+- **Contact screenshots upload to a draft when the message is sent.** The form checks the images against the shared
+  limits as they're chosen; on send it runs the human check, asks the API for a draft with one signed upload per image
+  (`POST /v1/contact/uploads`), uploads them straight to storage and sends the message with the draft id in place of a
+  token. The API spends a draft on any send, even a refused one, so a retry starts over with a new check, draft and
+  uploads.

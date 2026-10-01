@@ -91,6 +91,12 @@ describe('describeContactError', () => {
         )
     })
 
+    it('says it was an image that didn’t finish uploading', () => {
+        expect(describeContactError(new ApiRequestError(RequestErrorCode.UploadIncomplete))).toBe(
+            'An image didn’t finish uploading. Please try again.',
+        )
+    })
+
     it('falls back to the shared copy, and never shows the raw text of an unknown failure', () => {
         expect(describeContactError(new ApiRequestError(RequestErrorCode.Unavailable))).toBe(
             'AdLens is briefly unavailable. Please try again.',

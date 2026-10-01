@@ -66,12 +66,13 @@ export const describeJobError = (code: JobErrorCode | undefined): string =>
 
 export const describeRequestError = (code: RequestErrorCode): string => ERROR_COPY[code]
 
-// The contact form's own wording where the shared copy speaks of analyses, settings or a moment's wait (its limits are
-// per hour).
+// The contact form's own wording where the shared copy speaks of analyses or settings, or of a moment's wait (its
+// limits are per hour), and to name what was uploading.
 const CONTACT_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
     [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then send the message.',
     [RequestErrorCode.ValidationFailed]: 'We couldn’t send this message. Check it, then try again.',
     [RequestErrorCode.RateLimited]: 'Too many messages in the last hour. Please try again later.',
+    [RequestErrorCode.UploadIncomplete]: 'An image didn’t finish uploading. Please try again.',
 }
 
 export const describeContactError = (err: unknown): string => {
