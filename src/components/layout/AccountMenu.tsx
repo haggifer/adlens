@@ -1,7 +1,7 @@
 'use client'
 
 import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Button, Dropdown, MenuProps } from 'antd'
+import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -17,6 +17,11 @@ enum AccountMenuKey {
     Contact = 'contact',
     SignOut = 'signout',
 }
+
+// Click alongside hover, because a hover trigger alone never opens from the keyboard (Enter or Space).
+const HOVER_TRIGGERS: DropdownProps['trigger'] = ['hover', 'click']
+
+const TOUCH_TRIGGERS: DropdownProps['trigger'] = ['click']
 
 export function AccountMenu() {
     const { styles } = useStyles()
@@ -78,7 +83,7 @@ export function AccountMenu() {
 
     return (
         <Dropdown
-            trigger={isHoverCapable ? ['hover'] : ['click']}
+            trigger={isHoverCapable ? HOVER_TRIGGERS : TOUCH_TRIGGERS}
             placement="bottomRight"
             menu={{ items, onClick: handleClick }}
         >

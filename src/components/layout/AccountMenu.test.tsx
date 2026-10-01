@@ -8,9 +8,11 @@ import { AccountMenu } from './AccountMenu'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
+const mockIsHoverCapable = jest.fn(() => false)
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
+jest.mock('@/hooks/useHoverCapable', () => ({ useHoverCapable: () => mockIsHoverCapable() }))
 
 const FORGET_WARNING = 'Analyses you ran here without an account will no longer be reachable.'
 
@@ -23,6 +25,7 @@ const renderMenu = (auth: AuthContextValue) => {
 describe('AccountMenu', () => {
     beforeEach(() => {
         mockPush.mockClear()
+        mockIsHoverCapable.mockReturnValue(false)
         useAuthModalStore.setState({ view: null })
         useContactModalStore.setState({ isOpen: false })
     })
@@ -115,6 +118,17 @@ describe('AccountMenu', () => {
             expect(await screen.findByText(MEMBER_EMAIL)).toBeInTheDocument()
             expect(screen.queryByRole('button', { name: 'Forget this browser' })).not.toBeInTheDocument()
             expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+        })
+
+        it('opens from the keyboard on a device that can hover', async () => {
+            mockIsHoverCapable.mockReturnValue(true)
+            const { user } = renderMenu(memberAuth())
+
+            await user.tab()
+            expect(screen.getByRole('button', { name: 'Account menu' })).toHaveFocus()
+            await user.keyboard('{Enter}')
+
+            expect(await screen.findByRole('menuitem', { name: /Account/ })).toBeInTheDocument()
         })
 
         it('opens the account page', async () => {
