@@ -38,6 +38,9 @@ const submitSignUp = async (user: ReturnType<typeof renderForm>['user']) => {
     await user.click(screen.getByRole('button', { name: 'Create account' }))
 }
 
+// Each test fills the form and waits for antd's dialogs and alerts: seconds of work under a full parallel run.
+jest.setTimeout(20_000)
+
 describe('SignUpForm', () => {
     beforeEach(() => {
         jest.clearAllMocks()

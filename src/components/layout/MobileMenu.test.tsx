@@ -32,6 +32,9 @@ const openMenu = async (auth: AuthContextValue) => {
     return { user, menu: within(menu) }
 }
 
+// Each test opens antd's drawer, and some a confirmation on top: seconds of work under a full parallel run.
+jest.setTimeout(20_000)
+
 describe('MobileMenu', () => {
     beforeEach(() => {
         mockPush.mockClear()

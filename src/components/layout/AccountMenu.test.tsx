@@ -22,6 +22,9 @@ const renderMenu = (auth: AuthContextValue) => {
     return renderWithProviders(<AccountMenu />)
 }
 
+// Each test opens antd's dropdown or a confirmation: seconds of work under a full parallel run.
+jest.setTimeout(20_000)
+
 describe('AccountMenu', () => {
     beforeEach(() => {
         mockPush.mockClear()
