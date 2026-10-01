@@ -77,6 +77,9 @@ const renderWorkspace = () => {
     return renderWithProviders(<AdWorkspace />)
 }
 
+// Each test picks a file, runs and re-renders antd's Selects: seconds of work under a full parallel run.
+jest.setTimeout(20_000)
+
 describe('AdWorkspace', () => {
     let blobCount = 0
 
