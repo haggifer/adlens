@@ -1,14 +1,12 @@
 'use client'
 
-import { MailOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Input, Result } from 'antd'
+import { Alert, Button, Input } from 'antd'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useAuth } from '@/auth/AuthContext'
 import { signUp } from '@/auth/authClient'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeError, isEmailInUse, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -29,16 +27,10 @@ const EMAIL_INPUT_ID = 'signup-email'
 const PASSWORD_INPUT_ID = 'signup-password'
 const CONFIRM_PASSWORD_INPUT_ID = 'signup-confirm'
 
-// The API links an anonymous history only when this browser's anonymous session opens the link or signs in later;
-// a link opened elsewhere activates the account without it.
-const KEEP_ANALYSES_HINT = 'To keep the analyses you ran here, open it in this browser or sign in here afterwards.'
-
 export function SignUpForm() {
     const { styles } = useStyles()
-    const { isAnonymous } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
-    const [formError, setFormError] = useState<string | null>(null)
-    const [sentTo, setSentTo] = useState<string | null>(null)
+    const [formError, setFormError] = useState<AuthError | null>(null)
     const {
         control,
         handleSubmit,
@@ -54,31 +46,31 @@ export function SignUpForm() {
         const error = await runAuthRequest(() => signUp.email({ name, email, password }))
 
         if (error) {
-            setFormError(describeError(error))
+            setFormError(error)
             return
         }
 
-        setSentTo(email)
-    }
-
-    if (sentTo) {
-        return (
-            <Result
-                icon={<MailOutlined />}
-                title="Check your inbox"
-                subTitle={`We sent a confirmation link to ${sentTo}. Open it to activate your account.${isAnonymous ? ` ${KEEP_ANALYSES_HINT}` : ''}`}
-                extra={
-                    <Button type="primary" onClick={() => setView('signin')}>
-                        Back to sign in
-                    </Button>
-                }
-            />
-        )
+        // Sign-up signs the new account in (moving any anonymous history to it); only confirming the email is left.
+        setView('confirm')
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
+            {formError && (
+                <Alert
+                    className="mb-3"
+                    type="error"
+                    showIcon
+                    title={describeError(formError)}
+                    action={
+                        isEmailInUse(formError) ? (
+                            <Button size="small" onClick={() => setView('signin')}>
+                                Sign in
+                            </Button>
+                        ) : undefined
+                    }
+                />
+            )}
             <Field label="Name" htmlFor={NAME_INPUT_ID} error={errors.name?.message}>
                 <Controller
                     name="name"

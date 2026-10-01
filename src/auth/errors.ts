@@ -3,16 +3,15 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     INVALID_EMAIL_OR_PASSWORD: 'Wrong email or password.',
     INVALID_PASSWORD: 'Wrong password.',
     INVALID_EMAIL: 'Enter a valid email.',
-    EMAIL_NOT_VERIFIED: 'Confirm your email first — we’ve just sent you a new link.',
-    USER_ALREADY_EXISTS: 'An account with this email already exists. Sign in instead.',
-    USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'An account with this email already exists. Sign in instead.',
+    USER_ALREADY_EXISTS: 'This email is already in use. Sign in instead.',
+    USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'This email is already in use. Sign in instead.',
     PASSWORD_TOO_SHORT: 'The password is too short.',
     PASSWORD_TOO_LONG: 'The password is too long.',
     INVALID_TOKEN: 'This link is invalid or has already been used.',
     TOKEN_EXPIRED: 'This link has expired. Request a new one.',
     SESSION_EXPIRED: 'Your session has expired. Sign in again.',
     EMAIL_NOT_SENT:
-        'We couldn’t send the email. Try again in a few minutes; if you just signed up, sign in to get a new link.',
+        'We couldn’t send the email. Try again in a few minutes; if you just signed up, use Confirm email to get a new link.',
     DISPOSABLE_EMAIL: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
     ACCOUNT_LINK_FAILED:
         'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
@@ -28,6 +27,7 @@ const AUTH_ERROR_COPY: Record<string, string> = {
 
 const RATE_LIMITED_STATUS = 429
 const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
+const ALREADY_IN_USE_CODES = new Set(['USER_ALREADY_EXISTS', 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL'])
 
 export interface AuthError {
     code?: string
@@ -38,6 +38,9 @@ export interface AuthError {
 export const isRateLimited = (error: AuthError | null): boolean => error?.status === RATE_LIMITED_STATUS
 
 export const isNetworkError = (error: AuthError | null): boolean => error?.code === NETWORK_ERROR_CODE
+
+// A sign-up for an address that already has an account.
+export const isEmailInUse = (error: AuthError | null): boolean => ALREADY_IN_USE_CODES.has(error?.code ?? '')
 
 export const describeError = (error: AuthError | null): string => {
     if (isRateLimited(error)) {

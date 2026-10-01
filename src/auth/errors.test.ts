@@ -13,6 +13,12 @@ describe('describeError', () => {
         )
     })
 
+    it('says an address already in use for sign-up is taken', () => {
+        expect(describeError({ status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
+            'This email is already in use. Sign in instead.',
+        )
+    })
+
     it('shows the copy for a code a social provider sent back', () => {
         expect(describeError({ code: 'access_denied' })).toBe('Sign-in was cancelled.')
     })
