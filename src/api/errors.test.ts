@@ -1,6 +1,6 @@
 import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { ApiRequestError, describeJobError, toApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeContactError, describeJobError, toApiRequestError } from '@/api/errors'
 
 const axiosErrorWithResponse = (status: number, data: unknown) =>
     new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, undefined, {
@@ -75,5 +75,28 @@ describe('describeJobError', () => {
     it('describes the job error code, falling back to a generic analysis failure', () => {
         expect(describeJobError(JobErrorCode.VideoTooLong)).toBe('Videos can be up to 60 seconds long.')
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
+    })
+})
+
+describe('describeContactError', () => {
+    it('words the security check, validation and rate limits for a message rather than an analysis', () => {
+        expect(describeContactError(new ApiRequestError(RequestErrorCode.ChallengeFailed))).toBe(
+            'The security check didn’t pass. Try it again, then send the message.',
+        )
+        expect(describeContactError(new ApiRequestError(RequestErrorCode.ValidationFailed))).toBe(
+            'We couldn’t send this message. Check it, then try again.',
+        )
+        expect(describeContactError(new ApiRequestError(RequestErrorCode.RateLimited))).toBe(
+            'Too many messages in the last hour. Please try again later.',
+        )
+    })
+
+    it('falls back to the shared copy, and never shows the raw text of an unknown failure', () => {
+        expect(describeContactError(new ApiRequestError(RequestErrorCode.Unavailable))).toBe(
+            'AdLens is briefly unavailable. Please try again.',
+        )
+        expect(describeContactError(new Error('socket hang up'))).toBe(
+            'Something went wrong on our side. Please try again.',
+        )
     })
 })

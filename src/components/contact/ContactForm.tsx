@@ -7,14 +7,16 @@ import {
     type ContactMessageInput,
     contactMessageInputSchema,
     type ContactMessagePayload,
+    RequestErrorCode,
 } from 'adlens-shared'
 import { Alert, Button, Input, Result } from 'antd'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { sendContactMessage } from '@/api/contact'
-import { toApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeContactError } from '@/api/errors'
 import { useAuth } from '@/auth/AuthContext'
+import { HumanCheck, type HumanCheckHandle } from '@/components/upload/HumanCheck'
 import { Field } from '@/components/utils/Field'
 
 // The rules come from the shared schema; only the wording is the form's own.
@@ -42,6 +44,7 @@ export function ContactForm({ onDone }: IProps) {
     const { user } = useAuth()
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
+    const humanCheck = useRef<HumanCheckHandle>(null)
     const {
         control,
         register,
@@ -52,14 +55,24 @@ export function ContactForm({ onDone }: IProps) {
         defaultValues: { email: user?.email ?? '', message: '', website: '' },
     })
 
+    const getChallengeToken = async (): Promise<string> => {
+        if (!humanCheck.current) {
+            throw new ApiRequestError(RequestErrorCode.ChallengeFailed)
+        }
+
+        return humanCheck.current.getToken()
+    }
+
     const onSubmit = async (values: ContactMessagePayload) => {
         setFormError(null)
 
         try {
-            await sendContactMessage(values)
+            const challengeToken = await getChallengeToken()
+
+            await sendContactMessage({ ...values, challengeToken })
             setSentTo(values.email)
         } catch (error) {
-            setFormError(toApiRequestError(error).message)
+            setFormError(describeContactError(error))
         }
     }
 
@@ -75,7 +88,9 @@ export function ContactForm({ onDone }: IProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        // Wrapped so handleSubmit runs on submit: React's ref lint can't tell that it calls onSubmit, which reads the
+        // human check's ref, only from the event, not during render.
+        <form onSubmit={(event) => handleSubmit(onSubmit)(event)}>
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Your email" htmlFor="contact-email" error={errors.email?.message}>
                 <Controller
@@ -88,6 +103,7 @@ export function ContactForm({ onDone }: IProps) {
                             type="email"
                             autoComplete="email"
                             placeholder="you@company.com"
+                            disabled={isSubmitting}
                             status={errors.email ? 'error' : undefined}
                         />
                     )}
@@ -106,6 +122,7 @@ export function ContactForm({ onDone }: IProps) {
                             showCount
                             className="mb-2"
                             placeholder="Questions, feedback, bug reports..."
+                            disabled={isSubmitting}
                             status={errors.message ? 'error' : undefined}
                         />
                     )}
@@ -118,6 +135,7 @@ export function ContactForm({ onDone }: IProps) {
                     <input type="text" tabIndex={-1} autoComplete="off" {...register('website')} />
                 </label>
             </div>
+            <HumanCheck ref={humanCheck} action="send your message" />
             <Button type="primary" htmlType="submit" icon={<MailOutlined />} block loading={isSubmitting}>
                 Send message
             </Button>

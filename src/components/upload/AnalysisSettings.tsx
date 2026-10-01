@@ -377,7 +377,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                     />
                 </div>
             </div>
-            <HumanCheck ref={humanCheck} />
+            <HumanCheck ref={humanCheck} action="start the analysis" />
             {renderQuota()}
             <Button
                 type="primary"

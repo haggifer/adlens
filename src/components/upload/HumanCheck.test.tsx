@@ -58,10 +58,10 @@ jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, se
 const INTERACTION_HINT = 'Confirm you’re human to start the analysis.'
 const FAILURE_HINT = 'Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.'
 
-const renderCheck = () => {
+const renderCheck = (action = 'start the analysis') => {
     const ref = createRef<HumanCheckHandle>()
 
-    render(<HumanCheck ref={ref} />)
+    render(<HumanCheck ref={ref} action={action} />)
 
     return ref
 }
@@ -119,6 +119,15 @@ describe('HumanCheck', () => {
         act(() => screen.getByRole('button', { name: 'Finish the click' }).click())
 
         expect(screen.queryByText(INTERACTION_HINT)).not.toBeInTheDocument()
+    })
+
+    it('names the action it guards when it asks for a click', () => {
+        const ref = renderCheck('send your message')
+
+        startCheck(ref)
+        act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
+
+        expect(screen.getByText('Confirm you’re human to send your message.')).toBeInTheDocument()
     })
 
     it('fails the run and says how to recover when the widget reports an error', async () => {

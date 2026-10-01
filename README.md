@@ -16,8 +16,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
   anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
   analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
-- **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts and invisible
-  unless Cloudflare asks for a click
+- **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts or a contact
+  message is sent, and invisible unless Cloudflare asks for a click
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
   cache
 - **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
@@ -140,4 +140,5 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   an account, and accounts whose email isn't confirmed, get a token first (the API always checks theirs), before any
   anonymous user is created. Members skip it; if the API answers `CHALLENGE_REQUIRED` (a busy network), the page runs
   the check and starts over with a new job, since the token is only read at job creation. A check that doesn't finish
-  within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint.
+  within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint. The contact form runs
+  the same check for every message, signed in or not, since the contact endpoints are public.

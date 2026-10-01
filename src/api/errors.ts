@@ -65,3 +65,17 @@ export const describeJobError = (code: JobErrorCode | undefined): string =>
     ERROR_COPY[code ?? JobErrorCode.AnalysisFailed]
 
 export const describeRequestError = (code: RequestErrorCode): string => ERROR_COPY[code]
+
+// The contact form's own wording where the shared copy speaks of analyses, settings or a moment's wait (its limits are
+// per hour).
+const CONTACT_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
+    [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then send the message.',
+    [RequestErrorCode.ValidationFailed]: 'We couldn’t send this message. Check it, then try again.',
+    [RequestErrorCode.RateLimited]: 'Too many messages in the last hour. Please try again later.',
+}
+
+export const describeContactError = (err: unknown): string => {
+    const { code, message } = toApiRequestError(err)
+
+    return CONTACT_ERROR_COPY[code] ?? message
+}

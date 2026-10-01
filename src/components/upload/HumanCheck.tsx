@@ -25,11 +25,13 @@ interface PendingCheck {
 
 interface IProps {
     ref: Ref<HumanCheckHandle>
+    // What passing the check lets the visitor do, finishing "Confirm you're human to …".
+    action: string
 }
 
-// Cloudflare Turnstile in Managed mode, run only when an analysis starts (`execution: 'execute'`) and invisible unless
-// Cloudflare wants the visitor to click something (`appearance: 'interaction-only'`), which most never see.
-export function HumanCheck({ ref }: IProps) {
+// Cloudflare Turnstile in Managed mode, run only when the guarded action starts (`execution: 'execute'`) and invisible
+// unless Cloudflare wants the visitor to click something (`appearance: 'interaction-only'`), which most never see.
+export function HumanCheck({ ref, action }: IProps) {
     const { styles } = useStyles()
     const { isDark } = useTheme()
     const widget = useRef<TurnstileInstance>(null)
@@ -99,7 +101,7 @@ export function HumanCheck({ ref }: IProps) {
                 onBeforeInteractive={handleBeforeInteractive}
                 onAfterInteractive={() => setIsInteractive(false)}
             />
-            {isInteractive && <p className={styles.hint}>Confirm you’re human to start the analysis.</p>}
+            {isInteractive && <p className={styles.hint}>Confirm you’re human to {action}.</p>}
             {hasFailed && (
                 <p className={styles.hint}>
                     Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.

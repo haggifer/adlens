@@ -42,8 +42,8 @@ npm test             # Jest + React Testing Library
   account-only UI on `isEmailConfirmed`: an account whose email isn't confirmed yet is limited like an anonymous
   session and is offered Confirm email instead. Never show an anonymous user's email (`AuthContext` gives `null`); an
   unconfirmed account may see the address it typed.
-- A Turnstile token is single-use: get one from `HumanCheck`'s `getToken()` for every job creation that needs it
-  (it resets the widget each time); never reuse a token.
+- A Turnstile token is single-use: get one from `HumanCheck`'s `getToken()` for every job creation that needs it and
+  for every contact message (it resets the widget each time); never reuse a token.
 
 ## Conventions
 
