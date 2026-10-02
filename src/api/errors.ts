@@ -18,6 +18,8 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}. This run wasn't counted.`,
     [JobErrorCode.AnalysisFailed]: "The analysis failed. Please try again. This run wasn't counted.",
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. This run wasn't counted.",
+    [JobErrorCode.VideoCheckFailed]: "We couldn't check this video. Please try again. This run wasn't counted.",
+    [JobErrorCode.UploadFailed]: "The upload didn't finish. Please try again. This run wasn't counted.",
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
     [RequestErrorCode.SignUpRequired]: 'You’ve used your free analysis. Sign in or create an account to run more.',

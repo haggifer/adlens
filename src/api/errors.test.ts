@@ -79,6 +79,15 @@ describe('describeJobError', () => {
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
     })
 
+    it('explains a run that failed before the analysis started', () => {
+        expect(describeJobError(JobErrorCode.VideoCheckFailed)).toBe(
+            "We couldn't check this video. Please try again. This run wasn't counted.",
+        )
+        expect(describeJobError(JobErrorCode.UploadFailed)).toBe(
+            "The upload didn't finish. Please try again. This run wasn't counted.",
+        )
+    })
+
     it.each([
         JobErrorCode.VideoUnreadable,
         JobErrorCode.VideoTooLong,
@@ -86,6 +95,8 @@ describe('describeJobError', () => {
         JobErrorCode.UnsupportedFormat,
         JobErrorCode.AnalysisFailed,
         JobErrorCode.AnalysisTimedOut,
+        JobErrorCode.VideoCheckFailed,
+        JobErrorCode.UploadFailed,
     ])('says a run that ended in %s wasn’t counted', (code) => {
         expect(describeJobError(code)).toMatch(/ This run wasn't counted\.$/)
     })
