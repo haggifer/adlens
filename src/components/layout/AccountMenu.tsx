@@ -46,10 +46,11 @@ export function AccountMenu() {
 
     if (!kind) {
         // Nothing remembered: hold the button's place, since the session may still turn out to exist.
+        // Separate keys: reusing the placeholder's element would fade Sign In in through antd's visibility transition.
         return isInert ? (
-            <Button aria-hidden="true" tabIndex={-1} className={styles.accountPlaceholder} />
+            <Button key="placeholder" aria-hidden="true" tabIndex={-1} className={styles.accountPlaceholder} />
         ) : (
-            <Button type="primary" onClick={() => setView('signin')}>
+            <Button key="sign-in" type="primary" onClick={() => setView('signin')}>
                 Sign In
             </Button>
         )
