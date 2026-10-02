@@ -2,7 +2,7 @@
 
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { useJobs } from '@/hooks/useJobs'
-import { ALL_PLATFORMS_LABEL, JOB_STATUS_COLORS, JOB_STATUS_LABELS, PLATFORM_LABELS } from '@/labels'
+import { formatPlatforms, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '@/labels'
 import type { Job } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
@@ -39,10 +39,7 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
         key: 'platforms',
         width: '25%',
         responsive: ['lg'],
-        render: (_, job) =>
-            job.settings.platforms.length
-                ? job.settings.platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ')
-                : ALL_PLATFORMS_LABEL,
+        render: (_, job) => formatPlatforms(job.settings.platforms),
     },
     {
         title: 'Status',

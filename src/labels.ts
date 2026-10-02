@@ -75,3 +75,6 @@ export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
     google: 'Google',
     github: 'GitHub',
 }
+
+export const formatPlatforms = (platforms: Platform[]): string =>
+    platforms.length ? platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ') : ALL_PLATFORMS_LABEL
