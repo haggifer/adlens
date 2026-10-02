@@ -40,7 +40,6 @@ export function SignInForm() {
         const error = await runAuthRequest(() => signIn.email(values))
 
         if (!error) {
-            notification.success({ title: 'Signed in', placement: 'bottomRight' })
             setView(null)
             return
         }
