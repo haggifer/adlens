@@ -110,6 +110,56 @@ describe('AuthProvider', () => {
         })
     })
 
+    describe('when the session changes after it has loaded', () => {
+        const renderChangingSession = (initialSession: object | null, isPending = false) => {
+            mockUseSession.mockReturnValue({ data: initialSession, isPending })
+            const queryClient = createTestQueryClient()
+            const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+            const { rerender } = renderAuth(queryClient)
+
+            const changeSessionTo = (session: object | null) => {
+                mockUseSession.mockReturnValue({ data: session, isPending: false })
+                rerender()
+            }
+
+            return { invalidate, changeSessionTo }
+        }
+
+        it('refreshes nothing when the session first loads', () => {
+            const { invalidate, changeSessionTo } = renderChangingSession(null, true)
+
+            changeSessionTo(MEMBER_SESSION)
+
+            expect(invalidate).not.toHaveBeenCalled()
+        })
+
+        it('refreshes the limits and the history when another user takes over the session', () => {
+            const { invalidate, changeSessionTo } = renderChangingSession(ANONYMOUS_SESSION)
+
+            changeSessionTo(MEMBER_SESSION)
+
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['jobs'] })
+        })
+
+        it('refreshes the limits once the email is confirmed, in this tab or another', () => {
+            const { invalidate, changeSessionTo } = renderChangingSession(UNCONFIRMED_SESSION)
+
+            changeSessionTo({ user: { ...UNCONFIRMED_SESSION.user, emailVerified: true } })
+
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+            expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['jobs'] })
+        })
+
+        it('refreshes nothing when the same session is fetched again', () => {
+            const { invalidate, changeSessionTo } = renderChangingSession(MEMBER_SESSION)
+
+            changeSessionTo({ user: { ...MEMBER_SESSION.user } })
+
+            expect(invalidate).not.toHaveBeenCalled()
+        })
+    })
+
     it('drops every cached query once signing out succeeds, so the next user never sees them', async () => {
         mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
         const queryClient = createTestQueryClient()

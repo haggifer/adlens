@@ -1,7 +1,8 @@
 import { screen, waitFor } from '@testing-library/react'
 import { StrictMode } from 'react'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { authClient, verifyEmail } from '@/auth/authClient'
+import { verifyEmail } from '@/auth/authClient'
+import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
@@ -12,10 +13,10 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ replace: mockReplace }) }))
 jest.mock('@/auth/authClient', () => ({
-    authClient: { $store: { notify: jest.fn() } },
     verifyEmail: jest.fn(async () => ({ data: { status: true }, error: null })),
 }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
+jest.mock('@/auth/session', () => ({ announceSessionChange: jest.fn(), refreshSession: jest.fn() }))
 
 const TOKEN = 'a-token'
 
@@ -43,14 +44,13 @@ describe('ConfirmEmail', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('confirms the email, refreshes the session and the limits, and goes home', async () => {
-        const { queryClient } = renderConfirmEmail(TOKEN)
-        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+    it('confirms the email, refreshes the session in this tab and the others, and goes home', async () => {
+        renderConfirmEmail(TOKEN)
 
         expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
         expect(verifyEmail).toHaveBeenCalledWith({ query: { token: TOKEN } })
-        expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
-        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+        expect(refreshSession).toHaveBeenCalled()
+        expect(announceSessionChange).toHaveBeenCalled()
         expect(mockReplace).toHaveBeenCalledWith('/')
     })
 

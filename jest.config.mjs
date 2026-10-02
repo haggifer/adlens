@@ -2,8 +2,19 @@ import nextJest from 'next/jest.js'
 
 const createJestConfig = nextJest({ dir: './' })
 
-// antd and its helper packages publish ESM-only builds, which Jest must transform like source files.
-const ESM_PACKAGES = ['@ant-design', 'antd', 'antd-style', '@rc-component', 'rc-[a-z-]+', '@babel/runtime']
+// antd and its helper packages, and Better Auth's client, publish ESM-only builds, which Jest must transform like
+// source files.
+const ESM_PACKAGES = [
+    '@ant-design',
+    'antd',
+    'antd-style',
+    '@rc-component',
+    'rc-[a-z-]+',
+    '@babel/runtime',
+    'better-auth',
+    '@better-auth',
+    'nanostores',
+]
 
 /** @type {import('jest').Config} */
 const config = {

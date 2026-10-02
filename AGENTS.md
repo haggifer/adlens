@@ -67,5 +67,5 @@ npm test             # Jest + React Testing Library
 - A production build (`VERCEL_ENV=production`) fails without `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: `src/config.ts` checks it
   while `next build` renders the pages. `VERCEL_ENV` isn't inlined, so the check never runs in the browser.
 - Better Auth's client throws on network failure instead of returning `{ error }`.
-- Jest transforms antd's ESM packages (see `jest.config.mjs`), and `jest.setup.ts` polyfills `matchMedia`,
-  `ResizeObserver` and `MessageChannel` for antd.
+- Jest transforms antd's and Better Auth's ESM packages (see `jest.config.mjs`), and `jest.setup.ts` polyfills
+  `matchMedia`, `ResizeObserver` and `MessageChannel` for antd.

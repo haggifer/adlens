@@ -1,3 +1,4 @@
+import { getGlobalBroadcastChannel } from 'better-auth/client'
 import { authClient } from '@/auth/authClient'
 import { type AuthError, runAuthQuery } from '@/auth/errors'
 
@@ -7,6 +8,15 @@ const AFTER_SIGN_IN_CODES = new Set(['ACCOUNT_LINK_FAILED', 'EMAIL_NOT_SENT'])
 
 // Has Better Auth fetch the session again, for a change the API made that the client didn't ask for.
 export const refreshSession = () => authClient.$store.notify('$sessionSignal')
+
+// Makes the other tabs fetch the session again, through the channel Better Auth itself uses after a sign-out or a user
+// update. It never reaches this tab, so a change made here also needs refreshSession().
+export const announceSessionChange = () =>
+    getGlobalBroadcastChannel().post({
+        event: 'session',
+        data: { trigger: 'updateUser' },
+        clientId: Math.random().toString(36).slice(2),
+    })
 
 // Whether a sign-in or sign-up that failed still left an account signed in; if so, the session state catches up.
 export const checkSignedInDespite = async (error: AuthError): Promise<boolean> => {

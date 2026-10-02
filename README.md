@@ -136,7 +136,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
   resend the link. A duplicate sign-up says the address is already in use. The confirmation link never signs anyone
   in: it confirms only for a session signed in as its own account, so `/confirm-email` asks a visitor to sign in
-  first and then sends the same token again.
+  first and then sends the same token again. A confirmation also tells the browser's other tabs, through Better Auth's
+  own cross-tab channel, to fetch the session again, and whenever the session's user or its confirmation changes, the
+  quota (and, for a new user, the history) is fetched again.
 - **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
   and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors without
   an account, and accounts whose email isn't confirmed, get a token first (the API always checks theirs), before any

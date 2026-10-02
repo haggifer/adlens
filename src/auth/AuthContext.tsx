@@ -1,7 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { createContext, ReactNode, useContext, useMemo } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef } from 'react'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
 
@@ -32,9 +32,45 @@ interface IProps {
     children: ReactNode
 }
 
+interface SessionAccount {
+    userId: string | null
+    isEmailConfirmed: boolean
+}
+
 export function AuthProvider({ children }: IProps) {
     const queryClient = useQueryClient()
     const { data: session, isPending } = useSession()
+    // The account the session last resolved to, null until it first has, to tell a change from the first load.
+    const lastAccount = useRef<SessionAccount | null>(null)
+    const userId = session?.user.id ?? null
+    const isEmailConfirmed = Boolean(session?.user && !session.user.isAnonymous && session.user.emailVerified)
+
+    // The session can change under the page: a sign-in, a confirmation, or another tab (Better Auth tells this one).
+    // Per-user data is keyed by the user id, but a quota cached for that id still carries the old limits, and an
+    // account's history cached earlier in this tab misses what an anonymous session just moved into it.
+    useEffect(() => {
+        if (isPending) {
+            return
+        }
+
+        const previous = lastAccount.current
+
+        lastAccount.current = { userId, isEmailConfirmed }
+
+        if (!previous) {
+            return
+        }
+
+        if (previous.userId !== userId) {
+            void queryClient.invalidateQueries({ queryKey: ['quota'] })
+            void queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            return
+        }
+
+        if (previous.isEmailConfirmed !== isEmailConfirmed) {
+            void queryClient.invalidateQueries({ queryKey: ['quota'] })
+        }
+    }, [isPending, userId, isEmailConfirmed, queryClient])
 
     const value = useMemo<AuthContextValue>(() => {
         const user = session?.user
@@ -44,7 +80,7 @@ export function AuthProvider({ children }: IProps) {
             isInitializing: isPending,
             isSignedIn: Boolean(user),
             isAnonymous,
-            isEmailConfirmed: Boolean(user && !isAnonymous && user.emailVerified),
+            isEmailConfirmed,
             user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
             // Cached server data belongs to the signed-in user, so it goes with the session. A refused or
             // unreachable sign-out must not clear it or leave the caller thinking the user is signed out.
@@ -58,7 +94,7 @@ export function AuthProvider({ children }: IProps) {
                 queryClient.clear()
             },
         }
-    }, [session, isPending, queryClient])
+    }, [session, isPending, isEmailConfirmed, queryClient])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

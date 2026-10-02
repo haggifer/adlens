@@ -1,12 +1,12 @@
 'use client'
 
-import { useQueryClient } from '@tanstack/react-query'
 import { App, Button, Result, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { authClient, verifyEmail } from '@/auth/authClient'
+import { verifyEmail } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useStyles } from './styles'
 
@@ -36,7 +36,6 @@ interface IProps {
 export function ConfirmEmail({ token }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
-    const queryClient = useQueryClient()
     const { notification } = App.useApp()
     const { isInitializing, isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
@@ -76,9 +75,9 @@ export function ConfirmEmail({ token }: IProps) {
             const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
 
             if (!error) {
-                authClient.$store.notify('$sessionSignal')
-                // The quota's limit rises with the confirmation, under the same user id.
-                void queryClient.invalidateQueries({ queryKey: ['quota'] })
+                // AuthProvider refreshes the quota, whose limit rises with the confirmation, in every tab.
+                refreshSession()
+                announceSessionChange()
                 notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
                 router.replace('/')
                 return
@@ -116,7 +115,6 @@ export function ConfirmEmail({ token }: IProps) {
         isUnconfirmed,
         sessionKey,
         notification,
-        queryClient,
         router,
         setView,
         setIsOtherAddressLink,
