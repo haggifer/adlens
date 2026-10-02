@@ -114,7 +114,7 @@ export function HumanCheck({ ref, action }: IProps) {
     }
 
     return (
-        <div>
+        <div className={isInteractive || hasFailed ? undefined : styles.idle}>
             <Turnstile
                 ref={widget}
                 siteKey={config.turnstileSiteKey}
