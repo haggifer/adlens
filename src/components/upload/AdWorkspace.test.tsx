@@ -5,13 +5,14 @@ import type { ReactNode } from 'react'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { ApiRequestError } from '@/api/errors'
 import { createJob, startAnalysis } from '@/api/jobs'
-import { memberAuth } from '@/test/auth'
+import { memberAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { AdWorkspace } from './AdWorkspace'
 
 const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
+const mockGetToken = jest.fn<Promise<string>, []>()
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
@@ -20,7 +21,17 @@ jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn(async () => []) }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn(async () => undefined) }))
-jest.mock('@/components/human-check/HumanCheck', () => ({ HumanCheck: () => null }))
+// Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken settles with.
+jest.mock('@/components/human-check/HumanCheck', () => {
+    const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react')
+
+    return {
+        HumanCheck: ({ ref }: { ref: unknown }) => {
+            useImperativeHandle(ref as never, () => ({ getToken: () => mockGetToken() }))
+            return null
+        },
+    }
+})
 // Vidstack's custom elements don't run in jsdom; the workspace only needs the player's place in the layout.
 jest.mock('@vidstack/react', () => ({
     MediaPlayer: ({ children, 'aria-label': label }: { children: ReactNode; 'aria-label': string }) => (
@@ -71,8 +82,8 @@ const chooseFile = async (user: UserEvent, file: File) => {
     await screen.findByRole('button', { name: 'Remove video' })
 }
 
-const renderWorkspace = () => {
-    mockUseAuth.mockReturnValue(memberAuth())
+const renderWorkspace = (auth: AuthContextValue = memberAuth()) => {
+    mockUseAuth.mockReturnValue(auth)
 
     return renderWithProviders(<AdWorkspace />)
 }
@@ -122,6 +133,28 @@ describe('AdWorkspace', () => {
 
         expect(platformsSelect).toBeEnabled()
         expect(marketsSelect).toBeEnabled()
+    })
+
+    it('unlocks the video when the human check fails, before any job exists', async () => {
+        const check = deferred<string>()
+
+        mockGetToken.mockReturnValueOnce(check.promise)
+        const { user } = renderWorkspace(unconfirmedAuth())
+
+        await chooseFile(user, buildFile('launch.mp4'))
+        await user.click(runButton())
+
+        expect(removeButton()).toBeDisabled()
+        expect(replaceButton()).toBeDisabled()
+
+        await act(async () => check.reject(new ApiRequestError(RequestErrorCode.ChallengeFailed)))
+
+        expect(
+            await screen.findByText('The security check didn’t pass. Try it again, then run the analysis.'),
+        ).toBeInTheDocument()
+        expect(removeButton()).toBeEnabled()
+        expect(replaceButton()).toBeEnabled()
+        expect(createJob).not.toHaveBeenCalled()
     })
 
     it('keeps everything locked once the run has started, until the page changes', async () => {

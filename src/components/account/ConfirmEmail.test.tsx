@@ -112,6 +112,19 @@ describe('ConfirmEmail', () => {
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
+    it('tells a signed-out visitor with a refused token to sign in for a new link', async () => {
+        answerOnce({ status: 400, code: 'TOKEN_EXPIRED' })
+        const { user } = renderConfirmEmail(TOKEN, signedOutAuth())
+
+        expect(await screen.findByText('This link has expired. Request a new one.')).toBeInTheDocument()
+        expect(screen.getByText('Sign in, then use Confirm email to get a new link.')).toBeInTheDocument()
+        expect(useAuthModalStore.getState().view).toBeNull()
+
+        await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+        expect(useAuthModalStore.getState().view).toBe('signin')
+    })
+
     it.each(['TOKEN_EXPIRED', 'INVALID_TOKEN'])(
         'tells a confirmed member whose link was refused (%s) that their email is already confirmed',
         async (code) => {

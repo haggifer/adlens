@@ -312,6 +312,8 @@ describe('AnalysisSettings', () => {
             await run(user)
 
             expect(await screen.findByText(CONFIRMATION_REQUIRED_COPY)).toBeInTheDocument()
+            // Unlike sign-up, confirming waits for the visitor to ask: the email may already be on its way.
+            expect(useAuthModalStore.getState().view).toBeNull()
 
             await user.click(screen.getByRole('button', { name: 'Confirm email' }))
 

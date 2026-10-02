@@ -23,6 +23,8 @@ const EMAIL_NOT_SENT_COPY = 'We couldn’t send the email. Try again in a few mi
 
 const NEW_ACCOUNT_SESSION = { user: { id: 'member-1', isAnonymous: false } }
 
+const ANONYMOUS_SESSION = { user: { id: 'anon-1', isAnonymous: true } }
+
 const failSignUpOnce = (error: object) =>
     jest.mocked(signUp.email).mockResolvedValueOnce({ data: null, error } as never)
 
@@ -133,6 +135,24 @@ describe('SignUpForm', () => {
 
             expect(within(alert).getByText(EMAIL_NOT_SENT_COPY)).toBeInTheDocument()
             expect(useAuthModalStore.getState().view).toBe('signup')
+        })
+
+        it('keeps the form when the only session left is the visitor’s anonymous one', async () => {
+            failSignUpOnce({ status: 503, code: 'EMAIL_NOT_SENT' })
+            jest.mocked(authClient.getSession).mockResolvedValueOnce({
+                data: ANONYMOUS_SESSION,
+                error: null,
+            } as never)
+            const { user } = renderForm()
+
+            await submitSignUp(user)
+
+            const alert = await screen.findByRole('alert')
+
+            expect(within(alert).getByText(EMAIL_NOT_SENT_COPY)).toBeInTheDocument()
+            expect(authClient.getSession).toHaveBeenCalled()
+            expect(useAuthModalStore.getState().view).toBe('signup')
+            expect(authClient.$store.notify).not.toHaveBeenCalled()
         })
     })
 })
