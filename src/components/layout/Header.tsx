@@ -22,8 +22,10 @@ export function Header() {
     const pathname = usePathname()
     // While the session loads, the header takes the shape of the account this browser last had.
     const { kind } = useShownAccountKind()
-    const isSignedIn = kind !== null
+
     const { quota } = useQuota()
+
+    const isSignedIn = kind !== null
 
     return (
         <header className={styles.header}>

@@ -12,6 +12,7 @@ import { Button, Drawer } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
+import { checkEmailConfirmed } from '@/auth/account-kind'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
@@ -60,11 +61,14 @@ export function MobileMenu() {
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
     const forgetBrowser = useForgetBrowser()
-    const { quota } = useQuota()
+
     const [isOpen, setIsOpen] = useState(false)
+
+    const { quota } = useQuota()
+
     const isSignedIn = kind !== null
     const isAnonymous = kind === AccountKind.Anonymous
-    const isEmailConfirmed = kind === AccountKind.Member || kind === AccountKind.Admin
+    const isEmailConfirmed = checkEmailConfirmed(kind)
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
 

@@ -40,9 +40,55 @@ export function AccountMenu() {
     const signOut = useSignOut()
     const forgetBrowser = useForgetBrowser()
     const isHoverCapable = useHoverCapable()
+
     const [isOpen, setIsOpen] = useState(false)
     // Moves focus into the menu only when the keyboard opened it; a hover leaves focus where it is.
     const [isOpenedByKeyboard, setIsOpenedByKeyboard] = useState(false)
+
+    const items: MenuProps['items'] = [
+        { key: AccountMenuKey.Email, label: user?.email, disabled: true },
+        { type: 'divider' },
+        { key: AccountMenuKey.Account, label: 'Account', icon: <SettingOutlined /> },
+        { key: AccountMenuKey.Contact, label: 'Contact support', icon: <MailOutlined /> },
+        { type: 'divider' },
+        { key: AccountMenuKey.SignOut, label: 'Sign Out', icon: <LogoutOutlined />, danger: true },
+    ]
+
+    // Escape and Tab are handled by the dropdown itself, which closes the menu and returns focus to the trigger.
+    const handleOpenChange = (isNextOpen: boolean) => {
+        setIsOpen(isNextOpen)
+
+        if (!isNextOpen) {
+            setIsOpenedByKeyboard(false)
+        }
+    }
+
+    // A click trigger already opens from the keyboard, since Enter and Space click a button.
+    const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+        if (!isHoverCapable || !OPEN_KEYS.has(event.key)) {
+            return
+        }
+
+        event.preventDefault()
+        setIsOpenedByKeyboard(true)
+        setIsOpen(true)
+    }
+
+    const handleClick: MenuProps['onClick'] = ({ key }) => {
+        if (key === AccountMenuKey.Account) {
+            router.push('/account')
+            return
+        }
+
+        if (key === AccountMenuKey.Contact) {
+            setIsContactOpen(true)
+            return
+        }
+
+        if (key === AccountMenuKey.SignOut) {
+            void signOut()
+        }
+    }
 
     if (!kind) {
         // Nothing remembered: hold the button's place, since the session may still turn out to exist.
@@ -97,51 +143,6 @@ export function AccountMenu() {
                 <Avatar size={32} icon={<UserOutlined />} />
             </button>
         )
-    }
-
-    const items: MenuProps['items'] = [
-        { key: AccountMenuKey.Email, label: user?.email, disabled: true },
-        { type: 'divider' },
-        { key: AccountMenuKey.Account, label: 'Account', icon: <SettingOutlined /> },
-        { key: AccountMenuKey.Contact, label: 'Contact support', icon: <MailOutlined /> },
-        { type: 'divider' },
-        { key: AccountMenuKey.SignOut, label: 'Sign Out', icon: <LogoutOutlined />, danger: true },
-    ]
-
-    // Escape and Tab are handled by the dropdown itself, which closes the menu and returns focus to the trigger.
-    const handleOpenChange = (isNextOpen: boolean) => {
-        setIsOpen(isNextOpen)
-
-        if (!isNextOpen) {
-            setIsOpenedByKeyboard(false)
-        }
-    }
-
-    // A click trigger already opens from the keyboard, since Enter and Space click a button.
-    const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-        if (!isHoverCapable || !OPEN_KEYS.has(event.key)) {
-            return
-        }
-
-        event.preventDefault()
-        setIsOpenedByKeyboard(true)
-        setIsOpen(true)
-    }
-
-    const handleClick: MenuProps['onClick'] = ({ key }) => {
-        if (key === AccountMenuKey.Account) {
-            router.push('/account')
-            return
-        }
-
-        if (key === AccountMenuKey.Contact) {
-            setIsContactOpen(true)
-            return
-        }
-
-        if (key === AccountMenuKey.SignOut) {
-            void signOut()
-        }
     }
 
     return (
