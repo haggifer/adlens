@@ -1,4 +1,5 @@
 import type { AuthContextValue, AuthUser } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
 
 export const MEMBER_EMAIL = 'ann@example.com'
 
@@ -13,19 +14,24 @@ const createAuth = (overrides: Partial<AuthContextValue>): AuthContextValue => (
     isAnonymous: false,
     isEmailConfirmed: false,
     user: null,
+    accountKind: null,
+    snapshotKind: null,
     signOut: jest.fn(async () => undefined),
     ...overrides,
 })
 
-export const initializingAuth = (): AuthContextValue => createAuth({ isInitializing: true })
+// While the session loads, the header draws the kind of account this browser last had, if it remembers one.
+export const initializingAuth = (snapshotKind: AccountKind | null = null): AuthContextValue =>
+    createAuth({ isInitializing: true, snapshotKind })
 
 export const signedOutAuth = (): AuthContextValue => createAuth({})
 
 export const anonymousAuth = (): AuthContextValue =>
-    createAuth({ isSignedIn: true, isAnonymous: true, user: ANONYMOUS_USER })
+    createAuth({ isSignedIn: true, isAnonymous: true, user: ANONYMOUS_USER, accountKind: AccountKind.Anonymous })
 
 // Signed up with email and password, but hasn't opened the confirmation link yet.
-export const unconfirmedAuth = (): AuthContextValue => createAuth({ isSignedIn: true, user: MEMBER_USER })
+export const unconfirmedAuth = (): AuthContextValue =>
+    createAuth({ isSignedIn: true, user: MEMBER_USER, accountKind: AccountKind.Unconfirmed })
 
 export const memberAuth = (): AuthContextValue =>
-    createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER })
+    createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER, accountKind: AccountKind.Member })

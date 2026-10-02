@@ -13,12 +13,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useQuota } from '@/hooks/useQuota'
+import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
@@ -51,13 +53,18 @@ const canOpen = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed: bool
 export function MobileMenu() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
-    const { isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
+    const { user } = useAuth()
+    // While the session loads, the remembered kind is drawn with every session action disabled.
+    const { kind, isInert } = useShownAccountKind()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
     const forgetBrowser = useForgetBrowser()
     const { quota } = useQuota()
     const [isOpen, setIsOpen] = useState(false)
+    const isSignedIn = kind !== null
+    const isAnonymous = kind === AccountKind.Anonymous
+    const isEmailConfirmed = kind === AccountKind.Member || kind === AccountKind.Admin
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
 
@@ -105,13 +112,25 @@ export function MobileMenu() {
                 title="Menu"
                 classNames={{ body: styles.drawerBody }}
             >
-                {hasAccount && user && (
+                {/* The snapshot keeps no name or email, so until the session loads a member's block has nothing
+                    to show. */}
+                {hasAccount && (user || !isEmailConfirmed) && (
                     <div className={styles.drawerUser}>
-                        <span className={styles.drawerUserName}>{user.name}</span>
-                        <span className={styles.drawerUserEmail}>{user.email}</span>
+                        {user && (
+                            <>
+                                <span className={styles.drawerUserName}>{user.name}</span>
+                                <span className={styles.drawerUserEmail}>{user.email}</span>
+                            </>
+                        )}
                         {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
                         {!isEmailConfirmed && (
-                            <Button type="primary" block className="mt-2" onClick={handleConfirmEmail}>
+                            <Button
+                                type="primary"
+                                block
+                                className={user ? 'mt-2' : undefined}
+                                disabled={isInert}
+                                onClick={handleConfirmEmail}
+                            >
                                 Confirm email
                             </Button>
                         )}
@@ -120,7 +139,7 @@ export function MobileMenu() {
                 {isAnonymous && (
                     <div className={cx(styles.drawerUser, 'gap-2')}>
                         {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
-                        <Button type="primary" block onClick={handleSignIn}>
+                        <Button type="primary" block disabled={isInert} onClick={handleSignIn}>
                             Sign In
                         </Button>
                     </div>
@@ -149,7 +168,13 @@ export function MobileMenu() {
                     <ThemeSwitch />
                 </div>
                 {hasAccount && (
-                    <button type="button" className={styles.drawerItem} data-danger="true" onClick={handleSignOut}>
+                    <button
+                        type="button"
+                        className={styles.drawerItem}
+                        data-danger="true"
+                        disabled={isInert}
+                        onClick={handleSignOut}
+                    >
                         <LogoutOutlined />
                         Sign Out
                     </button>
@@ -159,6 +184,7 @@ export function MobileMenu() {
                         type="button"
                         className={styles.drawerItem}
                         data-danger="true"
+                        disabled={isInert}
                         onClick={handleForgetBrowser}
                     >
                         <LogoutOutlined />

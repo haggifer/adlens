@@ -1,8 +1,9 @@
 import { screen, waitFor } from '@testing-library/react'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { AccountMenu } from './AccountMenu'
 
@@ -41,6 +42,76 @@ describe('AccountMenu', () => {
         await user.click(screen.getByRole('button', { name: 'Sign In' }))
 
         expect(useAuthModalStore.getState().view).toBe('signin')
+    })
+
+    describe('while the session loads', () => {
+        it('holds the place of Sign In with an empty placeholder when nothing is remembered', () => {
+            const { container } = renderMenu(initializingAuth())
+
+            expect(screen.queryByRole('button')).not.toBeInTheDocument()
+            expect(container).toHaveTextContent('')
+            expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument()
+        })
+
+        it.each([AccountKind.Member, AccountKind.Admin])(
+            'shows the avatar of a remembered %s, but no menu opens from it',
+            async (kind) => {
+                mockIsHoverCapable.mockReturnValue(true)
+                const { user } = renderMenu(initializingAuth(kind))
+                const avatar = screen.getByRole('button', { name: 'Account menu' })
+
+                expect(avatar).toHaveAttribute('aria-disabled', 'true')
+                expect(avatar).toHaveAttribute('tabindex', '-1')
+                expect(avatar).not.toHaveAttribute('aria-haspopup')
+
+                await user.hover(avatar)
+                await user.click(avatar)
+                await user.tab()
+
+                expect(avatar).not.toHaveFocus()
+                expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
+                expect(screen.queryByText(MEMBER_EMAIL)).not.toBeInTheDocument()
+            },
+        )
+
+        it('shows a remembered anonymous visitor’s buttons, disabled', () => {
+            renderMenu(initializingAuth(AccountKind.Anonymous))
+
+            expect(screen.getByRole('button', { name: 'Forget this browser' })).toBeDisabled()
+            expect(screen.getByRole('button', { name: 'Sign In' })).toBeDisabled()
+        })
+
+        it('shows a remembered unconfirmed account’s buttons, disabled', () => {
+            renderMenu(initializingAuth(AccountKind.Unconfirmed))
+
+            expect(screen.getByRole('button', { name: 'Confirm email' })).toBeDisabled()
+            expect(screen.getByRole('button', { name: 'Sign Out' })).toBeDisabled()
+        })
+
+        it('switches to the real session once it loads, even when it differs from the remembered one', async () => {
+            const { rerender, user } = renderMenu(initializingAuth(AccountKind.Anonymous))
+
+            mockUseAuth.mockReturnValue(memberAuth())
+            rerender(<AccountMenu />)
+
+            expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+
+            const avatar = screen.getByRole('button', { name: 'Account menu' })
+
+            expect(avatar).not.toHaveAttribute('aria-disabled')
+            await user.click(avatar)
+            expect(await screen.findByText(MEMBER_EMAIL)).toBeInTheDocument()
+        })
+
+        it('offers Sign In once the session loads as none', () => {
+            const { rerender } = renderMenu(initializingAuth(AccountKind.Member))
+
+            mockUseAuth.mockReturnValue(signedOutAuth())
+            rerender(<AccountMenu />)
+
+            expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled()
+            expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
+        })
     })
 
     describe('for an anonymous visitor', () => {

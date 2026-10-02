@@ -3,13 +3,13 @@
 import { Divider } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/auth/AuthContext'
 import { Logo } from '@/components/brand/Logo'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useQuota } from '@/hooks/useQuota'
+import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useStyles } from './styles'
 
 const NAV_LINKS = [
@@ -20,7 +20,9 @@ const NAV_LINKS = [
 export function Header() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
-    const { isSignedIn } = useAuth()
+    // While the session loads, the header takes the shape of the account this browser last had.
+    const { kind } = useShownAccountKind()
+    const isSignedIn = kind !== null
     const { quota } = useQuota()
 
     return (

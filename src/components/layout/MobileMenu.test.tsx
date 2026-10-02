@@ -1,9 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { MobileMenu } from './MobileMenu'
 
@@ -41,6 +42,44 @@ describe('MobileMenu', () => {
         mockQuota = QUOTA
         useAuthModalStore.setState({ view: null })
         useContactModalStore.setState({ isOpen: false })
+    })
+
+    describe('while the session loads', () => {
+        beforeEach(() => {
+            mockQuota = undefined
+        })
+
+        it('shows a remembered anonymous visitor’s Sign In and Forget this browser, disabled', async () => {
+            const { menu } = await openMenu(initializingAuth(AccountKind.Anonymous))
+
+            expect(menu.getByRole('button', { name: 'Sign In' })).toBeDisabled()
+            expect(menu.getByRole('button', { name: /Forget this browser/ })).toBeDisabled()
+        })
+
+        it('shows a remembered unconfirmed account’s Confirm email and Sign Out, disabled', async () => {
+            const { menu } = await openMenu(initializingAuth(AccountKind.Unconfirmed))
+
+            expect(menu.getByRole('button', { name: 'Confirm email' })).toBeDisabled()
+            expect(menu.getByRole('button', { name: /Sign Out/ })).toBeDisabled()
+        })
+
+        it.each([AccountKind.Member, AccountKind.Admin])(
+            'shows a remembered %s Sign Out, disabled, and no email',
+            async (kind) => {
+                const { menu } = await openMenu(initializingAuth(kind))
+
+                expect(menu.getByRole('button', { name: /Sign Out/ })).toBeDisabled()
+                expect(menu.getByRole('link', { name: /Account/ })).toBeInTheDocument()
+                expect(menu.queryByText(/@/)).not.toBeInTheDocument()
+            },
+        )
+
+        it('offers no Sign In when nothing is remembered', async () => {
+            const { menu } = await openMenu(initializingAuth())
+
+            expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+            expect(menu.queryByRole('button', { name: /Sign Out|Forget this browser/ })).not.toBeInTheDocument()
+        })
     })
 
     describe('for an anonymous visitor', () => {

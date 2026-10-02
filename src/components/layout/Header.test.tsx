@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { anonymousAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import { AccountKind } from '@/auth/types'
+import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { Header } from './Header'
 
@@ -61,6 +62,21 @@ describe('Header', () => {
         expect(screen.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
         expect(screen.getByText('1/1 analyses left')).toBeInTheDocument()
+    })
+
+    it('shows no Sign In while the session loads and nothing is remembered', () => {
+        renderHeader(initializingAuth())
+
+        expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
+    })
+
+    it('takes the shape of a remembered member while the session loads, with an inert avatar', () => {
+        renderHeader(initializingAuth(AccountKind.Member))
+
+        expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'History' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Account menu' })).toHaveAttribute('aria-disabled', 'true')
     })
 
     it('shows no count before the quota has loaded', () => {

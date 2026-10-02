@@ -5,10 +5,12 @@ import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { type KeyboardEvent, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
+import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
@@ -30,7 +32,9 @@ const OPEN_KEYS = new Set(['Enter', ' ', 'ArrowDown'])
 export function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
-    const { isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
+    const { user } = useAuth()
+    // While the session loads, the remembered kind is drawn with every session action disabled.
+    const { kind, isInert } = useShownAccountKind()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
@@ -40,23 +44,26 @@ export function AccountMenu() {
     // Moves focus into the menu only when the keyboard opened it; a hover leaves focus where it is.
     const [isOpenedByKeyboard, setIsOpenedByKeyboard] = useState(false)
 
-    if (!isSignedIn) {
-        return (
+    if (!kind) {
+        // Nothing remembered: hold the button's place, since the session may still turn out to exist.
+        return isInert ? (
+            <Button aria-hidden="true" tabIndex={-1} className={styles.accountPlaceholder} />
+        ) : (
             <Button type="primary" onClick={() => setView('signin')}>
                 Sign In
             </Button>
         )
     }
 
-    if (isAnonymous) {
+    if (kind === AccountKind.Anonymous) {
         return (
             <span className="d-flex gap-2">
-                <Button type="text" onClick={forgetBrowser}>
+                <Button type="text" disabled={isInert} onClick={forgetBrowser}>
                     Forget this browser
                 </Button>
                 {/* Signing in or up in this browser moves the anonymous history to the account, so one entry point
                     is enough; the dialog links to sign-up. */}
-                <Button type="primary" onClick={() => setView('signin')}>
+                <Button type="primary" disabled={isInert} onClick={() => setView('signin')}>
                     Sign In
                 </Button>
             </span>
@@ -64,16 +71,30 @@ export function AccountMenu() {
     }
 
     // Until the email is confirmed there is no account page to offer, only the way to confirm it.
-    if (!isEmailConfirmed) {
+    if (kind === AccountKind.Unconfirmed) {
         return (
             <span className="d-flex gap-2">
-                <Button type="primary" onClick={() => setView('confirm')}>
+                <Button type="primary" disabled={isInert} onClick={() => setView('confirm')}>
                     Confirm email
                 </Button>
-                <Button type="text" onClick={() => void signOut()}>
+                <Button type="text" disabled={isInert} onClick={() => void signOut()}>
                     Sign Out
                 </Button>
             </span>
+        )
+    }
+
+    if (isInert) {
+        return (
+            <button
+                type="button"
+                className={styles.accountAvatar}
+                aria-label="Account menu"
+                aria-disabled="true"
+                tabIndex={-1}
+            >
+                <Avatar size={32} icon={<UserOutlined />} />
+            </button>
         )
     }
 
