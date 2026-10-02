@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
     return (
-        <LegalPage title="Terms of Use" lastUpdated="September 29, 2026">
+        <LegalPage title="Terms of Use" lastUpdated="October 2, 2026">
             <Terms />
         </LegalPage>
     )
