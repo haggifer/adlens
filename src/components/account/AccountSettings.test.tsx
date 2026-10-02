@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { listAccounts, revokeOtherSessions } from '@/auth/authClient'
-import { MEMBER_USER, memberAuth } from '@/test/auth'
+import { initializingAuth, MEMBER_USER, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { AccountSettings } from './AccountSettings'
 
@@ -24,8 +24,10 @@ const linkAccounts = (...providerIds: string[]) =>
         error: null,
     } as never)
 
-const renderSettings = () => {
-    mockUseAuth.mockReturnValue(memberAuth())
+const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Sessions', 'Delete account']
+
+const renderSettings = (auth: AuthContextValue = memberAuth()) => {
+    mockUseAuth.mockReturnValue(auth)
 
     return renderWithProviders(<AccountSettings />)
 }
@@ -54,14 +56,35 @@ describe('AccountSettings', () => {
         expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
     })
 
-    it('waits for the sign-in methods before showing password and deletion settings', () => {
+    it('shows placeholders, and no section, until the sign-in methods have loaded', () => {
         jest.mocked(listAccounts).mockReturnValue(new Promise(() => {}) as never)
-        renderSettings()
+        const { container } = renderSettings()
 
-        expect(screen.getByRole('heading', { name: 'Sessions' })).toBeInTheDocument()
-        expect(screen.queryByRole('heading', { name: 'Change password' })).not.toBeInTheDocument()
-        expect(screen.queryByRole('heading', { name: 'Password' })).not.toBeInTheDocument()
-        expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
+        expect(container.querySelectorAll('.ant-skeleton')).not.toHaveLength(0)
+        expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+        expect(screen.queryByText(MEMBER_USER.email ?? '', { exact: false })).not.toBeInTheDocument()
+    })
+
+    it('shows placeholders while the session loads, without asking for the sign-in methods', () => {
+        const { container } = renderSettings(initializingAuth())
+
+        expect(container.querySelectorAll('.ant-skeleton')).not.toHaveLength(0)
+        expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+        expect(listAccounts).not.toHaveBeenCalled()
+    })
+
+    it('shows every section at once when the sign-in methods load', async () => {
+        linkAccounts('credential')
+        const { container } = renderSettings()
+
+        expect(await screen.findByRole('heading', { name: 'Sign-in methods' })).toBeInTheDocument()
+
+        for (const heading of SECTION_HEADINGS) {
+            expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
+        }
+
+        expect(container.querySelector('.ant-skeleton')).not.toBeInTheDocument()
+        expect(screen.getByText(`${MEMBER_USER.name} · ${MEMBER_USER.email}`)).toBeInTheDocument()
     })
 
     it('says the sign-in methods couldn’t load when the server refuses, not the server’s message', async () => {
@@ -73,7 +96,9 @@ describe('AccountSettings', () => {
 
         expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
         expect(screen.queryByText('Internal adapter failure')).not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Sessions' })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
+        expect(document.querySelector('.ant-skeleton')).not.toBeInTheDocument()
     })
 
     it('says AdLens is unreachable when the sign-in methods request never reaches it', async () => {
@@ -93,7 +118,7 @@ describe('AccountSettings', () => {
         linkAccounts('credential')
         const { user } = renderSettings()
 
-        await user.click(screen.getByRole('button', { name: 'Sign out other devices' }))
+        await user.click(await screen.findByRole('button', { name: 'Sign out other devices' }))
 
         expect(revokeOtherSessions).toHaveBeenCalledTimes(1)
         expect(await screen.findByText('Signed out of all other devices')).toBeInTheDocument()
@@ -107,7 +132,7 @@ describe('AccountSettings', () => {
         } as never)
         const { user } = renderSettings()
 
-        await user.click(screen.getByRole('button', { name: 'Sign out other devices' }))
+        await user.click(await screen.findByRole('button', { name: 'Sign out other devices' }))
 
         expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
         expect(screen.queryByText('Rate limit exceeded')).not.toBeInTheDocument()

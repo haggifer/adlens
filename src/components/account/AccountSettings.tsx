@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, App, Button } from 'antd'
+import { Alert, App, Button, Skeleton } from 'antd'
 import { useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { revokeOtherSessions } from '@/auth/authClient'
@@ -18,6 +18,11 @@ const METHOD_LABELS: Record<string, string> = { [PASSWORD_PROVIDER]: 'Email and 
 
 const formatMethods = (providers: string[]) =>
     providers.map((provider) => METHOD_LABELS[provider] ?? provider).join(', ')
+
+// Text rows per section placeholder, roughly matching the sign-in methods, password, sessions and deletion cards.
+const SECTION_SKELETONS = [1, 5, 2, 3].map((rows) => ({ rows }))
+
+const USER_LINE_SKELETON = { rows: 1, width: '60%' }
 
 export function AccountSettings() {
     const { styles } = useStyles()
@@ -41,13 +46,32 @@ export function AccountSettings() {
         notification.success({ title: 'Signed out of all other devices', placement: 'bottomRight' })
     }
 
+    // The sections depend on the sign-in methods, so they appear together rather than one by one as they load.
+    if (!user || (!providers && !providersError)) {
+        return (
+            <section className="d-flex justify-content-center">
+                <div className={styles.column}>
+                    <div className="d-flex flex-column gap-1">
+                        <h1 className={styles.pageTitle}>Account</h1>
+                        <Skeleton active title={false} paragraph={USER_LINE_SKELETON} />
+                    </div>
+                    {SECTION_SKELETONS.map((paragraph, index) => (
+                        <div key={index} className={styles.section}>
+                            <Skeleton active paragraph={paragraph} />
+                        </div>
+                    ))}
+                </div>
+            </section>
+        )
+    }
+
     return (
         <section className="d-flex justify-content-center">
             <div className={styles.column}>
                 <div className="d-flex flex-column gap-1">
                     <h1 className={styles.pageTitle}>Account</h1>
                     <p className={styles.sectionText}>
-                        {user?.name} · {user?.email}
+                        {user.name} · {user.email}
                     </p>
                 </div>
                 {providersError && <Alert type="error" showIcon title={describeError(providersError)} />}
