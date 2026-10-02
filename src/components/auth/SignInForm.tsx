@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
-import { checkSignedInDespite } from '@/auth/session'
+import { isSignedInDespite } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -44,7 +44,7 @@ export function SignInForm() {
             return
         }
 
-        const isSignedIn = await checkSignedInDespite(error)
+        const isSignedIn = await isSignedInDespite(error)
 
         if (!isSignedIn) {
             setFormError(describeError(error))

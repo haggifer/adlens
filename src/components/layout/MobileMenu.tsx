@@ -1,6 +1,6 @@
 'use client'
 
-import { checkEmailConfirmed } from '@/auth/account-kind'
+import { isConfirmedKind } from '@/auth/account-kind'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { formatQuotaLeft } from '@/components/layout/quota-label'
@@ -68,7 +68,7 @@ export function MobileMenu() {
 
     const isSignedIn = kind !== null
     const isAnonymous = kind === AccountKind.Anonymous
-    const isEmailConfirmed = checkEmailConfirmed(kind)
+    const isEmailConfirmed = isConfirmedKind(kind)
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
 

@@ -1,3 +1,14 @@
+export interface AuthError {
+    code?: string
+    message?: string
+    status?: number
+}
+
+export interface AuthQueryResult<T> {
+    data: T | null
+    error: AuthError | null
+}
+
 // Better Auth errors carry a stable `code`; anything unmapped falls back to a generic line rather than raw server text.
 const AUTH_ERROR_COPY: Record<string, string> = {
     INVALID_EMAIL_OR_PASSWORD: 'Wrong email or password.',
@@ -35,12 +46,6 @@ const RATE_LIMITED_STATUS = 429
 const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
 const ALREADY_IN_USE_CODES = new Set(['USER_ALREADY_EXISTS', 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL'])
 
-export interface AuthError {
-    code?: string
-    message?: string
-    status?: number
-}
-
 export const isRateLimited = (error: AuthError | null): boolean => error?.status === RATE_LIMITED_STATUS
 
 export const isNetworkError = (error: AuthError | null): boolean => error?.code === NETWORK_ERROR_CODE
@@ -58,11 +63,6 @@ export const describeError = (error: AuthError | null): string => {
     }
 
     return 'Something went wrong. Please try again.'
-}
-
-export interface AuthQueryResult<T> {
-    data: T | null
-    error: AuthError | null
 }
 
 // Better Auth returns server-side failures as `{ error }` but throws when the request never reaches the API;

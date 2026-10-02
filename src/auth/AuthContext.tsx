@@ -1,6 +1,6 @@
 'use client'
 
-import { checkEmailConfirmed } from '@/auth/account-kind'
+import { isConfirmedKind } from '@/auth/account-kind'
 import { readAccountKind, rememberAccountKind } from '@/auth/account-kind-snapshot'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
@@ -34,12 +34,6 @@ export interface AuthContextValue {
     signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
-
-interface IProps {
-    children: ReactNode
-}
-
 interface SessionAccount {
     userId: string | null
     isEmailConfirmed: boolean
@@ -61,6 +55,8 @@ interface AuthState {
     isEmailConfirmed: boolean
     snapshotKind: AccountKind | null
 }
+
+const AuthContext = createContext<AuthContextValue | null>(null)
 
 const getAccountKind = (user: SessionUser | undefined): AccountKind | null => {
     if (!user) {
@@ -129,6 +125,10 @@ const subscribeToNothing = () => () => {}
 // The server has no storage, so the first render (and hydration) shows no snapshot; the browser's follows at once.
 const getServerAccountKind = () => null
 
+interface IProps {
+    children: ReactNode
+}
+
 export function AuthProvider({ children }: IProps) {
     const queryClient = useQueryClient()
     const rememberedKind = useSyncExternalStore(subscribeToNothing, readAccountKind, getServerAccountKind)
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: IProps) {
     const user = session?.user
     const userId = user?.id ?? null
     const accountKind = getAccountKind(user)
-    const isEmailConfirmed = checkEmailConfirmed(accountKind)
+    const isEmailConfirmed = isConfirmedKind(accountKind)
     const snapshotKind = isPending ? rememberedKind : null
     const value = useMemo(
         () => createAuthValue({ user, isPending, accountKind, isEmailConfirmed, snapshotKind }, queryClient),
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: IProps) {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export const useAuth = (): AuthContextValue => {
+export function useAuth(): AuthContextValue {
     const context = useContext(AuthContext)
 
     if (!context) {

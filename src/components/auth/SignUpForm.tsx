@@ -3,7 +3,7 @@
 import { signUp } from '@/auth/authClient'
 import { type AuthError, describeError, isEmailInUse, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
-import { checkSignedInDespite } from '@/auth/session'
+import { isSignedInDespite } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -48,7 +48,7 @@ export function SignUpForm() {
         const error = await runAuthRequest(() => signUp.email({ name, email, password }))
 
         if (error) {
-            const isSignedIn = await checkSignedInDespite(error)
+            const isSignedIn = await isSignedInDespite(error)
 
             if (!isSignedIn) {
                 setFormError(error)

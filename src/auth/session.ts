@@ -19,7 +19,7 @@ export const announceSessionChange = () =>
     })
 
 // Whether a sign-in or sign-up that failed still left an account signed in; if so, the session state catches up.
-export const checkSignedInDespite = async (error: AuthError): Promise<boolean> => {
+export const isSignedInDespite = async (error: AuthError): Promise<boolean> => {
     if (!AFTER_SIGN_IN_CODES.has(error.code ?? '')) {
         return false
     }
