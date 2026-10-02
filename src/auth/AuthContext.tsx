@@ -1,7 +1,8 @@
 'use client'
 
-import { useQueryClient } from '@tanstack/react-query'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { checkEmailConfirmed } from '@/auth/account-kind'
 import { readAccountKind, rememberAccountKind } from '@/auth/account-kind-snapshot'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
@@ -45,9 +46,20 @@ interface SessionAccount {
 }
 
 interface SessionUser {
+    id: string
+    email: string
+    name: string
     isAnonymous?: boolean | null
     emailVerified: boolean
     isAdmin?: boolean | null
+}
+
+interface AuthState {
+    user: SessionUser | undefined
+    isPending: boolean
+    accountKind: AccountKind | null
+    isEmailConfirmed: boolean
+    snapshotKind: AccountKind | null
 }
 
 const getAccountKind = (user: SessionUser | undefined): AccountKind | null => {
@@ -66,6 +78,51 @@ const getAccountKind = (user: SessionUser | undefined): AccountKind | null => {
     return user.isAdmin ? AccountKind.Admin : AccountKind.Member
 }
 
+// Cached server data belongs to the signed-in user, so it goes with the session. A refused or unreachable sign-out
+// must not clear it or leave the caller thinking the user is signed out.
+const signOutAndClear = async (queryClient: QueryClient) => {
+    const error = await runAuthRequest(() => signOutRequest())
+
+    if (error) {
+        throw error
+    }
+
+    queryClient.clear()
+    rememberAccountKind(null)
+}
+
+const createAuthValue = (
+    { user, isPending, accountKind, isEmailConfirmed, snapshotKind }: AuthState,
+    queryClient: QueryClient,
+): AuthContextValue => {
+    const isAnonymous = accountKind === AccountKind.Anonymous
+
+    return {
+        isInitializing: isPending,
+        isSignedIn: Boolean(user),
+        isAnonymous,
+        isEmailConfirmed,
+        user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
+        accountKind,
+        snapshotKind,
+        signOut: () => signOutAndClear(queryClient),
+    }
+}
+
+// Per-user data is keyed by the user id, but a quota cached for that id still carries the old limits, and an
+// account's history cached earlier in this tab misses what an anonymous session just moved into it.
+const invalidateChangedAccount = (queryClient: QueryClient, previous: SessionAccount, current: SessionAccount) => {
+    if (previous.userId !== current.userId) {
+        void queryClient.invalidateQueries({ queryKey: ['quota'] })
+        void queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        return
+    }
+
+    if (previous.isEmailConfirmed !== current.isEmailConfirmed) {
+        void queryClient.invalidateQueries({ queryKey: ['quota'] })
+    }
+}
+
 // The snapshot is only read, never watched: this tab writes it itself, and only once its session has loaded.
 const subscribeToNothing = () => () => {}
 
@@ -74,13 +131,22 @@ const getServerAccountKind = () => null
 
 export function AuthProvider({ children }: IProps) {
     const queryClient = useQueryClient()
-    const { data: session, isPending, error } = useSession()
     const rememberedKind = useSyncExternalStore(subscribeToNothing, readAccountKind, getServerAccountKind)
+
     // The account the session last resolved to, null until it first has, to tell a change from the first load.
     const lastAccount = useRef<SessionAccount | null>(null)
-    const userId = session?.user.id ?? null
-    const accountKind = getAccountKind(session?.user)
-    const isEmailConfirmed = accountKind === AccountKind.Member || accountKind === AccountKind.Admin
+
+    const { data: session, isPending, error } = useSession()
+
+    const user = session?.user
+    const userId = user?.id ?? null
+    const accountKind = getAccountKind(user)
+    const isEmailConfirmed = checkEmailConfirmed(accountKind)
+    const snapshotKind = isPending ? rememberedKind : null
+    const value = useMemo(
+        () => createAuthValue({ user, isPending, accountKind, isEmailConfirmed, snapshotKind }, queryClient),
+        [user, isPending, accountKind, isEmailConfirmed, snapshotKind, queryClient],
+    )
 
     // A failed session request says nothing about the account, so it keeps the snapshot.
     useEffect(() => {
@@ -90,58 +156,20 @@ export function AuthProvider({ children }: IProps) {
     }, [isPending, error, accountKind])
 
     // The session can change under the page: a sign-in, a confirmation, or another tab (Better Auth tells this one).
-    // Per-user data is keyed by the user id, but a quota cached for that id still carries the old limits, and an
-    // account's history cached earlier in this tab misses what an anonymous session just moved into it.
     useEffect(() => {
         if (isPending) {
             return
         }
 
         const previous = lastAccount.current
+        const current = { userId, isEmailConfirmed }
 
-        lastAccount.current = { userId, isEmailConfirmed }
+        lastAccount.current = current
 
-        if (!previous) {
-            return
-        }
-
-        if (previous.userId !== userId) {
-            void queryClient.invalidateQueries({ queryKey: ['quota'] })
-            void queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            return
-        }
-
-        if (previous.isEmailConfirmed !== isEmailConfirmed) {
-            void queryClient.invalidateQueries({ queryKey: ['quota'] })
+        if (previous) {
+            invalidateChangedAccount(queryClient, previous, current)
         }
     }, [isPending, userId, isEmailConfirmed, queryClient])
-
-    const value = useMemo<AuthContextValue>(() => {
-        const user = session?.user
-        const isAnonymous = accountKind === AccountKind.Anonymous
-
-        return {
-            isInitializing: isPending,
-            isSignedIn: Boolean(user),
-            isAnonymous,
-            isEmailConfirmed,
-            user: user ? { id: user.id, email: isAnonymous ? null : user.email, name: user.name } : null,
-            accountKind,
-            snapshotKind: isPending ? rememberedKind : null,
-            // Cached server data belongs to the signed-in user, so it goes with the session. A refused or
-            // unreachable sign-out must not clear it or leave the caller thinking the user is signed out.
-            signOut: async () => {
-                const error = await runAuthRequest(() => signOutRequest())
-
-                if (error) {
-                    throw error
-                }
-
-                queryClient.clear()
-                rememberAccountKind(null)
-            },
-        }
-    }, [session, isPending, accountKind, isEmailConfirmed, rememberedKind, queryClient])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
