@@ -5,6 +5,9 @@ import { type AuthError, runAuthQuery } from '@/auth/errors'
 // confirmation email couldn't be sent.
 const AFTER_SIGN_IN_CODES = new Set(['ACCOUNT_LINK_FAILED', 'EMAIL_NOT_SENT'])
 
+// Has Better Auth fetch the session again, for a change the API made that the client didn't ask for.
+export const refreshSession = () => authClient.$store.notify('$sessionSignal')
+
 // Whether a sign-in or sign-up that failed still left an account signed in; if so, the session state catches up.
 export const checkSignedInDespite = async (error: AuthError): Promise<boolean> => {
     if (!AFTER_SIGN_IN_CODES.has(error.code ?? '')) {
@@ -15,7 +18,7 @@ export const checkSignedInDespite = async (error: AuthError): Promise<boolean> =
     const isSignedIn = Boolean(data?.user && !data.user.isAnonymous)
 
     if (isSignedIn) {
-        authClient.$store.notify('$sessionSignal')
+        refreshSession()
     }
 
     return isSignedIn

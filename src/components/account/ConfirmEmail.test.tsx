@@ -112,6 +112,20 @@ describe('ConfirmEmail', () => {
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
+    it.each(['TOKEN_EXPIRED', 'INVALID_TOKEN'])(
+        'tells a confirmed member whose link was refused (%s) that their email is already confirmed',
+        async (code) => {
+            answerOnce({ status: 400, code })
+            const { user } = renderConfirmEmail(TOKEN, memberAuth())
+
+            expect(await screen.findByText('Your email is already confirmed')).toBeInTheDocument()
+
+            await user.click(screen.getByRole('button', { name: 'Go to the home page' }))
+
+            expect(mockReplace).toHaveBeenCalledWith('/')
+        },
+    )
+
     describe('without a session that owns the link', () => {
         it('opens sign-in, then confirms the same token once the user has signed in', async () => {
             answerOnce(SIGN_IN_REQUIRED)

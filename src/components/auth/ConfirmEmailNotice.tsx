@@ -6,7 +6,10 @@ import { Alert, App, Button, Result } from 'antd'
 import { useAuth } from '@/auth/AuthContext'
 import { sendVerificationEmail } from '@/auth/authClient'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+
+const ALREADY_CONFIRMED_CODE = 'EMAIL_ALREADY_VERIFIED'
 
 const resendConfirmation = async (email: string): Promise<void> => {
     const error = await runAuthRequest(() => sendVerificationEmail({ email }))
@@ -20,10 +23,21 @@ const resendConfirmation = async (email: string): Promise<void> => {
 export function ConfirmEmailNotice() {
     const { user } = useAuth()
     const isOtherAddressLink = useAuthModalStore((s) => s.isOtherAddressLink)
+    const setView = useAuthModalStore((s) => s.setView)
     const { notification } = App.useApp()
     const resend = useMutation<void, AuthError, string>({
         mutationFn: resendConfirmation,
         onSuccess: () => notification.success({ title: 'We sent you a new link', placement: 'bottomRight' }),
+        // Confirmed in another tab or on another device: this session just hasn't heard yet.
+        onError: (error) => {
+            if (error.code !== ALREADY_CONFIRMED_CODE) {
+                return
+            }
+
+            refreshSession()
+            setView(null)
+            notification.success({ title: describeError(error), placement: 'bottomRight' })
+        },
     })
     // Right after sign-up the session may still be loading the new account.
     const email = user?.email ?? null

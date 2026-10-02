@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { sendVerificationEmail } from '@/auth/authClient'
+import { authClient, sendVerificationEmail } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { MEMBER_EMAIL, memberAuth } from '@/test/auth'
+import { MEMBER_EMAIL, memberAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { AuthModal } from './AuthModal'
 
@@ -10,6 +10,7 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({
+    authClient: { $store: { notify: jest.fn() } },
     sendVerificationEmail: jest.fn(async () => ({ data: { status: true }, error: null })),
 }))
 
@@ -56,6 +57,21 @@ describe('ConfirmEmailNotice', () => {
         await user.click(await screen.findByRole('button', { name: 'Resend email' }))
 
         expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
+    })
+
+    it('refreshes the session and closes the dialog when the email was confirmed elsewhere', async () => {
+        jest.mocked(sendVerificationEmail).mockResolvedValueOnce({
+            data: null,
+            error: { status: 400, code: 'EMAIL_ALREADY_VERIFIED', message: 'Raw server text' },
+        } as never)
+        const { user } = openConfirmation(unconfirmedAuth())
+
+        await user.click(await screen.findByRole('button', { name: 'Resend email' }))
+
+        expect(await screen.findByText('Your email is already confirmed.')).toBeInTheDocument()
+        expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
+        expect(useAuthModalStore.getState().view).toBeNull()
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
     })
 

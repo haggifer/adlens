@@ -18,6 +18,8 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     // The confirmation link: it needs a session signed in as its own account.
     SIGN_IN_REQUIRED: 'Sign in to confirm your email.',
     EMAIL_MISMATCH: 'This link is for a different account. Sign out, then open it again.',
+    // A resend after the email was confirmed in another tab or on another device.
+    EMAIL_ALREADY_VERIFIED: 'Your email is already confirmed.',
     NETWORK_ERROR: 'Couldn’t reach AdLens. Check your connection and try again.',
     // Google / GitHub sign-in: Better Auth sends the user back with ?error=<code>.
     access_denied: 'Sign-in was cancelled.',
