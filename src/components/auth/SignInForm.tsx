@@ -27,6 +27,7 @@ export function SignInForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
     const { notification } = App.useApp()
+
     const [formError, setFormError] = useState<string | null>(null)
     const {
         control,

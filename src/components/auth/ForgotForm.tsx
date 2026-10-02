@@ -23,6 +23,7 @@ const EMAIL_INPUT_ID = 'forgot-email'
 export function ForgotForm() {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
+
     const [formError, setFormError] = useState<string | null>(null)
     const [isSent, setIsSent] = useState(false)
     const {

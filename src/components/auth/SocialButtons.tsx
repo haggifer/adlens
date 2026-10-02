@@ -39,6 +39,7 @@ const PROVIDERS: SocialProvider[] = ['google', 'github']
 
 export function SocialButtons() {
     const { notification } = App.useApp()
+
     const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null)
 
     // Both callbacks return to the current page: the API appends ?error=<code> when the sign-in fails.

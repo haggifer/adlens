@@ -25,6 +25,7 @@ export function ConfirmEmailNotice() {
     const isOtherAddressLink = useAuthModalStore((s) => s.isOtherAddressLink)
     const setView = useAuthModalStore((s) => s.setView)
     const { notification } = App.useApp()
+
     const resend = useMutation<void, AuthError, string>({
         mutationFn: resendConfirmation,
         onSuccess: () => notification.success({ title: 'We sent you a new link', placement: 'bottomRight' }),
@@ -39,6 +40,7 @@ export function ConfirmEmailNotice() {
             notification.success({ title: describeError(error), placement: 'bottomRight' })
         },
     })
+
     // Right after sign-up the session may still be loading the new account.
     const email = user?.email ?? null
 
