@@ -8,10 +8,6 @@ import { RequestErrorCode } from 'adlens-shared'
 import { type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useStyles } from './styles'
 
-// Long enough for the Cloudflare script to load and a non-interactive check to finish on a slow connection. A visitor
-// answering a challenge gets as long as Cloudflare allows; the limit starts again once they've answered.
-const CHECK_TIMEOUT_MS = 30 * 1000
-
 export interface HumanCheckHandle {
     // Runs the check and resolves with a fresh token; rejects with CHALLENGE_FAILED when it can't pass.
     getToken: () => Promise<string>
@@ -22,6 +18,10 @@ interface PendingCheck {
     reject: (error: Error) => void
     timer: ReturnType<typeof setTimeout>
 }
+
+// Long enough for the Cloudflare script to load and a non-interactive check to finish on a slow connection. A visitor
+// answering a challenge gets as long as Cloudflare allows; the limit starts again once they've answered.
+const CHECK_TIMEOUT_MS = 30 * 1000
 
 // Ends a check without the token, so its caller doesn't wait on a timer or a widget that will never answer.
 const abandon = (check: PendingCheck) => {
@@ -67,7 +67,7 @@ export function HumanCheck({ ref, action }: IProps) {
         check.reject(outcome.error)
     }
 
-    const fail = () => settle({ error: new ApiRequestError(RequestErrorCode.ChallengeFailed) })
+    const handleFail = () => settle({ error: new ApiRequestError(RequestErrorCode.ChallengeFailed) })
 
     // The visitor is answering a challenge: no limit of ours while they do. Cloudflare ends an unanswered one through
     // `onTimeout` or `onExpire`.
@@ -82,7 +82,7 @@ export function HumanCheck({ ref, action }: IProps) {
     const handleAfterInteractive = () => {
         if (pending.current) {
             clearTimeout(pending.current.timer)
-            pending.current.timer = setTimeout(fail, CHECK_TIMEOUT_MS)
+            pending.current.timer = setTimeout(handleFail, CHECK_TIMEOUT_MS)
         }
 
         setIsInteractive(false)
@@ -95,7 +95,7 @@ export function HumanCheck({ ref, action }: IProps) {
                     abandon(pending.current)
                 }
 
-                pending.current = { resolve, reject, timer: setTimeout(fail, CHECK_TIMEOUT_MS) }
+                pending.current = { resolve, reject, timer: setTimeout(handleFail, CHECK_TIMEOUT_MS) }
                 setHasFailed(false)
                 // A token works once, so every run starts from a fresh widget.
                 widget.current?.reset()
@@ -128,9 +128,9 @@ export function HumanCheck({ ref, action }: IProps) {
                 // Run clicked before Cloudflare's script finished loading: start the check now that it can run.
                 onWidgetLoad={() => pending.current && widget.current?.execute()}
                 onSuccess={(token) => settle({ token })}
-                onError={fail}
-                onExpire={fail}
-                onTimeout={fail}
+                onError={handleFail}
+                onExpire={handleFail}
+                onTimeout={handleFail}
                 onBeforeInteractive={handleBeforeInteractive}
                 onAfterInteractive={handleAfterInteractive}
             />
