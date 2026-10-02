@@ -6,7 +6,6 @@ import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, 
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import '@vidstack/react/player/styles/default/layouts/video.css'
-import '@vidstack/react/player/styles/default/theme.css'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'

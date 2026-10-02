@@ -1,5 +1,8 @@
 import type { DefaultVideoLayoutSlots } from '@vidstack/react/player/layouts/default'
 import type { CSSProperties } from 'react'
+// Vidstack's layout stylesheet overrides its theme at equal specificity, so the theme must load first. It loads here,
+// ahead of the layout each player imports, because Organize Imports also sorts side-effect imports.
+import '@vidstack/react/player/styles/default/theme.css'
 
 // The MIME types Vidstack recognises as video. Neither a blob: object URL nor a signed GCS URL has a file extension,
 // so Vidstack relies entirely on this type to pick the native video provider — anything it doesn't list is never
