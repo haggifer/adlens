@@ -32,6 +32,15 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
+type SessionCheck = 'active' | 'none' | 'unknown'
+
+enum RunStage {
+    Idle = 'idle',
+    Creating = 'creating',
+    Uploading = 'uploading',
+    Starting = 'starting',
+}
+
 const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))
 
 const MARKET_OPTIONS = Object.values(Market).map((value) => ({ value, label: MARKET_LABELS[value] }))
@@ -41,6 +50,14 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     placements: [],
     markets: [],
 }
+
+// Refusals that mean the visitor's quota is spent, which a stale tab may not know yet.
+const LIMIT_CODES: ApiErrorCode[] = [
+    RequestErrorCode.SignUpRequired,
+    RequestErrorCode.EmailConfirmationRequired,
+    RequestErrorCode.QuotaExceeded,
+    RequestErrorCode.NetworkQuotaExceeded,
+]
 
 const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput =>
     source.kind === 'sample' ? { ...DEFAULT_VALUES, ...source.sample.settings } : DEFAULT_VALUES
@@ -53,6 +70,9 @@ const getPlacementOptions = (platforms: Platform[]) =>
             .map((value) => ({ value, label: `${platform} · ${PLACEMENT_LABELS[value]}` })),
     }))
 
+const keepPlacementsFor = (placements: Placement[], platforms: Platform[]) =>
+    placements.filter((placement) => platforms.includes(PLACEMENT_PLATFORM[placement]))
+
 const formatNextFree = (nextFreeAt: string) =>
     new Date(nextFreeAt).toLocaleString(undefined, {
         month: 'short',
@@ -60,16 +80,6 @@ const formatNextFree = (nextFreeAt: string) =>
         hour: 'numeric',
         minute: '2-digit',
     })
-
-// Refusals that mean the visitor's quota is spent, which a stale tab may not know yet.
-const LIMIT_CODES: ApiErrorCode[] = [
-    RequestErrorCode.SignUpRequired,
-    RequestErrorCode.EmailConfirmationRequired,
-    RequestErrorCode.QuotaExceeded,
-    RequestErrorCode.NetworkQuotaExceeded,
-]
-
-type SessionCheck = 'active' | 'none' | 'unknown'
 
 // A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
 // fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Any
@@ -99,13 +109,6 @@ const startAnonymousSession = async (): Promise<void> => {
     throw new ApiRequestError(isNetworkError(error) ? RequestErrorCode.Unavailable : RequestErrorCode.Internal)
 }
 
-enum RunStage {
-    Idle = 'idle',
-    Creating = 'creating',
-    Uploading = 'uploading',
-    Starting = 'starting',
-}
-
 interface IProps {
     source: AnalysisSource
     // True from Run until the run fails; a run that succeeds stays locked while the page navigates away.
@@ -119,7 +122,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const { user, isAnonymous, isEmailConfirmed, isInitializing } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
-    const { quota } = useQuota()
+
     const [stage, setStage] = useState<RunStage>(RunStage.Idle)
     const [uploadProgress, setUploadProgress] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
@@ -131,8 +134,10 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         resolver: zodResolver(analysisSettingsSchema),
         defaultValues: getDefaultValues(source),
     })
-
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
+
+    const { quota } = useQuota()
+
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
 
@@ -169,49 +174,55 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         return job.id
     }
 
-    const run = useMutation({
-        mutationFn: async (settings: AnalysisSettingsValues): Promise<string> => {
-            // Belt and braces: the disabled Run button already keeps this from firing while the session is still
-            // loading, but a still-loading session must never reach the anonymous sign-in below either way. It fails
-            // the run rather than returning, which would count as a success and leave Run loading for good.
-            if (isInitializing) {
+    const runAnalysis = async (settings: AnalysisSettingsValues): Promise<string> => {
+        // Belt and braces: the disabled Run button already keeps this from firing while the session is still
+        // loading, but a still-loading session must never reach the anonymous sign-in below either way. It fails
+        // the run rather than returning, which would count as a success and leave Run loading for good.
+        if (isInitializing) {
+            throw new ApiRequestError(RequestErrorCode.Unavailable)
+        }
+
+        setStage(RunStage.Creating)
+        setUploadProgress(0)
+
+        // Without an account, or with one whose email isn't confirmed, the API always asks for the check, so it
+        // runs first: a visitor who can't pass it creates no anonymous user. Members skip it until the API asks
+        // (past the network's soft limit).
+        const isCheckRequired = !user || isAnonymous || !isEmailConfirmed
+        let token: string | undefined
+
+        if (isCheckRequired) {
+            token = await getChallengeToken()
+        }
+
+        if (!user) {
+            const sessionCheck = await checkSession()
+
+            if (sessionCheck === 'unknown') {
                 throw new ApiRequestError(RequestErrorCode.Unavailable)
             }
 
-            setStage(RunStage.Creating)
-            setUploadProgress(0)
+            if (sessionCheck === 'none') {
+                await startAnonymousSession()
+            }
+        }
 
-            // Without an account, or with one whose email isn't confirmed, the API always asks for the check, so it
-            // runs first: a visitor who can't pass it creates no anonymous user. Members skip it until the API asks
-            // (past the network's soft limit).
-            const needsCheck = !user || isAnonymous || !isEmailConfirmed
-            const token = needsCheck ? await getChallengeToken() : undefined
-
-            if (!user) {
-                const sessionCheck = await checkSession()
-
-                if (sessionCheck === 'unknown') {
-                    throw new ApiRequestError(RequestErrorCode.Unavailable)
-                }
-
-                if (sessionCheck === 'none') {
-                    await startAnonymousSession()
-                }
+        try {
+            return await startRun(settings, token)
+        } catch (err) {
+            if (isCheckRequired || toApiRequestError(err).code !== RequestErrorCode.ChallengeRequired) {
+                throw err
             }
 
-            try {
-                return await startRun(settings, token)
-            } catch (err) {
-                if (needsCheck || toApiRequestError(err).code !== RequestErrorCode.ChallengeRequired) {
-                    throw err
-                }
+            // The token is only read when a job is created, so the retry starts over with a new job.
+            const retryToken = await getChallengeToken()
 
-                // The token is only read when a job is created, so the retry starts over with a new job.
-                const retryToken = await getChallengeToken()
+            return startRun(settings, retryToken)
+        }
+    }
 
-                return startRun(settings, retryToken)
-            }
-        },
+    const run = useMutation({
+        mutationFn: runAnalysis,
         onMutate: () => onRunningChange?.(true),
         onSuccess: (jobId) => {
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
@@ -236,17 +247,14 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         },
     })
 
+    const isRunning = run.isPending || run.isSuccess
+
     const handlePlatformsChange = (next: Platform[]) => {
         setValue('platforms', next)
-        setValue(
-            'placements',
-            (getValues('placements') ?? []).filter((placement) => next.includes(PLACEMENT_PLATFORM[placement])),
-        )
+        setValue('placements', keepPlacementsFor(getValues('placements') ?? [], next))
     }
 
     const onSubmit = (settings: AnalysisSettingsValues) => run.mutate(settings)
-
-    const isRunning = run.isPending || run.isSuccess
 
     const renderErrorAction = (code: ApiErrorCode) => {
         if (code === RequestErrorCode.NetworkQuotaExceeded) {

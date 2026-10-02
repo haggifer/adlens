@@ -15,15 +15,6 @@ import { useStyles } from './styles'
 import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
 
-interface IProps {
-    video: SelectedVideo | null
-    onSelect: (file: File, video: AcceptedVideo) => void
-    onClear: () => void
-    onBrowseSamples: () => void
-    // Set while an analysis runs: the video and its source can't change under it.
-    isDisabled?: boolean
-}
-
 const { Dragger } = Upload
 
 const MAX_UPLOAD_MB = toMegabytes(MAX_UPLOAD_BYTES)
@@ -54,11 +45,35 @@ const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
         video.src = url
     })
 
+interface IProps {
+    video: SelectedVideo | null
+    onSelect: (file: File, video: AcceptedVideo) => void
+    onClear: () => void
+    onBrowseSamples: () => void
+    // Set while an analysis runs: the video and its source can't change under it.
+    isDisabled?: boolean
+}
+
 export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisabled = false }: IProps) {
     const theme = useTheme()
     const { styles, cx } = useStyles()
     const { notification } = App.useApp()
+
     const [isDragging, setIsDragging] = useState(false)
+
+    const requirements = (
+        <div className="d-flex flex-column gap-1">
+            <div>
+                <span className={styles.reqKey}>Formats:</span> {VIDEO_FORMATS_LABEL}
+            </div>
+            <div>
+                <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
+            </div>
+            <div>
+                <span className={styles.reqKey}>Length:</span> up to {MAX_DURATION_S} seconds
+            </div>
+        </div>
+    )
 
     // Stable Vidstack source (memoised — Vidstack watches `src` by identity) with an explicit, recognised
     // MIME type so a blob object URL actually loads instead of spinning.
@@ -112,17 +127,26 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         }
     }
 
+    const handleBeforeUpload = async (incoming: File) => {
+        await selectIfAccepted(incoming)
+
+        return false
+    }
+
     const handleDragEnter = () => setIsDragging(!isDisabled)
+
     const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
             setIsDragging(false)
         }
     }
+
     // antd's Dragger owns the empty state, so the video state gets its own drop handler.
     const handleDropReplace = async (event: DragEvent<HTMLDivElement>) => {
+        const file = event.dataTransfer.files?.[0]
+
         event.preventDefault()
         setIsDragging(false)
-        const file = event.dataTransfer.files?.[0]
 
         if (!file || isDisabled) {
             return
@@ -130,20 +154,6 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
 
         await selectIfAccepted(file)
     }
-
-    const requirements = (
-        <div className="d-flex flex-column gap-1">
-            <div>
-                <span className={styles.reqKey}>Formats:</span> {VIDEO_FORMATS_LABEL}
-            </div>
-            <div>
-                <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
-            </div>
-            <div>
-                <span className={styles.reqKey}>Length:</span> up to {MAX_DURATION_S} seconds
-            </div>
-        </div>
-    )
 
     if (video) {
         return (
@@ -182,10 +192,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         maxCount={1}
                         showUploadList={false}
                         disabled={isDisabled}
-                        beforeUpload={async (incoming) => {
-                            await selectIfAccepted(incoming)
-                            return false
-                        }}
+                        beforeUpload={handleBeforeUpload}
                     >
                         <Button
                             shape="circle"
@@ -223,10 +230,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                 maxCount={1}
                 showUploadList={false}
                 disabled={isDisabled}
-                beforeUpload={async (incoming) => {
-                    await selectIfAccepted(incoming)
-                    return false
-                }}
+                beforeUpload={handleBeforeUpload}
             >
                 <p className={styles.icon} data-icon>
                     <InboxOutlined />

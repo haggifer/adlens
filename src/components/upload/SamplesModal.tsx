@@ -66,6 +66,7 @@ interface IProps {
 
 export function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
     const { styles } = useStyles()
+
     const { samples, isLoading, error } = useSamples(isOpen)
 
     const renderBody = () => {

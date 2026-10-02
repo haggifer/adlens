@@ -15,12 +15,45 @@ const releasePreview = (source: AnalysisSource | null) => {
     }
 }
 
+const toSelectedVideo = (source: AnalysisSource | null): SelectedVideo | null => {
+    if (!source) {
+        return null
+    }
+
+    if (source.kind === 'sample') {
+        const { previewUrl, contentType, title, media } = source.sample
+
+        return { url: previewUrl, type: contentType, sampleTitle: title, width: media.width, height: media.height }
+    }
+
+    return { url: source.url, type: source.contentType, width: source.width, height: source.height }
+}
+
 export function AdWorkspace() {
     const { styles } = useStyles()
+
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
     const workspaceRef = useRef<HTMLDivElement>(null)
+
+    const video = toSelectedVideo(source)
+
+    const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
+        releasePreview(source)
+        setSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
+    }
+
+    const handleSelectSample = (sample: Sample) => {
+        releasePreview(source)
+        setSource({ kind: 'sample', sample })
+        setIsSamplesOpen(false)
+    }
+
+    const handleClearVideo = () => {
+        releasePreview(source)
+        setSource(null)
+    }
 
     // The square and panel size off the flex column height directly (100%). A hugged (fit-content) video
     // can't: CSS can't hand a % height to a fit-content parent's child. So mirror the column's flex-computed
@@ -41,36 +74,6 @@ export function AdWorkspace() {
         return () => observer.disconnect()
     }, [])
 
-    const selectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
-        releasePreview(source)
-        setSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
-    }
-
-    const selectSample = (sample: Sample) => {
-        releasePreview(source)
-        setSource({ kind: 'sample', sample })
-        setIsSamplesOpen(false)
-    }
-
-    const clearVideo = () => {
-        releasePreview(source)
-        setSource(null)
-    }
-
-    const getVideo = (): SelectedVideo | null => {
-        if (!source) {
-            return null
-        }
-
-        if (source.kind === 'sample') {
-            const { previewUrl, contentType, title, media } = source.sample
-
-            return { url: previewUrl, type: contentType, sampleTitle: title, width: media.width, height: media.height }
-        }
-
-        return { url: source.url, type: source.contentType, width: source.width, height: source.height }
-    }
-
     return (
         <div className={styles.page}>
             <header className={styles.hero}>
@@ -86,9 +89,9 @@ export function AdWorkspace() {
             <div className={styles.workspace} ref={workspaceRef}>
                 <div className={styles.left}>
                     <UploadPanel
-                        video={getVideo()}
-                        onSelect={selectFile}
-                        onClear={clearVideo}
+                        video={video}
+                        onSelect={handleSelectFile}
+                        onClear={handleClearVideo}
                         onBrowseSamples={() => setIsSamplesOpen(true)}
                         isDisabled={isRunning}
                     />
@@ -106,7 +109,11 @@ export function AdWorkspace() {
                     )}
                 </div>
             </div>
-            <SamplesModal isOpen={isSamplesOpen} onClose={() => setIsSamplesOpen(false)} onSelect={selectSample} />
+            <SamplesModal
+                isOpen={isSamplesOpen}
+                onClose={() => setIsSamplesOpen(false)}
+                onSelect={handleSelectSample}
+            />
         </div>
     )
 }
