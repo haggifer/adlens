@@ -12,6 +12,7 @@ export function SetPasswordSection() {
     const { styles } = useStyles()
     const { user } = useAuth()
     const { notification } = App.useApp()
+
     const [isSending, setIsSending] = useState(false)
 
     const handleSendLink = async () => {

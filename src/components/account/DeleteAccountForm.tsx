@@ -1,8 +1,9 @@
 'use client'
 
-import { authClient, deleteUser } from '@/auth/authClient'
+import { deleteUser } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { refreshSession } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
@@ -36,6 +37,7 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
     const { signOut } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const { modal, notification } = App.useApp()
+
     const {
         control,
         handleSubmit,
@@ -75,7 +77,7 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
         }
 
         // The API deleted the session with the user; refresh the client's view of it and drop the old user's data.
-        authClient.$store.notify('$sessionSignal')
+        refreshSession()
         queryClient.clear()
         notification.success({ title: 'Your account has been deleted', placement: 'bottomRight' })
         router.push('/')

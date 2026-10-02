@@ -33,6 +33,8 @@ export function AccountSettings() {
 
     const { providers, error: providersError } = useLinkedAccounts()
 
+    const hasPassword = Boolean(providers?.includes(PASSWORD_PROVIDER))
+
     const handleRevokeOtherSessions = async () => {
         setIsRevoking(true)
 
@@ -83,7 +85,7 @@ export function AccountSettings() {
                             <h2 className={styles.sectionTitle}>Sign-in methods</h2>
                             <p className={styles.sectionText}>{formatMethods(providers)}</p>
                         </div>
-                        {providers.includes(PASSWORD_PROVIDER) ? <ChangePasswordForm /> : <SetPasswordSection />}
+                        {hasPassword ? <ChangePasswordForm /> : <SetPasswordSection />}
                     </>
                 )}
                 <div className={styles.section}>
@@ -97,7 +99,7 @@ export function AccountSettings() {
                         </Button>
                     </div>
                 </div>
-                {providers && <DeleteAccountForm hasPassword={providers.includes(PASSWORD_PROVIDER)} />}
+                {providers && <DeleteAccountForm hasPassword={hasPassword} />}
             </div>
         </section>
     )

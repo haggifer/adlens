@@ -25,6 +25,7 @@ const CONFIRM_PASSWORD_INPUT_ID = 'change-password-confirm'
 export function ChangePasswordForm() {
     const { styles } = useStyles()
     const { notification } = App.useApp()
+
     const {
         control,
         handleSubmit,

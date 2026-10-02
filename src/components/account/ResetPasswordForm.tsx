@@ -24,6 +24,7 @@ interface IProps {
 export function ResetPasswordForm({ token }: IProps) {
     const { styles } = useStyles()
     const setView = useAuthModalStore((s) => s.setView)
+
     const [formError, setFormError] = useState<string | null>(null)
     const [isDone, setIsDone] = useState(false)
     const {

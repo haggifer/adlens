@@ -53,7 +53,7 @@ export function ConfirmEmail({ token }: IProps) {
     const sessionKey = hasAccount && user ? user.id : NO_ACCOUNT
     const failure = linkError ? describeError(linkError) : INVALID_LINK
 
-    const openOwnConfirmation = () => {
+    const handleOpenOwnConfirmation = () => {
         setView('confirm')
         setIsOtherAddressLink(true)
     }
@@ -129,7 +129,7 @@ export function ConfirmEmail({ token }: IProps) {
                     title={failure}
                     extra={
                         isUnconfirmed ? (
-                            <Button type="primary" onClick={openOwnConfirmation}>
+                            <Button type="primary" onClick={handleOpenOwnConfirmation}>
                                 Check your inbox
                             </Button>
                         ) : undefined
