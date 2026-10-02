@@ -51,7 +51,7 @@ describe('AnalysisView', () => {
 
             expect(screen.getByText('The analysis failed')).toBeInTheDocument()
             expect(
-                screen.getByText("The analysis took too long and was stopped. Your run wasn't counted."),
+                screen.getByText("The analysis took too long and was stopped. This run wasn't counted."),
             ).toBeInTheDocument()
         })
 

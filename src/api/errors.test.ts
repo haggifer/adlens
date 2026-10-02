@@ -79,13 +79,14 @@ describe('describeJobError', () => {
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
     })
 
-    // The API rejects these videos before it charges the run.
     it.each([
         JobErrorCode.VideoUnreadable,
         JobErrorCode.VideoTooLong,
         JobErrorCode.VideoTooLarge,
         JobErrorCode.UnsupportedFormat,
-    ])('says a run rejected for %s wasn’t counted', (code) => {
+        JobErrorCode.AnalysisFailed,
+        JobErrorCode.AnalysisTimedOut,
+    ])('says a run that ended in %s wasn’t counted', (code) => {
         expect(describeJobError(code)).toMatch(/ This run wasn't counted\.$/)
     })
 })
