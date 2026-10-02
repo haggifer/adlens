@@ -40,6 +40,7 @@ interface IProps {
 export function HumanCheck({ ref, action }: IProps) {
     const { styles } = useStyles()
     const { isDark } = useTheme()
+
     const widget = useRef<TurnstileInstance>(null)
     // The caller awaits the token across Turnstile's callbacks, which only report what happened.
     const pending = useRef<PendingCheck | null>(null)
@@ -68,6 +69,25 @@ export function HumanCheck({ ref, action }: IProps) {
 
     const fail = () => settle({ error: new ApiRequestError(RequestErrorCode.ChallengeFailed) })
 
+    // The visitor is answering a challenge: no limit of ours while they do. Cloudflare ends an unanswered one through
+    // `onTimeout` or `onExpire`.
+    const handleBeforeInteractive = () => {
+        if (pending.current) {
+            clearTimeout(pending.current.timer)
+        }
+
+        setIsInteractive(true)
+    }
+
+    const handleAfterInteractive = () => {
+        if (pending.current) {
+            clearTimeout(pending.current.timer)
+            pending.current.timer = setTimeout(fail, CHECK_TIMEOUT_MS)
+        }
+
+        setIsInteractive(false)
+    }
+
     useImperativeHandle(ref, () => ({
         getToken: () =>
             new Promise<string>((resolve, reject) => {
@@ -93,25 +113,6 @@ export function HumanCheck({ ref, action }: IProps) {
         },
         [],
     )
-
-    // The visitor is answering a challenge: no limit of ours while they do. Cloudflare ends an unanswered one through
-    // `onTimeout` or `onExpire`.
-    const handleBeforeInteractive = () => {
-        if (pending.current) {
-            clearTimeout(pending.current.timer)
-        }
-
-        setIsInteractive(true)
-    }
-
-    const handleAfterInteractive = () => {
-        if (pending.current) {
-            clearTimeout(pending.current.timer)
-            pending.current.timer = setTimeout(fail, CHECK_TIMEOUT_MS)
-        }
-
-        setIsInteractive(false)
-    }
 
     return (
         <div className={isInteractive || hasFailed ? undefined : styles.idle}>

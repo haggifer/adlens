@@ -71,6 +71,7 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
 export function HistoryTable() {
     const { styles } = useStyles()
     const router = useRouter()
+
     const { jobs, isLoading, error, hasMore, isLoadingMore, loadMore } = useJobs()
 
     // The whole row opens the analysis. Clicks on its link or its Delete button are left to them, so a row never

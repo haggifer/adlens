@@ -50,6 +50,7 @@ interface IProps {
 
 export function ContactForm({ onDone }: IProps) {
     const { user } = useAuth()
+
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
     const [attachments, setAttachments] = useState<UploadFile[]>([])
@@ -64,6 +65,9 @@ export function ContactForm({ onDone }: IProps) {
         defaultValues: { email: user?.email ?? '', message: '', website: '' },
     })
 
+    const files = getFiles(attachments)
+    const attachmentsError = checkAttachments(files)
+
     const getChallengeToken = async (): Promise<string> => {
         if (!humanCheck.current) {
             throw new ApiRequestError(RequestErrorCode.ChallengeFailed)
@@ -71,9 +75,6 @@ export function ContactForm({ onDone }: IProps) {
 
         return humanCheck.current.getToken()
     }
-
-    const files = getFiles(attachments)
-    const attachmentsError = checkAttachments(files)
 
     const sendMessage = async (values: ContactMessagePayload): Promise<void> => {
         const challengeToken = await getChallengeToken()
