@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { UploadPanel } from './UploadPanel'
 
 // Vidstack's custom elements don't run in jsdom, and the empty state renders no player.

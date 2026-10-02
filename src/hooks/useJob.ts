@@ -1,12 +1,12 @@
+import type { ApiRequestError } from '@/api/errors'
+import { getJob } from '@/api/jobs'
+import { useAuth } from '@/auth/AuthContext'
+import { config } from '@/config'
+import { isJobInProgress } from '@/job-status'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Job } from 'adlens-shared'
 import { useEffect } from 'react'
 import { io } from 'socket.io-client'
-import { getJob } from '@/api/jobs'
-import type { ApiRequestError } from '@/api/errors'
-import { useAuth } from '@/auth/AuthContext'
-import { config } from '@/config'
-import { isJobInProgress } from '@/job-status'
 
 export const jobKey = (userId: string | undefined, jobId: string) => ['job', userId, jobId]
 

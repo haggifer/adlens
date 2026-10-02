@@ -1,6 +1,6 @@
+import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithProviders } from '@/test/render'
 import RouteError from './error'
 
 describe('RouteError', () => {

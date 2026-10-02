@@ -1,5 +1,5 @@
-import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
+import { createStyles } from 'antd-style'
 
 // One neutral drop shadow in both schemes, faint at rest and bolder while a file is dragged over. Dark uses fixed greys
 // (a shadow has to be lighter than the near-black backdrop to show); light derives its tint from the text colour.

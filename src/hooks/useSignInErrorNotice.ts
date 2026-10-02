@@ -1,7 +1,7 @@
+import { describeError } from '@/auth/errors'
 import { App } from 'antd'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
-import { describeError } from '@/auth/errors'
 
 const ERROR_PARAMS = ['error', 'error_description']
 

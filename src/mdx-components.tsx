@@ -1,6 +1,6 @@
+import { toAnchorId } from '@/components/legal/anchor'
 import type { MDXComponents } from 'mdx/types'
 import type { ReactNode } from 'react'
-import { toAnchorId } from '@/components/legal/anchor'
 
 const getAnchorId = (children: ReactNode) => (typeof children === 'string' ? toAnchorId(children) : undefined)
 

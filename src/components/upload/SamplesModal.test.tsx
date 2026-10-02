@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { Placement, Platform, RequestErrorCode } from 'adlens-shared'
 import { ApiRequestError } from '@/api/errors'
 import { listSamples } from '@/api/samples'
 import { buildSample } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Placement, Platform, RequestErrorCode } from 'adlens-shared'
 import { SampleRow, SamplesModal } from './SamplesModal'
 
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn() }))

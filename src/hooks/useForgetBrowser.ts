@@ -1,8 +1,8 @@
 'use client'
 
-import { App } from 'antd'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useSignOut } from '@/hooks/useSignOut'
+import { App } from 'antd'
 
 // Signing an anonymous session out strands its analyses: nothing links them to an account, so they can't be reached
 // again. On a shared browser that's the point, but it must be deliberate.

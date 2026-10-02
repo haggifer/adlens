@@ -1,10 +1,10 @@
-import { act, screen } from '@testing-library/react'
-import { type Job, JobStatus } from 'adlens-shared'
 import { getJob } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { memberAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
+import { act, screen } from '@testing-library/react'
+import { type Job, JobStatus } from 'adlens-shared'
 import { useJob } from './useJob'
 
 type SocketHandler = (payload?: unknown) => void

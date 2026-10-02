@@ -1,11 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
-import { StrictMode } from 'react'
-import type { AuthContextValue } from '@/auth/AuthContext'
 import { verifyEmail } from '@/auth/authClient'
+import type { AuthContextValue } from '@/auth/AuthContext'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { screen, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { ConfirmEmail } from './ConfirmEmail'
 
 const mockReplace = jest.fn()

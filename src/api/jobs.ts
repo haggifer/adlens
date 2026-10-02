@@ -1,3 +1,4 @@
+import { api } from '@/api/client'
 import type {
     CreateJobInput,
     CreateJobResponse,
@@ -7,7 +8,6 @@ import type {
     JobResponse,
     JobVideoResponse,
 } from 'adlens-shared'
-import { api } from '@/api/client'
 
 export const JOBS_PAGE_SIZE = 20
 

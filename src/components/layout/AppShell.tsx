@@ -1,7 +1,5 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { ReactNode, useEffect } from 'react'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { AmbientBackground } from '@/components/background/AmbientBackground'
 import { ContactModal } from '@/components/contact/ContactModal'
@@ -9,6 +7,8 @@ import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { useNavigationStore } from '@/contexts/stores/navigationStore'
 import { useSignInErrorNotice } from '@/hooks/useSignInErrorNotice'
+import { usePathname } from 'next/navigation'
+import { ReactNode, useEffect } from 'react'
 import { useStyles } from './styles'
 
 interface IProps {

@@ -1,9 +1,9 @@
 'use client'
 
-import { Button, Spin } from 'antd'
-import { ReactNode } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { Button, Spin } from 'antd'
+import { ReactNode } from 'react'
 import { useStyles } from './styles'
 
 interface IProps {

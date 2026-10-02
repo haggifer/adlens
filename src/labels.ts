@@ -1,5 +1,5 @@
-import { JobStatus, Market, Placement, Platform, RulePlatform } from 'adlens-shared'
 import type { SocialProvider } from '@/auth/types'
+import { JobStatus, Market, Placement, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
 

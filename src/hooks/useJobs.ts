@@ -1,8 +1,8 @@
+import type { ApiRequestError } from '@/api/errors'
+import { listJobs } from '@/api/jobs'
+import { useAuth } from '@/auth/AuthContext'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import type { Job } from 'adlens-shared'
-import { listJobs } from '@/api/jobs'
-import type { ApiRequestError } from '@/api/errors'
-import { useAuth } from '@/auth/AuthContext'
 
 export interface UseJobsResult {
     jobs: Job[]

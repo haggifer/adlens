@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
 import { ErrorState } from '@/components/status/ErrorState'
+import { useEffect } from 'react'
 
 interface IProps {
     error: Error & { digest?: string }

@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import type { Quota } from 'adlens-shared'
 import { getQuota } from '@/api/me'
 import { useAuth } from '@/auth/AuthContext'
+import { useQuery } from '@tanstack/react-query'
+import type { Quota } from 'adlens-shared'
 
 export const quotaKey = (userId: string | undefined) => ['quota', userId]
 

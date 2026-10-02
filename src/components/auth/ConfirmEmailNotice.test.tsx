@@ -1,9 +1,9 @@
-import { screen } from '@testing-library/react'
-import type { AuthContextValue } from '@/auth/AuthContext'
 import { authClient, sendVerificationEmail } from '@/auth/authClient'
+import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_EMAIL, memberAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { AuthModal } from './AuthModal'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

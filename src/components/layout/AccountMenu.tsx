@@ -1,9 +1,5 @@
 'use client'
 
-import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
-import { useRouter } from 'next/navigation'
-import { type KeyboardEvent, useState } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -12,6 +8,10 @@ import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
+import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
+import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
+import { useRouter } from 'next/navigation'
+import { type KeyboardEvent, useState } from 'react'
 import { useStyles } from './styles'
 
 enum AccountMenuKey {

@@ -1,6 +1,6 @@
+import { useNavigationStore } from '@/contexts/stores/navigationStore'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useNavigationStore } from '@/contexts/stores/navigationStore'
 import { BackButton } from './BackButton'
 
 const back = jest.fn()

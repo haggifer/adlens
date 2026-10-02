@@ -1,5 +1,5 @@
-import { createStyles, keyframes } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
+import { createStyles, keyframes } from 'antd-style'
 
 // One cycle per icon: in, hold, out. AnalysisAnimation sets the duration and switches the icon between cycles.
 const ICON_FADE = keyframes`

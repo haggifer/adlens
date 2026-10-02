@@ -1,17 +1,17 @@
 'use client'
 
+import { authClient, deleteUser } from '@/auth/authClient'
+import { useAuth } from '@/auth/AuthContext'
+import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { Field } from '@/components/utils/Field'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { MODAL_WIDTH } from '@/design/theme'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { App, Button, Input } from 'antd'
 import { useRouter } from 'next/navigation'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useAuth } from '@/auth/AuthContext'
-import { authClient, deleteUser } from '@/auth/authClient'
-import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
-import { Field } from '@/components/utils/Field'
-import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { MODAL_WIDTH } from '@/design/theme'
 import { useStyles } from './styles'
 
 // Without a password, Better Auth deletes only from a recent sign-in and answers SESSION_EXPIRED otherwise.

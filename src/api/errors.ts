@@ -1,3 +1,4 @@
+import { VIDEO_FORMATS_LABEL } from '@/labels'
 import {
     type ApiErrorCode,
     apiErrorSchema,
@@ -7,7 +8,6 @@ import {
     RequestErrorCode,
 } from 'adlens-shared'
 import { AxiosError } from 'axios'
-import { VIDEO_FORMATS_LABEL } from '@/labels'
 
 const ERROR_COPY: Record<ApiErrorCode, string> = {
     // The API never counts a run that ends without a result.

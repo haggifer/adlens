@@ -1,5 +1,5 @@
-import type { Metadata } from 'next'
 import { ConfirmEmail } from '@/components/account/ConfirmEmail'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
     title: 'Confirming your email',

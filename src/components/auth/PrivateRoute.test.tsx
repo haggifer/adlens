@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { PrivateRoute } from './PrivateRoute'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

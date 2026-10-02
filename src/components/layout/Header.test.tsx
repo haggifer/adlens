@@ -1,9 +1,9 @@
-import { screen } from '@testing-library/react'
-import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
+import type { Quota } from 'adlens-shared'
 import { Header } from './Header'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

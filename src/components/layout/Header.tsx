@@ -1,8 +1,5 @@
 'use client'
 
-import { Divider } from 'antd'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Logo } from '@/components/brand/Logo'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
@@ -10,6 +7,9 @@ import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
+import { Divider } from 'antd'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useStyles } from './styles'
 
 const NAV_LINKS = [

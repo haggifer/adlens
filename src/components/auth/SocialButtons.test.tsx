@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
 import { signIn } from '@/auth/authClient'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { SocialButtons } from './SocialButtons'
 
 jest.mock('@/auth/authClient', () => ({ signIn: { social: jest.fn(async () => ({ error: null })) } }))

@@ -1,6 +1,6 @@
-import { createStyles } from 'antd-style'
 import { ambientBackground } from '@/components/background/ambient'
 import { HEADING_FONT_STACK } from '@/fonts'
+import { createStyles } from 'antd-style'
 
 export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     page: css`

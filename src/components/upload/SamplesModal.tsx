@@ -1,11 +1,11 @@
 'use client'
 
-import type { Sample } from 'adlens-shared'
-import { Alert, Empty, Modal, Skeleton, type SkeletonProps, Tag } from 'antd'
-import { KeyboardEvent, SyntheticEvent } from 'react'
 import { formatSeconds } from '@/components/analysis/results'
 import { useSamples } from '@/hooks/useSamples'
 import { ALL_PLATFORMS_LABEL, PLATFORM_LABELS } from '@/labels'
+import type { Sample } from 'adlens-shared'
+import { Alert, Empty, Modal, Skeleton, type SkeletonProps, Tag } from 'antd'
+import { KeyboardEvent, SyntheticEvent } from 'react'
 import { useStyles } from './styles'
 
 const SKELETON_ROWS = 3

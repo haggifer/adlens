@@ -1,13 +1,13 @@
 'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { App, Button, Input } from 'antd'
-import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { changePassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import { Field } from '@/components/utils/Field'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { App, Button, Input } from 'antd'
+import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { useStyles } from './styles'
 
 const changePasswordSchema = z

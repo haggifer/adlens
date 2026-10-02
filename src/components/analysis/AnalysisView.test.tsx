@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react'
-import { type Job, JobErrorCode, type JobMedia, JobStatus } from 'adlens-shared'
 import { useJobVideo } from '@/hooks/useJobVideo'
 import { buildAnalysis, buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
+import { type Job, JobErrorCode, type JobMedia, JobStatus } from 'adlens-shared'
 import { AnalysisView } from './AnalysisView'
 
 const mockPush = jest.fn()

@@ -1,12 +1,12 @@
 'use client'
 
-import { DeleteOutlined } from '@ant-design/icons'
-import type { Job } from 'adlens-shared'
-import { App, Button, Tooltip } from 'antd'
 import { toApiRequestError } from '@/api/errors'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useDeleteJob } from '@/hooks/useDeleteJob'
 import { isJobInProgress } from '@/job-status'
+import { DeleteOutlined } from '@ant-design/icons'
+import type { Job } from 'adlens-shared'
+import { App, Button, Tooltip } from 'antd'
 
 interface IProps {
     job: Job

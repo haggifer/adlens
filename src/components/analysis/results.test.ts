@@ -1,5 +1,5 @@
-import type { Analysis, Finding, MetadataCheck } from 'adlens-shared'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
+import type { Analysis, Finding, MetadataCheck } from 'adlens-shared'
 import { countIssues, findingSeverity, formatCount, formatSeconds, formatTimeRange, splitResults } from './results'
 
 const analysis = (findings: Finding[], metadataChecks: MetadataCheck[]): Analysis =>

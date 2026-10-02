@@ -1,13 +1,13 @@
 'use client'
 
-import { MailOutlined } from '@ant-design/icons'
-import { useMutation } from '@tanstack/react-query'
-import { Alert, App, Button, Result } from 'antd'
-import { useAuth } from '@/auth/AuthContext'
 import { sendVerificationEmail } from '@/auth/authClient'
+import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { MailOutlined } from '@ant-design/icons'
+import { useMutation } from '@tanstack/react-query'
+import { Alert, App, Button, Result } from 'antd'
 
 const ALREADY_CONFIRMED_CODE = 'EMAIL_ALREADY_VERIFIED'
 

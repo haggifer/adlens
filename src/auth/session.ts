@@ -1,6 +1,6 @@
-import { getGlobalBroadcastChannel } from 'better-auth/client'
 import { authClient } from '@/auth/authClient'
 import { type AuthError, runAuthQuery } from '@/auth/errors'
+import { getGlobalBroadcastChannel } from 'better-auth/client'
 
 // Failures the API can answer after it has already signed the account in: moving the anonymous history failed, or the
 // confirmation email couldn't be sent.

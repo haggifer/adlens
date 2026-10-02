@@ -1,9 +1,9 @@
 'use client'
 
+import { RULE_PLATFORM_LABELS } from '@/labels'
 import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
-import { RULE_PLATFORM_LABELS } from '@/labels'
 import { countIssues, findingSeverity, formatCount, formatTimeRange, splitResults } from './results'
 import { useStyles } from './styles'
 

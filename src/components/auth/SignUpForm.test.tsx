@@ -1,7 +1,7 @@
-import { screen, waitFor, within } from '@testing-library/react'
 import { authClient, signUp } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
+import { screen, waitFor, within } from '@testing-library/react'
 import { SignUpForm } from './SignUpForm'
 
 jest.mock('@/auth/authClient', () => ({

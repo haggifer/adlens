@@ -1,6 +1,6 @@
+import { buildJob } from '@/test/fixtures'
 import { render, screen } from '@testing-library/react'
 import { JobStatus } from 'adlens-shared'
-import { buildJob } from '@/test/fixtures'
 import { JobStatusPanel } from './JobStatusPanel'
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))

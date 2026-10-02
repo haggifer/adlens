@@ -1,12 +1,23 @@
 'use client'
 
+import { ApiRequestError, describeRequestError, toApiRequestError } from '@/api/errors'
+import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
+import { authClient, signIn } from '@/auth/authClient'
+import { useAuth } from '@/auth/AuthContext'
+import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
+import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useQuota } from '@/hooks/useQuota'
+import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
+import { uploadToSignedUrl } from '@/storage/upload'
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-    type AnalysisSettings as AnalysisSettingsValues,
     type AnalysisSettingsInput,
     analysisSettingsSchema,
+    type AnalysisSettings as AnalysisSettingsValues,
     type ApiErrorCode,
     Market,
     Placement,
@@ -18,17 +29,6 @@ import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-import { ApiRequestError, describeRequestError, toApiRequestError } from '@/api/errors'
-import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
-import { useAuth } from '@/auth/AuthContext'
-import { authClient, signIn } from '@/auth/authClient'
-import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
-import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
-import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { useQuota } from '@/hooks/useQuota'
-import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
-import { uploadToSignedUrl } from '@/storage/upload'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 

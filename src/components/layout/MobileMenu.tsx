@@ -1,5 +1,16 @@
 'use client'
 
+import { checkEmailConfirmed } from '@/auth/account-kind'
+import { useAuth } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
+import { formatQuotaLeft } from '@/components/layout/quota-label'
+import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useForgetBrowser } from '@/hooks/useForgetBrowser'
+import { useQuota } from '@/hooks/useQuota'
+import { useShownAccountKind } from '@/hooks/useShownAccountKind'
+import { useSignOut } from '@/hooks/useSignOut'
 import {
     HistoryOutlined,
     LogoutOutlined,
@@ -12,17 +23,6 @@ import { Button, Drawer } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
-import { checkEmailConfirmed } from '@/auth/account-kind'
-import { useAuth } from '@/auth/AuthContext'
-import { AccountKind } from '@/auth/types'
-import { formatQuotaLeft } from '@/components/layout/quota-label'
-import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
-import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { useForgetBrowser } from '@/hooks/useForgetBrowser'
-import { useQuota } from '@/hooks/useQuota'
-import { useShownAccountKind } from '@/hooks/useShownAccountKind'
-import { useSignOut } from '@/hooks/useSignOut'
 import { useStyles } from './styles'
 
 const DRAWER_WIDTH = 300

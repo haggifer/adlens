@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react'
-import type { AuthContextValue } from '@/auth/AuthContext'
 import { requestPasswordReset } from '@/auth/authClient'
+import type { AuthContextValue } from '@/auth/AuthContext'
 import { MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { SetPasswordSection } from './SetPasswordSection'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

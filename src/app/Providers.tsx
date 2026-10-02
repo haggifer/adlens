@@ -1,12 +1,5 @@
 'use client'
 
-import { AntdRegistry } from '@ant-design/nextjs-registry'
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RequestErrorCode } from 'adlens-shared'
-import { App as AntdApp } from 'antd'
-import { styleManager, ThemeProvider as StyleThemeProvider } from 'antd-style'
-import { useServerInsertedHTML } from 'next/navigation'
-import { ReactNode, useRef, useState } from 'react'
 import { ApiRequestError } from '@/api/errors'
 import { authClient } from '@/auth/authClient'
 import { AuthProvider } from '@/auth/AuthContext'
@@ -15,6 +8,13 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { ANTD_THEME } from '@/design/theme'
 import { ThemeProvider, useTheme } from '@/design/ThemeContext'
 import { InitialScheme } from '@/design/types'
+import { AntdRegistry } from '@ant-design/nextjs-registry'
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RequestErrorCode } from 'adlens-shared'
+import { App as AntdApp } from 'antd'
+import { styleManager, ThemeProvider as StyleThemeProvider } from 'antd-style'
+import { useServerInsertedHTML } from 'next/navigation'
+import { ReactNode, useRef, useState } from 'react'
 
 const MAX_QUERY_RETRIES = 2
 

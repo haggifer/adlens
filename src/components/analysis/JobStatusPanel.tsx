@@ -1,9 +1,9 @@
 'use client'
 
+import { describeJobError } from '@/api/errors'
 import { type Job, JobStatus } from 'adlens-shared'
 import { Button, Result, Steps } from 'antd'
 import { useRouter } from 'next/navigation'
-import { describeJobError } from '@/api/errors'
 import { AnalysisAnimation } from './AnalysisAnimation'
 import { useStyles } from './styles'
 

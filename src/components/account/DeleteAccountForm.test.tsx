@@ -1,10 +1,10 @@
-import { screen, waitFor } from '@testing-library/react'
-import type { UserEvent } from '@testing-library/user-event'
-import type { AuthContextValue } from '@/auth/AuthContext'
 import { authClient, deleteUser } from '@/auth/authClient'
+import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
+import { screen, waitFor } from '@testing-library/react'
+import type { UserEvent } from '@testing-library/user-event'
 import { DeleteAccountForm } from './DeleteAccountForm'
 
 const mockPush = jest.fn()

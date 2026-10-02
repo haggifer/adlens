@@ -1,10 +1,10 @@
+import { signOut as signOutRequest } from '@/auth/authClient'
+import { AuthProvider, useAuth } from '@/auth/AuthContext'
+import { AccountKind } from '@/auth/types'
+import { createTestQueryClient } from '@/test/render'
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { AuthProvider, useAuth } from '@/auth/AuthContext'
-import { signOut as signOutRequest } from '@/auth/authClient'
-import { AccountKind } from '@/auth/types'
-import { createTestQueryClient } from '@/test/render'
 
 const mockUseSession = jest.fn()
 

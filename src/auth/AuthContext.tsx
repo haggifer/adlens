@@ -1,12 +1,12 @@
 'use client'
 
-import { type QueryClient, useQueryClient } from '@tanstack/react-query'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { checkEmailConfirmed } from '@/auth/account-kind'
 import { readAccountKind, rememberAccountKind } from '@/auth/account-kind-snapshot'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
 import { AccountKind } from '@/auth/types'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 
 export interface AuthUser {
     id: string

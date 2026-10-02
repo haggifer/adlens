@@ -1,19 +1,19 @@
 'use client'
 
+import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
+import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
+import '@vidstack/react/player/styles/default/layouts/video.css'
+import '@vidstack/react/player/styles/default/theme.css'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, SyntheticEvent, useMemo, useState } from 'react'
-import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
-import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { useStyles } from './styles'
 import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
-import '@vidstack/react/player/styles/default/theme.css'
-import '@vidstack/react/player/styles/default/layouts/video.css'
 
 interface IProps {
     video: SelectedVideo | null

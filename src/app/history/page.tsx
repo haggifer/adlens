@@ -1,6 +1,6 @@
-import type { Metadata } from 'next'
 import { PrivateRoute } from '@/components/auth/PrivateRoute'
 import { HistoryTable } from '@/components/history/HistoryTable'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
     title: 'History',

@@ -1,6 +1,6 @@
-import type { Metadata } from 'next'
 import { AnalysisView } from '@/components/analysis/AnalysisView'
 import { PrivateRoute } from '@/components/auth/PrivateRoute'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
     title: 'Analysis',

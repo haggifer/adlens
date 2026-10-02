@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { ErrorState } from './ErrorState'
 
 describe('ErrorState', () => {

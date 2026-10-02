@@ -1,9 +1,9 @@
 'use client'
 
+import { useNavigationStore } from '@/contexts/stores/navigationStore'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { useRouter } from 'next/navigation'
-import { useNavigationStore } from '@/contexts/stores/navigationStore'
 
 interface IProps {
     // Where to go when the page was opened directly (a new tab, an email link) and there is no in-app page to return to.

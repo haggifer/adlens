@@ -1,13 +1,13 @@
 'use client'
 
-import { App, Button, Result, Spin } from 'antd'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
 import { verifyEmail } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { App, Button, Result, Spin } from 'antd'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { useStyles } from './styles'
 
 const INVALID_LINK = 'This link is invalid or has expired'

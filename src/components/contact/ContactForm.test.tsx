@@ -1,11 +1,11 @@
+import { createContactUploads, sendContactMessage } from '@/api/contact'
+import { ApiRequestError } from '@/api/errors'
+import type { AuthContextValue } from '@/auth/AuthContext'
+import { uploadToSignedUrl } from '@/storage/upload'
+import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CONTACT_MESSAGE_MAX_LENGTH, RequestErrorCode, type UploadTarget } from 'adlens-shared'
-import type { AuthContextValue } from '@/auth/AuthContext'
-import { ApiRequestError } from '@/api/errors'
-import { createContactUploads, sendContactMessage } from '@/api/contact'
-import { uploadToSignedUrl } from '@/storage/upload'
-import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { ContactForm } from './ContactForm'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

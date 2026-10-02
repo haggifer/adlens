@@ -1,10 +1,10 @@
 'use client'
 
+import { requestPasswordReset } from '@/auth/authClient'
+import { useAuth } from '@/auth/AuthContext'
+import { describeError, runAuthRequest } from '@/auth/errors'
 import { App, Button } from 'antd'
 import { useState } from 'react'
-import { useAuth } from '@/auth/AuthContext'
-import { requestPasswordReset } from '@/auth/authClient'
-import { describeError, runAuthRequest } from '@/auth/errors'
 import { useStyles } from './styles'
 
 // Better Auth creates the password when the reset link is used; the browser has no other way to set one.

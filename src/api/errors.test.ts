@@ -1,6 +1,6 @@
+import { ApiRequestError, describeContactError, describeJobError, toApiRequestError } from '@/api/errors'
 import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { ApiRequestError, describeContactError, describeJobError, toApiRequestError } from '@/api/errors'
 
 const axiosErrorWithResponse = (status: number, data: unknown) =>
     new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, undefined, {

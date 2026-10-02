@@ -1,11 +1,11 @@
 'use client'
 
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
-import { RequestErrorCode } from 'adlens-shared'
-import { type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ApiRequestError } from '@/api/errors'
 import { config } from '@/config'
 import { useTheme } from '@/design/ThemeContext'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
+import { RequestErrorCode } from 'adlens-shared'
+import { type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useStyles } from './styles'
 
 // Long enough for the Cloudflare script to load and a non-interactive check to finish on a slow connection. A visitor

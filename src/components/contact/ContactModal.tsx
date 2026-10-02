@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal } from 'antd'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
+import { Modal } from 'antd'
 import { ContactForm } from './ContactForm'
 
 export function ContactModal() {

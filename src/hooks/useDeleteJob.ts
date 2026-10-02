@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { deleteJob } from '@/api/jobs'
 import { useAuth } from '@/auth/AuthContext'
 import { jobKey } from '@/hooks/useJob'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export interface UseDeleteJobResult {
     deleteJob: (jobId: string) => Promise<void>

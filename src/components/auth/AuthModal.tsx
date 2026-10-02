@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal } from 'antd'
 import { AuthView, useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MODAL_WIDTH } from '@/design/theme'
+import { Modal } from 'antd'
 import { ConfirmEmailNotice } from './ConfirmEmailNotice'
 import { ForgotForm } from './ForgotForm'
 import { SignInForm } from './SignInForm'

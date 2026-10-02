@@ -1,7 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import { BackButton } from '@/components/utils/BackButton'
+import type { ReactNode } from 'react'
 import { useStyles } from './styles'
 
 interface IProps {

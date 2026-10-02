@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
 import { renderWithProviders } from '@/test/render'
+import { screen } from '@testing-library/react'
 import { ForgotForm } from './ForgotForm'
 
 jest.mock('@/auth/authClient', () => ({ requestPasswordReset: jest.fn(async () => ({ error: null })) }))

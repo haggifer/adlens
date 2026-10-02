@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@/auth/AuthContext'
 import { listAccounts } from '@/auth/authClient'
+import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, runAuthQuery } from '@/auth/errors'
+import { useQuery } from '@tanstack/react-query'
 
 export interface UseLinkedAccountsResult {
     // Provider ids of the user's sign-in methods ('credential' is email and password); undefined until loaded.

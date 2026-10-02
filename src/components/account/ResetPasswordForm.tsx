@@ -1,15 +1,15 @@
 'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Button, Input, Result } from 'antd'
-import { useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { resetPassword } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Alert, Button, Input, Result } from 'antd'
+import { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { useStyles } from './styles'
 
 type ResetPasswordValues = z.infer<typeof newPasswordFieldsSchema>

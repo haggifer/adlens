@@ -1,7 +1,7 @@
+import { ApiRequestError } from '@/api/errors'
 import { act, render, screen } from '@testing-library/react'
 import { RequestErrorCode } from 'adlens-shared'
 import { createRef } from 'react'
-import { ApiRequestError } from '@/api/errors'
 import { HumanCheck, type HumanCheckHandle } from './HumanCheck'
 
 const mockToken = 'challenge-token'

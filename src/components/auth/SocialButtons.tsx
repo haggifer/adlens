@@ -1,12 +1,12 @@
 'use client'
 
-import { GithubOutlined } from '@ant-design/icons'
-import { App, Button, Divider } from 'antd'
-import { type ReactNode, useState } from 'react'
 import { signIn } from '@/auth/authClient'
 import { describeError, runAuthRequest } from '@/auth/errors'
 import type { SocialProvider } from '@/auth/types'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
+import { GithubOutlined } from '@ant-design/icons'
+import { App, Button, Divider } from 'antd'
+import { type ReactNode, useState } from 'react'
 
 // Google's sign-in branding requires its four-colour "G"; the brand colours are fixed, not theme tokens.
 const GOOGLE_LOGO = (

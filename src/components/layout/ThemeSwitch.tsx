@@ -1,8 +1,8 @@
 'use client'
 
+import { useTheme } from '@/design/ThemeContext'
 import { MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { Switch } from 'antd'
-import { useTheme } from '@/design/ThemeContext'
 
 export function ThemeSwitch() {
     const { isDark, setScheme } = useTheme()

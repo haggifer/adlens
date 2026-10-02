@@ -1,7 +1,7 @@
+import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RulePlatform } from 'adlens-shared'
-import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { ResultsPanel } from './ResultsPanel'
 
 const APPROVAL_HEADING = 'Will it be approved?'

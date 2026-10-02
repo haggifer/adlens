@@ -1,5 +1,5 @@
-import { createStyles } from 'antd-style'
 import { HEADING_FONT_STACK } from '@/fonts'
+import { createStyles } from 'antd-style'
 
 export const useStyles = createStyles(({ token, css }) => ({
     page: css`

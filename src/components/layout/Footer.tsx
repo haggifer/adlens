@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import Link from 'next/link'
 import { useStyles } from './styles'
 
 export function Footer() {

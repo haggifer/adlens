@@ -1,8 +1,8 @@
 'use client'
 
+import { ApiRequestError } from '@/api/errors'
 import { RequestErrorCode } from 'adlens-shared'
 import { Button, Result } from 'antd'
-import { ApiRequestError } from '@/api/errors'
 import { useStyles } from './styles'
 
 // A render failure's own message is a developer's text (or a server digest), never copy for the user.

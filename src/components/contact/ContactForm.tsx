@@ -1,5 +1,11 @@
 'use client'
 
+import { createContactUploads, sendContactMessage } from '@/api/contact'
+import { ApiRequestError, describeContactError } from '@/api/errors'
+import { useAuth } from '@/auth/AuthContext'
+import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
+import { Field } from '@/components/utils/Field'
+import { uploadToSignedUrl } from '@/storage/upload'
 import { MailOutlined, PaperClipOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -13,12 +19,6 @@ import { Alert, Button, Input, Result, Upload, type UploadFile } from 'antd'
 import { useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { createContactUploads, sendContactMessage } from '@/api/contact'
-import { ApiRequestError, describeContactError } from '@/api/errors'
-import { useAuth } from '@/auth/AuthContext'
-import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
-import { Field } from '@/components/utils/Field'
-import { uploadToSignedUrl } from '@/storage/upload'
 import { ATTACHMENT_ACCEPT, ATTACHMENTS_HINT, checkAttachments, toAttachmentFile } from './contact-attachments'
 
 // The rules come from the shared schema; only the wording is the form's own.

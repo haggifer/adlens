@@ -1,11 +1,11 @@
-import { screen, waitFor, within } from '@testing-library/react'
-import type { Quota } from 'adlens-shared'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { screen, waitFor, within } from '@testing-library/react'
+import type { Quota } from 'adlens-shared'
 import { MobileMenu } from './MobileMenu'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()

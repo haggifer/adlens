@@ -1,9 +1,9 @@
 'use client'
 
-import { App } from 'antd'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError } from '@/auth/errors'
+import { App } from 'antd'
+import { useRouter } from 'next/navigation'
 
 // Resolves to whether the session ended, so a caller can keep its own UI (a confirmation) open after a failure.
 export function useSignOut(): () => Promise<boolean> {
