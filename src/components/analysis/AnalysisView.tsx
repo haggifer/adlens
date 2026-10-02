@@ -22,24 +22,25 @@ interface IProps {
     jobId: string
 }
 
+const toPlayerSrc = (url: string | undefined, contentType: string | undefined) =>
+    url && contentType ? { src: url, type: toVidstackType(contentType) } : undefined
+
 export function AnalysisView({ jobId }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
+
+    // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
+    const playerRef = useRef<MediaPlayerInstance>(null)
+
     const { job, isLoading, error } = useJob(jobId)
     // Only a verified upload has a video to replay (`media`), so a pending job or one still being checked has none. A
     // failed job's video backs no results and is deleted soon after the failure, so its page never shows a player.
     const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
     const { url, isMissing } = useJobVideo(jobId, hasVideo)
+
     const hasPlayer = hasVideo && !isMissing
-    // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
-    const playerRef = useRef<MediaPlayerInstance>(null)
-
     const contentType = job?.file.contentType
-
-    const playerSrc = useMemo(
-        () => (url && contentType ? { src: url, type: toVidstackType(contentType) } : undefined),
-        [url, contentType],
-    )
+    const playerSrc = useMemo(() => toPlayerSrc(url, contentType), [url, contentType])
 
     const handleSeek = (seconds: number) => {
         const player = playerRef.current
