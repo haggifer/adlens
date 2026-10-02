@@ -1,3 +1,4 @@
+import { toMegabytes } from '@/file-size'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import {
     type ApiErrorCode,
@@ -14,7 +15,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.VideoUnreadable]:
         "We couldn't read this file as a video. Try exporting it again as MP4. This run wasn't counted.",
     [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long. This run wasn't counted.`,
-    [JobErrorCode.VideoTooLarge]: `Videos can be up to ${MAX_UPLOAD_BYTES / (1000 * 1000)} MB. This run wasn't counted.`,
+    [JobErrorCode.VideoTooLarge]: `Videos can be up to ${toMegabytes(MAX_UPLOAD_BYTES)} MB. This run wasn't counted.`,
     [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}. This run wasn't counted.`,
     [JobErrorCode.AnalysisFailed]: "The analysis failed. Please try again. This run wasn't counted.",
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. This run wasn't counted.",

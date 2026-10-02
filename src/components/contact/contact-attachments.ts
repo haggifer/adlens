@@ -1,3 +1,4 @@
+import { toMegabytes } from '@/file-size'
 import { ATTACHMENT_FORMATS_LABEL } from '@/labels'
 import {
     CONTACT_ATTACHMENT_MAX_BYTES,
@@ -6,8 +7,6 @@ import {
     type ContactAttachmentFile,
     contactAttachmentTypeSchema,
 } from 'adlens-shared'
-
-const toMegabytes = (bytes: number) => bytes / (1000 * 1000)
 
 export const ATTACHMENT_ACCEPT = contactAttachmentTypeSchema.options.join(',')
 

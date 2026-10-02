@@ -1,6 +1,7 @@
 'use client'
 
 import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
+import { toMegabytes } from '@/file-size'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
@@ -25,7 +26,7 @@ interface IProps {
 
 const { Dragger } = Upload
 
-const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1000 * 1000)
+const MAX_UPLOAD_MB = toMegabytes(MAX_UPLOAD_BYTES)
 
 const REQUIREMENTS_TRIGGER: TooltipProps['trigger'] = ['hover', 'click']
 
