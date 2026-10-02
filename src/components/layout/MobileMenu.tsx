@@ -25,8 +25,6 @@ import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { useStyles } from './styles'
 
-const DRAWER_WIDTH = 300
-
 // Who may open a link: anyone, any session (anonymous ones too), or only an account whose email is confirmed.
 type LinkAccess = 'public' | 'session' | 'account'
 
@@ -37,13 +35,15 @@ interface MenuLink {
     access: LinkAccess
 }
 
+const DRAWER_WIDTH = 300
+
 const MENU_LINKS: MenuLink[] = [
     { href: '/', label: 'Analyze', icon: <UploadOutlined />, access: 'public' },
     { href: '/history', label: 'History', icon: <HistoryOutlined />, access: 'session' },
     { href: '/account', label: 'Account', icon: <SettingOutlined />, access: 'account' },
 ]
 
-const canOpen = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed: boolean) => {
+const isLinkAllowed = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed: boolean) => {
     if (access === 'public') {
         return true
     }
@@ -71,7 +71,7 @@ export function MobileMenu() {
     const isEmailConfirmed = isConfirmedKind(kind)
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
-    const visibleLinks = MENU_LINKS.filter((link) => canOpen(link.access, isSignedIn, isEmailConfirmed))
+    const visibleLinks = MENU_LINKS.filter((link) => isLinkAllowed(link.access, isSignedIn, isEmailConfirmed))
 
     const handleClose = () => setIsOpen(false)
 
