@@ -26,10 +26,11 @@ export function AnalysisView({ jobId }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const { job, isLoading, error } = useJob(jobId)
-    // A pending job never received its upload, so there is nothing to replay. A failed job's video backs no results
-    // and is deleted about a day after the failure, so its page never shows a player.
-    const isFailed = job?.status === JobStatus.Error
-    const { url } = useJobVideo(jobId, Boolean(job) && job?.status !== JobStatus.Pending && !isFailed)
+    // Only a verified upload has a video to replay (`media`), so a pending job or one still being checked has none. A
+    // failed job's video backs no results and is deleted soon after the failure, so its page never shows a player.
+    const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
+    const { url, isMissing } = useJobVideo(jobId, hasVideo)
+    const hasPlayer = hasVideo && !isMissing
     // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
     const playerRef = useRef<MediaPlayerInstance>(null)
 
@@ -105,8 +106,8 @@ export function AnalysisView({ jobId }: IProps) {
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
             </header>
-            <div className={cx(styles.workspace, isFailed && 'justify-content-center align-items-start')}>
-                {!isFailed && (
+            <div className={cx(styles.workspace, !hasPlayer && 'justify-content-center align-items-start')}>
+                {hasPlayer && (
                     <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
                         {playerSrc ? (
                             <MediaPlayer
@@ -125,7 +126,7 @@ export function AnalysisView({ jobId }: IProps) {
                                 />
                             </MediaPlayer>
                         ) : (
-                            job.status !== JobStatus.Pending && <Spin />
+                            <Spin />
                         )}
                     </div>
                 )}

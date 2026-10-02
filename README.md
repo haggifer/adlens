@@ -104,7 +104,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   Cloud Run bills an API instance for as long as any socket to it is open.
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache. A failed analysis never shows a player: its video backs no results and is deleted about a day after the
-  failure, so its page shows why it failed and offers to analyze another video.
+  failure, so its page shows why it failed and offers to analyze another video. No other analysis without a video to
+  play shows one either: a job never verified has no `media`, and a deleted video's replay request answers 404, so
+  the page shows only its status.
 - **The client owns user-facing copy.** The API returns stable error codes and the client maps them to messages, so
   server internals never reach the screen and wording can change without an API release.
 - **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
