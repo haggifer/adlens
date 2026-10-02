@@ -4,7 +4,7 @@ import { BackButton } from '@/components/utils/BackButton'
 import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { useJob } from '@/hooks/useJob'
 import { useJobVideo } from '@/hooks/useJobVideo'
-import { ALL_PLATFORMS_LABEL, PLATFORM_LABELS } from '@/labels'
+import { formatPlatforms } from '@/labels'
 import { MediaPlayer, type MediaPlayerInstance, MediaProvider } from '@vidstack/react'
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
 import '@vidstack/react/player/styles/default/layouts/video.css'
@@ -17,12 +17,12 @@ import { JobStatusPanel } from './JobStatusPanel'
 import { ResultsPanel } from './ResultsPanel'
 import { useStyles } from './styles'
 
+const toPlayerSrc = (url: string | undefined, contentType: string | undefined) =>
+    url && contentType ? { src: url, type: toVidstackType(contentType) } : undefined
+
 interface IProps {
     jobId: string
 }
-
-const toPlayerSrc = (url: string | undefined, contentType: string | undefined) =>
-    url && contentType ? { src: url, type: toVidstackType(contentType) } : undefined
 
 export function AnalysisView({ jobId }: IProps) {
     const { styles, cx } = useStyles()
@@ -39,6 +39,7 @@ export function AnalysisView({ jobId }: IProps) {
 
     const hasPlayer = hasVideo && !isMissing
     const contentType = job?.file.contentType
+    const platforms = job ? formatPlatforms(job.settings.platforms) : ''
     const playerSrc = useMemo(() => toPlayerSrc(url, contentType), [url, contentType])
 
     const handleSeek = (seconds: number) => {
@@ -69,13 +70,13 @@ export function AnalysisView({ jobId }: IProps) {
     }
 
     if (error || !job) {
-        const isMissing = error?.code === RequestErrorCode.NotFound
+        const isNotFound = error?.code === RequestErrorCode.NotFound
 
         return (
             <div className={styles.page}>
                 <Result
-                    status={isMissing ? '404' : 'error'}
-                    title={isMissing ? 'Analysis not found' : 'Couldn’t load this analysis'}
+                    status={isNotFound ? '404' : 'error'}
+                    title={isNotFound ? 'Analysis not found' : 'Couldn’t load this analysis'}
                     subTitle={error?.message}
                     extra={
                         <Button type="primary" onClick={() => router.push('/history')}>
@@ -86,8 +87,6 @@ export function AnalysisView({ jobId }: IProps) {
             </div>
         )
     }
-
-    const platforms = job.settings.platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ')
 
     return (
         <div className={styles.page}>
@@ -101,7 +100,7 @@ export function AnalysisView({ jobId }: IProps) {
                         {job.sampleId && <Tag color="processing">Sample ad</Tag>}
                     </div>
                     <p className={styles.pageMeta}>
-                        {platforms || ALL_PLATFORMS_LABEL} · {new Date(job.createdAt).toLocaleString()}
+                        {platforms} · {new Date(job.createdAt).toLocaleString()}
                     </p>
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />

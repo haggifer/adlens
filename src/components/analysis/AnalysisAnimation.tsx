@@ -38,11 +38,12 @@ const ICONS: AnimatedIcon[] = [
 export function AnalysisAnimation() {
     const { styles } = useStyles()
     const theme = useTheme()
+
     const [index, setIndex] = useState(0)
 
-    const handleCycleEnd = () => setIndex((prev) => (prev + 1) % ICONS.length)
-
     const { Icon, color } = ICONS[index]
+
+    const handleCycleEnd = () => setIndex((prev) => (prev + 1) % ICONS.length)
 
     return (
         <span

@@ -16,7 +16,9 @@ interface IProps {
 
 export function DeleteJobButton({ job, isIconOnly, onDeleted }: IProps) {
     const { modal, notification } = App.useApp()
+
     const { deleteJob } = useDeleteJob()
+
     const isRunning = isJobInProgress(job.status)
 
     const handleDelete = async () => {

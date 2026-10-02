@@ -13,6 +13,12 @@ const PROGRESS_STEPS = [
     { status: JobStatus.Analyzing, title: 'Analyzing the ad' },
 ]
 
+const getStepItems = (current: number) =>
+    PROGRESS_STEPS.map((step, index) => ({
+        title: step.title,
+        icon: index === current ? <AnalysisAnimation /> : undefined,
+    }))
+
 interface IProps {
     job: Job
 }
@@ -21,6 +27,8 @@ export function JobStatusPanel({ job }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
 
+    const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
+    const stepItems = getStepItems(current)
     const newAnalysisButton = (
         <Button type="primary" onClick={() => router.push('/')}>
             Start a new analysis
@@ -58,21 +66,11 @@ export function JobStatusPanel({ job }: IProps) {
         )
     }
 
-    const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
-
     return (
         <div className={styles.panel}>
             <h2 className={styles.panelTitle}>Analyzing your ad</h2>
             <p className={styles.hint}>This usually takes under a minute. You can leave this page and come back.</p>
-            <Steps
-                orientation="vertical"
-                size="small"
-                current={current}
-                items={PROGRESS_STEPS.map((step, index) => ({
-                    title: step.title,
-                    icon: index === current ? <AnalysisAnimation /> : undefined,
-                }))}
-            />
+            <Steps orientation="vertical" size="small" current={current} items={stepItems} />
         </div>
     )
 }

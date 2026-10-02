@@ -34,6 +34,7 @@ interface IProps {
 
 export function ResultsPanel({ analysis, onSeek }: IProps) {
     const { styles } = useStyles()
+
     const { compliance, bestPractice, placementIssues, passedChecks } = splitResults(analysis)
     const { blockers, warnings } = countIssues(analysis)
     const { advisories, transcript } = analysis
