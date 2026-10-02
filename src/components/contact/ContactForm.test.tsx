@@ -38,7 +38,7 @@ const TOKEN = 'challenge-token'
 
 const ATTACHMENTS_LABEL = 'Screenshots (optional)'
 
-const ATTACHMENTS_HINT = 'Up to 5 images: PNG, JPEG or WebP, 8 MB each, 25 MB in total.'
+const ATTACHMENTS_HINT = 'Up to 5 images: PNG, JPEG or WebP, up to 8 MB each, up to 25 MB in total.'
 
 const UPLOAD_FAILED_COPY = 'An image didn’t finish uploading. Please try again.'
 

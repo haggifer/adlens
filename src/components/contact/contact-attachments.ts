@@ -13,7 +13,7 @@ export const ATTACHMENT_ACCEPT = contactAttachmentTypeSchema.options.join(',')
 
 export const ATTACHMENTS_HINT =
     `Up to ${CONTACT_MAX_ATTACHMENTS} images: ${ATTACHMENT_FORMATS_LABEL}, ` +
-    `${toMegabytes(CONTACT_ATTACHMENT_MAX_BYTES)} MB each, ${toMegabytes(CONTACT_ATTACHMENTS_MAX_TOTAL_BYTES)} MB in total.`
+    `up to ${toMegabytes(CONTACT_ATTACHMENT_MAX_BYTES)} MB each, up to ${toMegabytes(CONTACT_ATTACHMENTS_MAX_TOTAL_BYTES)} MB in total.`
 
 // The API's limits, checked before anything is sent; the first problem found, in the form's words.
 export const checkAttachments = (files: File[]): string | undefined => {
