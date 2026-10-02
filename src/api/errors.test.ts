@@ -73,8 +73,20 @@ describe('toApiRequestError', () => {
 
 describe('describeJobError', () => {
     it('describes the job error code, falling back to a generic analysis failure', () => {
-        expect(describeJobError(JobErrorCode.VideoTooLong)).toBe('Videos can be up to 60 seconds long.')
+        expect(describeJobError(JobErrorCode.VideoTooLong)).toBe(
+            "Videos can be up to 60 seconds long. This run wasn't counted.",
+        )
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
+    })
+
+    // The API rejects these videos before it charges the run.
+    it.each([
+        JobErrorCode.VideoUnreadable,
+        JobErrorCode.VideoTooLong,
+        JobErrorCode.VideoTooLarge,
+        JobErrorCode.UnsupportedFormat,
+    ])('says a run rejected for %s wasn’t counted', (code) => {
+        expect(describeJobError(code)).toMatch(/ This run wasn't counted\.$/)
     })
 })
 

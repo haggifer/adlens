@@ -10,10 +10,12 @@ import { AxiosError } from 'axios'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 
 const ERROR_COPY: Record<ApiErrorCode, string> = {
-    [JobErrorCode.VideoUnreadable]: "We couldn't read this file as a video. Try exporting it again as MP4.",
-    [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long.`,
-    [JobErrorCode.VideoTooLarge]: `Videos can be up to ${MAX_UPLOAD_BYTES / (1000 * 1000)} MB.`,
-    [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}.`,
+    // The API rejects these videos before it charges the run.
+    [JobErrorCode.VideoUnreadable]:
+        "We couldn't read this file as a video. Try exporting it again as MP4. This run wasn't counted.",
+    [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long. This run wasn't counted.`,
+    [JobErrorCode.VideoTooLarge]: `Videos can be up to ${MAX_UPLOAD_BYTES / (1000 * 1000)} MB. This run wasn't counted.`,
+    [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}. This run wasn't counted.`,
     // Usually refunded, but not past the network's weekly allowance of refunded failures (API IP_FAILURE_REFUND_LIMIT).
     [JobErrorCode.AnalysisFailed]: "The analysis failed. Please try again; a failed run usually isn't counted.",
     [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. Your run wasn't counted.",
