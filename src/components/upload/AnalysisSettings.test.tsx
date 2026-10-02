@@ -4,9 +4,11 @@ import { type Job, type Quota, RequestErrorCode, type UploadTarget, VideoMimeTyp
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { ApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
+import { getQuota } from '@/api/me'
 import { authClient, signIn } from '@/auth/authClient'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import type { UseQuotaResult } from '@/hooks/useQuota'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob, buildSample } from '@/test/fixtures'
@@ -18,6 +20,7 @@ const mockPush = jest.fn()
 const mockChallengeToken = 'challenge-token'
 const mockGetToken = jest.fn<Promise<string>, []>()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
+const mockUseQuota = jest.fn<UseQuotaResult, []>()
 let mockQuota: Quota | undefined
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
@@ -27,7 +30,8 @@ jest.mock('@/auth/authClient', () => ({
     signIn: { anonymous: jest.fn() },
 }))
 jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(), startAnalysis: jest.fn() }))
-jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: mockQuota }) }))
+jest.mock('@/api/me', () => ({ getQuota: jest.fn() }))
+jest.mock('@/hooks/useQuota', () => ({ useQuota: () => mockUseQuota() }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken resolves with.
 jest.mock('@/components/human-check/HumanCheck', () => {
@@ -74,6 +78,7 @@ describe('AnalysisSettings', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         mockQuota = undefined
+        mockUseQuota.mockImplementation(() => ({ quota: mockQuota }))
         useAuthModalStore.setState({ view: null })
         useContactModalStore.setState({ isOpen: false })
         jest.mocked(authClient.getSession).mockResolvedValue({ data: null, error: null } as never)
@@ -345,6 +350,27 @@ describe('AnalysisSettings', () => {
 
         await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signup'))
         expect(signIn.anonymous).not.toHaveBeenCalled()
+    })
+
+    it('refreshes the quota after a refused run, and shows its limit message once', async () => {
+        // The real hook, so the refusal's effect on the quota query shows.
+        mockUseQuota.mockImplementation(
+            jest.requireActual<typeof import('@/hooks/useQuota')>('@/hooks/useQuota').useQuota,
+        )
+        jest.mocked(getQuota)
+            .mockResolvedValueOnce({ used: 0, limit: 1, nextFreeAt: null })
+            .mockResolvedValue({ used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' })
+        jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
+        const { user } = renderSettings(anonymousAuth())
+
+        expect(await screen.findByText('0 of 1 analyses used in the last 7 days')).toBeInTheDocument()
+
+        await run(user)
+
+        await waitFor(() => expect(getQuota).toHaveBeenCalledTimes(2))
+        await waitFor(() => expect(runButton()).toBeDisabled())
+        expect(screen.getAllByText(SIGN_UP_REQUIRED_COPY)).toHaveLength(1)
+        expect(screen.getAllByRole('button', { name: 'Sign up' })).toHaveLength(1)
     })
 
     describe('for an uploaded file', () => {

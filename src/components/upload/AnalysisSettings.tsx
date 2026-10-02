@@ -61,6 +61,14 @@ const formatNextFree = (nextFreeAt: string) =>
         minute: '2-digit',
     })
 
+// Refusals that mean the visitor's quota is spent, which a stale tab may not know yet.
+const LIMIT_CODES: ApiErrorCode[] = [
+    RequestErrorCode.SignUpRequired,
+    RequestErrorCode.EmailConfirmationRequired,
+    RequestErrorCode.QuotaExceeded,
+    RequestErrorCode.NetworkQuotaExceeded,
+]
+
 type SessionCheck = 'active' | 'none' | 'unknown'
 
 // A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
@@ -213,10 +221,16 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             router.push(`/analyses/${jobId}`)
         },
         onError: (error) => {
+            const { code } = toApiRequestError(error)
+
             setStage(RunStage.Idle)
             onRunningChange?.(false)
 
-            if (toApiRequestError(error).code === RequestErrorCode.SignUpRequired) {
+            if (LIMIT_CODES.includes(code)) {
+                void queryClient.invalidateQueries({ queryKey: ['quota'] })
+            }
+
+            if (code === RequestErrorCode.SignUpRequired) {
                 setView('signup')
             }
         },
@@ -296,6 +310,11 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
         // Without a confirmed account the one analysis doesn't come back with time: the next needs an account.
         if (!hasQuotaLeft && !isEmailConfirmed) {
+            // Once a run is refused, its error under Run says this, with the same button.
+            if (run.error) {
+                return null
+            }
+
             const code = isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
 
             return <Alert type="info" showIcon title={describeRequestError(code)} action={renderErrorAction(code)} />
