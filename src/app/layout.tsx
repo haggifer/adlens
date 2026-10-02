@@ -45,6 +45,7 @@ interface IProps {
 export default async function RootLayout({ children }: IProps) {
     const cookieStore = await cookies()
     const headerList = await headers()
+
     const initialScheme = resolveInitialScheme(
         cookieStore.get(SCHEME_COOKIE)?.value,
         headerList.get(SCHEME_HINT_HEADER) ?? undefined,
