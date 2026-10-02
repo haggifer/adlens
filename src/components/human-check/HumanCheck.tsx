@@ -9,7 +9,7 @@ import { useTheme } from '@/design/ThemeContext'
 import { useStyles } from './styles'
 
 // Long enough for the Cloudflare script to load and a non-interactive check to finish on a slow connection. A visitor
-// answering a challenge gets as long as they need.
+// answering a challenge gets as long as Cloudflare allows; the limit starts again once they've answered.
 const CHECK_TIMEOUT_MS = 30 * 1000
 
 export interface HumanCheckHandle {
@@ -74,13 +74,23 @@ export function HumanCheck({ ref, action }: IProps) {
             }),
     }))
 
-    // The visitor is answering a challenge: no time limit while they do.
+    // The visitor is answering a challenge: no limit of ours while they do. Cloudflare ends an unanswered one through
+    // `onTimeout` or `onExpire`.
     const handleBeforeInteractive = () => {
         if (pending.current) {
             clearTimeout(pending.current.timer)
         }
 
         setIsInteractive(true)
+    }
+
+    const handleAfterInteractive = () => {
+        if (pending.current) {
+            clearTimeout(pending.current.timer)
+            pending.current.timer = setTimeout(fail, CHECK_TIMEOUT_MS)
+        }
+
+        setIsInteractive(false)
     }
 
     return (
@@ -98,8 +108,10 @@ export function HumanCheck({ ref, action }: IProps) {
                 onWidgetLoad={() => pending.current && widget.current?.execute()}
                 onSuccess={(token) => settle({ token })}
                 onError={fail}
+                onExpire={fail}
+                onTimeout={fail}
                 onBeforeInteractive={handleBeforeInteractive}
-                onAfterInteractive={() => setIsInteractive(false)}
+                onAfterInteractive={handleAfterInteractive}
             />
             {isInteractive && <p className={styles.hint}>Confirm you’re human to {action}.</p>}
             {hasFailed && (

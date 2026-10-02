@@ -140,7 +140,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   an account, and accounts whose email isn't confirmed, get a token first (the API always checks theirs), before any
   anonymous user is created. Members skip it; if the API answers `CHALLENGE_REQUIRED` (a busy network), the page runs
   the check and starts over with a new job, since the token is only read at job creation. A check that doesn't finish
-  within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint. The contact form runs
+  within 30 s, unless the visitor is answering a challenge, fails the run with the recovery hint, and so does a
+  challenge Cloudflare times out or expires; once a challenge is answered, the 30 s start again. The contact form runs
   the same check for every message, signed in or not, since the contact endpoints are public.
 - **Contact screenshots upload to a draft when the message is sent.** The form checks the images against the shared
   limits as they're chosen; on send it runs the human check, asks the API for a draft with one signed upload per image

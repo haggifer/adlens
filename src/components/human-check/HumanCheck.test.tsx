@@ -14,6 +14,8 @@ interface MockTurnstileProps {
     options: Record<string, unknown>
     onSuccess: (token: string) => void
     onError: () => void
+    onExpire: () => void
+    onTimeout: () => void
     onBeforeInteractive: () => void
     onAfterInteractive: () => void
 }
@@ -28,6 +30,8 @@ jest.mock('@marsidev/react-turnstile', () => {
             options,
             onSuccess,
             onError,
+            onExpire,
+            onTimeout,
             onBeforeInteractive,
             onAfterInteractive,
         }: MockTurnstileProps) => {
@@ -41,6 +45,12 @@ jest.mock('@marsidev/react-turnstile', () => {
                     </button>
                     <button type="button" onClick={onError}>
                         Fail the check
+                    </button>
+                    <button type="button" onClick={onExpire}>
+                        Expire the challenge
+                    </button>
+                    <button type="button" onClick={onTimeout}>
+                        Time out the challenge
                     </button>
                     <button type="button" onClick={onBeforeInteractive}>
                         Ask for a click
@@ -166,5 +176,38 @@ describe('HumanCheck', () => {
         act(() => screen.getByRole('button', { name: 'Pass the check' }).click())
 
         await expect(token).resolves.toBe(mockToken)
+    })
+
+    it.each(['Expire the challenge', 'Time out the challenge'])(
+        'fails the run when Cloudflare ends the challenge: %s',
+        async (callback) => {
+            const ref = renderCheck()
+            const token = startCheck(ref)
+
+            act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
+            act(() => screen.getByRole('button', { name: callback }).click())
+
+            await expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+            expect(screen.queryByText(INTERACTION_HINT)).not.toBeInTheDocument()
+            expect(screen.getByText(FAILURE_HINT)).toBeInTheDocument()
+        },
+    )
+
+    it('limits the wait again once the visitor has answered a challenge', async () => {
+        jest.useFakeTimers()
+        const ref = renderCheck()
+        const token = startCheck(ref)
+        const outcome = expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+
+        act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
+        act(() => {
+            jest.advanceTimersByTime(5 * 60 * 1000)
+        })
+        act(() => screen.getByRole('button', { name: 'Finish the click' }).click())
+        act(() => {
+            jest.advanceTimersByTime(60 * 1000)
+        })
+
+        await outcome
     })
 })
