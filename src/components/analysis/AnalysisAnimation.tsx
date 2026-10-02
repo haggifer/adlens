@@ -12,15 +12,15 @@ import { useTheme } from 'antd-style'
 import { type ComponentType, useState } from 'react'
 import { useStyles } from './styles'
 
-// One fade in and out per icon.
-const ICON_CYCLE_MS = 800
-
 type PresetColor = 'magenta' | 'blue' | 'cyan' | 'purple' | 'green' | 'orange'
 
 interface AnimatedIcon {
     Icon: ComponentType
     color: PresetColor
 }
+
+// One fade in and out per icon.
+const ICON_CYCLE_MS = 800
 
 // What the analysis looks at: the ad, its picture, its sound, its text, the policies, the evidence.
 const ICONS: AnimatedIcon[] = [

@@ -10,6 +10,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useStyles } from './styles'
 
+enum LinkOutcome {
+    Confirming = 'confirming',
+    SignInRequired = 'signInRequired',
+    OtherAccount = 'otherAccount',
+    Failed = 'failed',
+}
+
 const INVALID_LINK = 'This link is invalid or has expired'
 
 // The link never signs anyone in: it confirms only for a session signed in as the link's own account.
@@ -21,13 +28,6 @@ const REFUSED_TOKEN_CODES = new Set(['TOKEN_EXPIRED', 'INVALID_TOKEN'])
 
 // Keys the attempts by session, so signing in starts a new one.
 const NO_ACCOUNT = 'none'
-
-enum LinkOutcome {
-    Confirming = 'confirming',
-    SignInRequired = 'signInRequired',
-    OtherAccount = 'otherAccount',
-    Failed = 'failed',
-}
 
 interface IProps {
     token: string | null
