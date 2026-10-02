@@ -40,6 +40,7 @@ export function ConfirmEmail({ token }: IProps) {
     const { isInitializing, isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsOtherAddressLink = useAuthModalStore((s) => s.setIsOtherAddressLink)
+
     const [outcome, setOutcome] = useState<LinkOutcome>(token ? LinkOutcome.Confirming : LinkOutcome.Failed)
     // Null when the link came without a token, so the API was never asked.
     const [linkError, setLinkError] = useState<AuthError | null>(null)
@@ -56,69 +57,6 @@ export function ConfirmEmail({ token }: IProps) {
         setView('confirm')
         setIsOtherAddressLink(true)
     }
-
-    useEffect(() => {
-        if (!token || isInitializing) {
-            return
-        }
-
-        const isFirstAttempt = attemptedFor.current === null
-        const isRetry = outcome === LinkOutcome.SignInRequired && hasAccount && attemptedFor.current !== sessionKey
-
-        if (!isFirstAttempt && !isRetry) {
-            return
-        }
-
-        attemptedFor.current = sessionKey
-
-        const confirm = async () => {
-            const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
-
-            if (!error) {
-                // AuthProvider refreshes the quota, whose limit rises with the confirmation, in every tab.
-                refreshSession()
-                announceSessionChange()
-                notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
-                router.replace('/')
-                return
-            }
-
-            // Asked of a signed-in account (a retry included), it can't be met by signing in, so it ends as a failure.
-            if (error.code === SIGN_IN_REQUIRED_CODE && !hasAccount) {
-                setOutcome(LinkOutcome.SignInRequired)
-                setView('signin')
-                return
-            }
-
-            if (error.code === EMAIL_MISMATCH_CODE) {
-                setLinkError(error)
-                setOutcome(LinkOutcome.OtherAccount)
-
-                if (isUnconfirmed) {
-                    setView('confirm')
-                    setIsOtherAddressLink(true)
-                }
-
-                return
-            }
-
-            setLinkError(error)
-            setOutcome(LinkOutcome.Failed)
-        }
-
-        void confirm()
-    }, [
-        token,
-        isInitializing,
-        outcome,
-        hasAccount,
-        isUnconfirmed,
-        sessionKey,
-        notification,
-        router,
-        setView,
-        setIsOtherAddressLink,
-    ])
 
     const renderFailure = () => {
         if (isEmailConfirmed && REFUSED_TOKEN_CODES.has(linkError?.code ?? '')) {
@@ -206,6 +144,69 @@ export function ConfirmEmail({ token }: IProps) {
 
         return <Result icon={<Spin size="large" />} title="Confirming your email…" />
     }
+
+    useEffect(() => {
+        if (!token || isInitializing) {
+            return
+        }
+
+        const isFirstAttempt = attemptedFor.current === null
+        const isRetry = outcome === LinkOutcome.SignInRequired && hasAccount && attemptedFor.current !== sessionKey
+
+        if (!isFirstAttempt && !isRetry) {
+            return
+        }
+
+        attemptedFor.current = sessionKey
+
+        const confirm = async () => {
+            const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
+
+            if (!error) {
+                // AuthProvider refreshes the quota, whose limit rises with the confirmation, in every tab.
+                refreshSession()
+                announceSessionChange()
+                notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
+                router.replace('/')
+                return
+            }
+
+            // Asked of a signed-in account (a retry included), it can't be met by signing in, so it ends as a failure.
+            if (error.code === SIGN_IN_REQUIRED_CODE && !hasAccount) {
+                setOutcome(LinkOutcome.SignInRequired)
+                setView('signin')
+                return
+            }
+
+            if (error.code === EMAIL_MISMATCH_CODE) {
+                setLinkError(error)
+                setOutcome(LinkOutcome.OtherAccount)
+
+                if (isUnconfirmed) {
+                    setView('confirm')
+                    setIsOtherAddressLink(true)
+                }
+
+                return
+            }
+
+            setLinkError(error)
+            setOutcome(LinkOutcome.Failed)
+        }
+
+        void confirm()
+    }, [
+        token,
+        isInitializing,
+        outcome,
+        hasAccount,
+        isUnconfirmed,
+        sessionKey,
+        notification,
+        router,
+        setView,
+        setIsOtherAddressLink,
+    ])
 
     return (
         <section className={styles.page}>

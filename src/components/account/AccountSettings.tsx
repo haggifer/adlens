@@ -26,10 +26,12 @@ const USER_LINE_SKELETON = { rows: 1, width: '60%' }
 
 export function AccountSettings() {
     const { styles } = useStyles()
-    const { user } = useAuth()
-    const { providers, error: providersError } = useLinkedAccounts()
     const { notification } = App.useApp()
+    const { user } = useAuth()
+
     const [isRevoking, setIsRevoking] = useState(false)
+
+    const { providers, error: providersError } = useLinkedAccounts()
 
     const handleRevokeOtherSessions = async () => {
         setIsRevoking(true)
