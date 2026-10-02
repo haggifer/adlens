@@ -17,4 +17,6 @@ const components: MDXComponents = {
         ),
 }
 
-export const useMDXComponents = (): MDXComponents => components
+export function useMDXComponents(): MDXComponents {
+    return components
+}

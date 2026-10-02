@@ -3,8 +3,8 @@ import { ThemeConfig } from 'antd'
 
 // Seed-only theme: antd derives the whole palette from this one primary. The light/dark algorithm is
 // intentionally not set here — antd-style's ThemeProvider applies it via `appearance` (see Providers.tsx).
-export const PRIMARY_COLOR = '#0d9488'
-export const BORDER_RADIUS = 10
+const PRIMARY_COLOR = '#0d9488'
+const BORDER_RADIUS = 10
 // Every modal is at least this wide on screens that fit it; antd shrinks them to the viewport on phones.
 export const MODAL_WIDTH = 600
 

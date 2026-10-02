@@ -17,6 +17,21 @@ const applyToDocument = (scheme: ColorScheme) => {
     document.documentElement.style.colorScheme = scheme
 }
 
+const createThemeValue = (
+    scheme: ColorScheme,
+    setIsStored: (isStored: boolean) => void,
+    setSchemeState: (scheme: ColorScheme) => void,
+): ThemeContextValue => ({
+    scheme,
+    setScheme: (next) => {
+        applyToDocument(next)
+        writeSchemeCookie(next)
+        setIsStored(true)
+        setSchemeState(next)
+    },
+    isDark: scheme === 'dark',
+})
+
 interface IProps {
     children: ReactNode
     initial: InitialScheme
@@ -27,6 +42,8 @@ export function ThemeProvider({ children, initial }: IProps) {
     // matches the HTML.
     const [scheme, setSchemeState] = useState<ColorScheme>(initial.scheme)
     const [isStored, setIsStored] = useState(initial.isStored)
+
+    const value = useMemo(() => createThemeValue(scheme, setIsStored, setSchemeState), [scheme])
 
     // Until the user picks a scheme, follow the system: browsers without the client hint were rendered with the
     // fallback, and the system setting can change while the page is open.
@@ -49,24 +66,10 @@ export function ThemeProvider({ children, initial }: IProps) {
         return () => query.removeEventListener('change', follow)
     }, [isStored])
 
-    const value = useMemo<ThemeContextValue>(
-        () => ({
-            scheme,
-            setScheme: (next) => {
-                applyToDocument(next)
-                writeSchemeCookie(next)
-                setIsStored(true)
-                setSchemeState(next)
-            },
-            isDark: scheme === 'dark',
-        }),
-        [scheme],
-    )
-
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
-export const useTheme = (): ThemeContextValue => {
+export function useTheme(): ThemeContextValue {
     const context = useContext(ThemeContext)
 
     if (!context) {
