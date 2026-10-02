@@ -210,4 +210,36 @@ describe('HumanCheck', () => {
 
         await outcome
     })
+
+    it('gives a check asked for again its own full wait, not what was left of the one it replaced', async () => {
+        jest.useFakeTimers()
+        const ref = renderCheck()
+        const first = startCheck(ref)
+        const firstOutcome = expect(first).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+
+        act(() => {
+            jest.advanceTimersByTime(20 * 1000)
+        })
+        const second = startCheck(ref)
+
+        await firstOutcome
+        act(() => {
+            jest.advanceTimersByTime(15 * 1000)
+        })
+        act(() => screen.getByRole('button', { name: 'Pass the check' }).click())
+
+        await expect(second).resolves.toBe(mockToken)
+    })
+
+    it('fails a pending check and stops its timer when it unmounts', async () => {
+        jest.useFakeTimers()
+        const ref = createRef<HumanCheckHandle>()
+        const { unmount } = render(<HumanCheck ref={ref} action="start the analysis" />)
+        const token = startCheck(ref)
+
+        unmount()
+
+        await expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+        expect(jest.getTimerCount()).toBe(0)
+    })
 })

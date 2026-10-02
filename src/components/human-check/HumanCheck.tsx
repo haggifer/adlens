@@ -2,7 +2,7 @@
 
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { RequestErrorCode } from 'adlens-shared'
-import { type Ref, useImperativeHandle, useRef, useState } from 'react'
+import { type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ApiRequestError } from '@/api/errors'
 import { config } from '@/config'
 import { useTheme } from '@/design/ThemeContext'
@@ -21,6 +21,12 @@ interface PendingCheck {
     resolve: (token: string) => void
     reject: (error: Error) => void
     timer: ReturnType<typeof setTimeout>
+}
+
+// Ends a check without the token, so its caller doesn't wait on a timer or a widget that will never answer.
+const abandon = (check: PendingCheck) => {
+    clearTimeout(check.timer)
+    check.reject(new ApiRequestError(RequestErrorCode.ChallengeFailed))
 }
 
 interface IProps {
@@ -65,7 +71,10 @@ export function HumanCheck({ ref, action }: IProps) {
     useImperativeHandle(ref, () => ({
         getToken: () =>
             new Promise<string>((resolve, reject) => {
-                pending.current?.reject(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+                if (pending.current) {
+                    abandon(pending.current)
+                }
+
                 pending.current = { resolve, reject, timer: setTimeout(fail, CHECK_TIMEOUT_MS) }
                 setHasFailed(false)
                 // A token works once, so every run starts from a fresh widget.
@@ -73,6 +82,17 @@ export function HumanCheck({ ref, action }: IProps) {
                 widget.current?.execute()
             }),
     }))
+
+    // Unmounting mid-check would otherwise leave the caller locked and the timer firing after the widget is gone.
+    useEffect(
+        () => () => {
+            if (pending.current) {
+                abandon(pending.current)
+                pending.current = null
+            }
+        },
+        [],
+    )
 
     // The visitor is answering a challenge: no limit of ours while they do. Cloudflare ends an unanswered one through
     // `onTimeout` or `onExpire`.
