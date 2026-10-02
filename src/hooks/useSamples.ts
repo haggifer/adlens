@@ -3,14 +3,14 @@ import { listSamples } from '@/api/samples'
 import { useQuery } from '@tanstack/react-query'
 import type { Sample } from 'adlens-shared'
 
-// Preview URLs are signed for 15 minutes; refetching after 10 keeps the list's players loadable.
-const SAMPLES_STALE_MS = 10 * 60 * 1000
-
 export interface UseSamplesResult {
     samples: Sample[]
     isLoading: boolean
     error: ApiRequestError | null
 }
+
+// Preview URLs are signed for 15 minutes; refetching after 10 keeps the list's players loadable.
+const SAMPLES_STALE_MS = 10 * 60 * 1000
 
 // Public data, so the key isn't user-scoped; it loads only once the picker opens.
 export function useSamples(isEnabled: boolean): UseSamplesResult {
