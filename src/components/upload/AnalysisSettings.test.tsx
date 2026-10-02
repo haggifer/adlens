@@ -260,11 +260,11 @@ describe('AnalysisSettings', () => {
             expect(useContactModalStore.getState().isOpen).toBe(true)
         })
 
-        it('shows how many analyses are used while some are left', () => {
+        it('says nothing about the quota while analyses are left', () => {
             mockQuota = { used: 2, limit: 3, nextFreeAt: null }
             renderSettings(memberAuth())
 
-            expect(screen.getByText('2 of 3 analyses used in the last 7 days')).toBeInTheDocument()
+            expect(screen.queryByText(/analyses/)).not.toBeInTheDocument()
             expect(runButton()).toBeEnabled()
         })
 
@@ -365,7 +365,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
         const { user } = renderSettings(anonymousAuth())
 
-        expect(await screen.findByText('0 of 1 analyses used in the last 7 days')).toBeInTheDocument()
+        await waitFor(() => expect(getQuota).toHaveBeenCalledTimes(1))
 
         await run(user)
 
@@ -385,7 +385,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.QuotaExceeded))
         const { user } = renderSettings(memberAuth())
 
-        expect(await screen.findByText('2 of 3 analyses used in the last 7 days')).toBeInTheDocument()
+        await waitFor(() => expect(getQuota).toHaveBeenCalledTimes(1))
 
         await run(user)
 

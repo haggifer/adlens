@@ -334,11 +334,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             )
         }
 
-        return (
-            <p className={styles.hint}>
-                {quota.used} of {quota.limit} analyses used in the last 7 days
-            </p>
-        )
+        return null
     }
 
     return (
