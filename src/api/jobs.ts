@@ -9,7 +9,7 @@ import type {
     JobVideoResponse,
 } from 'adlens-shared'
 
-export const JOBS_PAGE_SIZE = 20
+const JOBS_PAGE_SIZE = 20
 
 export const createJob = async (input: CreateJobInput): Promise<CreateJobResponse> => {
     const { data } = await api.post<CreateJobResponse>('/v1/jobs', input)

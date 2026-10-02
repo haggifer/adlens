@@ -39,6 +39,15 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [RequestErrorCode.Internal]: 'Something went wrong on our side. Please try again.',
 }
 
+// The contact form's own wording where the shared copy speaks of analyses or settings, or of a moment's wait (its
+// limits are per hour), and to name what was uploading.
+const CONTACT_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
+    [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then send the message.',
+    [RequestErrorCode.ValidationFailed]: 'We couldn’t send this message. Check it, then try again.',
+    [RequestErrorCode.RateLimited]: 'Too many messages in the last hour. Please try again later.',
+    [RequestErrorCode.UploadIncomplete]: 'An image didn’t finish uploading. Please try again.',
+}
+
 // A failed API call, reduced to its stable code; the message is the copy shown to the user.
 export class ApiRequestError extends Error {
     constructor(readonly code: ApiErrorCode) {
@@ -68,15 +77,6 @@ export const describeJobError = (code: JobErrorCode | undefined): string =>
     ERROR_COPY[code ?? JobErrorCode.AnalysisFailed]
 
 export const describeRequestError = (code: RequestErrorCode): string => ERROR_COPY[code]
-
-// The contact form's own wording where the shared copy speaks of analyses or settings, or of a moment's wait (its
-// limits are per hour), and to name what was uploading.
-const CONTACT_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
-    [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then send the message.',
-    [RequestErrorCode.ValidationFailed]: 'We couldn’t send this message. Check it, then try again.',
-    [RequestErrorCode.RateLimited]: 'Too many messages in the last hour. Please try again later.',
-    [RequestErrorCode.UploadIncomplete]: 'An image didn’t finish uploading. Please try again.',
-}
 
 export const describeContactError = (err: unknown): string => {
     const { code, message } = toApiRequestError(err)
