@@ -71,31 +71,32 @@ export function MobileMenu() {
     const isEmailConfirmed = isConfirmedKind(kind)
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
+    const visibleLinks = MENU_LINKS.filter((link) => canOpen(link.access, isSignedIn, isEmailConfirmed))
 
-    const close = () => setIsOpen(false)
+    const handleClose = () => setIsOpen(false)
 
     const handleContact = () => {
-        close()
+        handleClose()
         setIsContactOpen(true)
     }
 
     const handleSignOut = () => {
-        close()
+        handleClose()
         void signOut()
     }
 
     const handleForgetBrowser = () => {
-        close()
+        handleClose()
         void forgetBrowser()
     }
 
     const handleSignIn = () => {
-        close()
+        handleClose()
         setView('signin')
     }
 
     const handleConfirmEmail = () => {
-        close()
+        handleClose()
         setView('confirm')
     }
 
@@ -111,7 +112,7 @@ export function MobileMenu() {
             />
             <Drawer
                 open={isOpen}
-                onClose={close}
+                onClose={handleClose}
                 size={DRAWER_WIDTH}
                 title="Menu"
                 classNames={{ body: styles.drawerBody }}
@@ -149,14 +150,14 @@ export function MobileMenu() {
                     </div>
                 )}
                 <nav className={styles.drawerNav} aria-label="Main">
-                    {MENU_LINKS.filter((link) => canOpen(link.access, isSignedIn, isEmailConfirmed)).map((link) => (
+                    {visibleLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
                             className={styles.drawerItem}
                             data-active={pathname === link.href}
                             aria-current={pathname === link.href ? 'page' : undefined}
-                            onClick={close}
+                            onClick={handleClose}
                         >
                             {link.icon}
                             {link.label}
