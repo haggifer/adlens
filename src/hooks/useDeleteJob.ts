@@ -11,6 +11,7 @@ export interface UseDeleteJobResult {
 export function useDeleteJob(): UseDeleteJobResult {
     const { user } = useAuth()
     const queryClient = useQueryClient()
+
     const userId = user?.id
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (jobId: string) => deleteJob(jobId),

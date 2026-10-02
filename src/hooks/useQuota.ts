@@ -3,11 +3,11 @@ import { useAuth } from '@/auth/AuthContext'
 import { useQuery } from '@tanstack/react-query'
 import type { Quota } from 'adlens-shared'
 
-export const quotaKey = (userId: string | undefined) => ['quota', userId]
-
 export interface UseQuotaResult {
     quota: Quota | undefined
 }
+
+const quotaKey = (userId: string | undefined) => ['quota', userId]
 
 export function useQuota(): UseQuotaResult {
     const { user } = useAuth()

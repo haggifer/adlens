@@ -17,6 +17,7 @@ export function useSignOut(): () => Promise<boolean> {
         } catch (error) {
             console.error(error)
             notification.error({ title: describeError(error as AuthError), placement: 'bottomRight' })
+
             return false
         }
 
