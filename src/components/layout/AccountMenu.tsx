@@ -67,11 +67,11 @@ export function AccountMenu() {
     if (!isEmailConfirmed) {
         return (
             <span className="d-flex gap-2">
-                <Button type="text" onClick={() => void signOut()}>
-                    Sign Out
-                </Button>
                 <Button type="primary" onClick={() => setView('confirm')}>
                     Confirm email
+                </Button>
+                <Button type="text" onClick={() => void signOut()}>
+                    Sign Out
                 </Button>
             </span>
         )
