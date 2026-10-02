@@ -280,6 +280,11 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         if (run.error) {
             const error = toApiRequestError(run.error)
 
+            // The refreshed quota says the same, with the date the next analysis is free.
+            if (error.code === RequestErrorCode.QuotaExceeded && !hasQuotaLeft && quota?.nextFreeAt) {
+                return null
+            }
+
             return <Alert type="error" showIcon title={error.message} action={renderErrorAction(error.code)} />
         }
 

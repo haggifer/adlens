@@ -375,6 +375,24 @@ describe('AnalysisSettings', () => {
         expect(screen.getAllByRole('button', { name: 'Sign up' })).toHaveLength(1)
     })
 
+    it('lets the refreshed quota say when a member’s next analysis is free, instead of a second limit message', async () => {
+        mockUseQuota.mockImplementation(
+            jest.requireActual<typeof import('@/hooks/useQuota')>('@/hooks/useQuota').useQuota,
+        )
+        jest.mocked(getQuota)
+            .mockResolvedValueOnce({ used: 2, limit: 3, nextFreeAt: null })
+            .mockResolvedValue({ used: 3, limit: 3, nextFreeAt: '2026-10-08T09:30:00.000Z' })
+        jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.QuotaExceeded))
+        const { user } = renderSettings(memberAuth())
+
+        expect(await screen.findByText('2 of 3 analyses used in the last 7 days')).toBeInTheDocument()
+
+        await run(user)
+
+        expect(await screen.findByText(/The next one is available on/)).toBeInTheDocument()
+        expect(screen.queryByText('You’ve used all your analyses for the last 7 days.')).not.toBeInTheDocument()
+    })
+
     describe('for an uploaded file', () => {
         const FILE = new File(['video-bytes'], 'launch.mp4', { type: VideoMimeType.Mp4 })
 
