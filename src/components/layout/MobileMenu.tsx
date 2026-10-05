@@ -23,6 +23,7 @@ import { Button, Drawer } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
+import { getSessionControlProps } from './session-control'
 import { useStyles } from './styles'
 
 // Who may open a link: anyone, any session (anonymous ones too), or only an account whose email is confirmed.
@@ -55,7 +56,7 @@ export function MobileMenu() {
     const { styles, cx } = useStyles()
     const pathname = usePathname()
     const { user } = useAuth()
-    // While the session loads, the remembered kind is drawn with every session action disabled.
+    // While the session loads, the remembered kind is drawn as it will be, with every session action ignored.
     const { kind, isInert } = useShownAccountKind()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
@@ -133,8 +134,7 @@ export function MobileMenu() {
                                 type="primary"
                                 block
                                 className={user ? 'mt-2' : undefined}
-                                disabled={isInert}
-                                onClick={handleConfirmEmail}
+                                {...getSessionControlProps(isInert, handleConfirmEmail)}
                             >
                                 Confirm email
                             </Button>
@@ -144,7 +144,7 @@ export function MobileMenu() {
                 {isAnonymous && (
                     <div className={cx(styles.drawerUser, 'gap-2')}>
                         {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
-                        <Button type="primary" block disabled={isInert} onClick={handleSignIn}>
+                        <Button type="primary" block {...getSessionControlProps(isInert, handleSignIn)}>
                             Sign In
                         </Button>
                     </div>
@@ -177,8 +177,7 @@ export function MobileMenu() {
                         type="button"
                         className={styles.drawerItem}
                         data-danger="true"
-                        disabled={isInert}
-                        onClick={handleSignOut}
+                        {...getSessionControlProps(isInert, handleSignOut)}
                     >
                         <LogoutOutlined />
                         Sign Out
@@ -189,8 +188,7 @@ export function MobileMenu() {
                         type="button"
                         className={styles.drawerItem}
                         data-danger="true"
-                        disabled={isInert}
-                        onClick={handleForgetBrowser}
+                        {...getSessionControlProps(isInert, handleForgetBrowser)}
                     >
                         <LogoutOutlined />
                         Forget this browser

@@ -139,12 +139,16 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   first and then sends the same token again. A confirmation also tells the browser's other tabs, through Better Auth's
   own cross-tab channel, to fetch the session again, and whenever the session's user or its confirmation changes, the
   quota (and, for a new user, the history) is fetched again.
-- **The header remembers the kind of account, not the account.** Each loaded session stores only its kind
-  (anonymous, unconfirmed, member or admin, the last from the API's `isAdmin` user field) in `localStorage`, and
-  forgets it on sign-out or when the session loads as none. While the next page load fetches the session, the header
-  draws that kind inert (an avatar with no menu, disabled session buttons), or an empty placeholder when nothing is
-  remembered, instead of flashing Sign In. It holds no email, name or id and never feeds per-user data, which still
-  waits for the real session.
+- **The header remembers the kind of account, not the account, in a cookie the server reads.** Each loaded session
+  stores only its kind (anonymous, unconfirmed, member or admin, the last from the API's `isAdmin` user field) in the
+  `adlens_account_kind` cookie (host-only, `samesite=lax`, `secure` over HTTPS, one year), and clears it on sign-out or
+  when the session loads as none; a failed session request keeps it. The root layout reads it like the scheme cookie,
+  so the server's HTML and the first paint already have the header's final shape: Sign In for a signed-out visitor
+  (the usual case) or the remembered kind's buttons, with no placeholder and no blink. Until the session loads those
+  controls look exactly as they will but do nothing (`aria-disabled`, clicks ignored, no menu from the avatar), and
+  the same elements come alive once it has; `disabled` would restyle them and blink. The cookie holds no email, name
+  or id, only shapes the first paint, and never decides access or feeds per-user data, which still waits for the real
+  session.
 - **Turnstile runs on Run, and only shows itself when it needs a click.** The widget is set to `execution: 'execute'`
   and `appearance: 'interaction-only'`, so nothing is shown and nothing runs until an analysis starts. Visitors without
   an account, and accounts whose email isn't confirmed, get a token first (the API always checks theirs), before any

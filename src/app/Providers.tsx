@@ -3,6 +3,7 @@
 import { ApiRequestError } from '@/api/errors'
 import { AuthProvider } from '@/auth/AuthContext'
 import { refreshSession } from '@/auth/session'
+import { AccountKind } from '@/auth/types'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { ANTD_THEME } from '@/design/theme'
@@ -78,7 +79,13 @@ const AntdStyleRegistry = ({ children }: { children: ReactNode }) => {
     return <>{children}</>
 }
 
-const ThemedShell = ({ children }: { children: ReactNode }) => {
+const ThemedShell = ({
+    children,
+    initialAccountKind,
+}: {
+    children: ReactNode
+    initialAccountKind: AccountKind | null
+}) => {
     const { scheme } = useTheme()
 
     // antd-style's ThemeProvider renders the antd ConfigProvider internally: `appearance` selects the
@@ -86,7 +93,7 @@ const ThemedShell = ({ children }: { children: ReactNode }) => {
     return (
         <StyleThemeProvider appearance={scheme} theme={ANTD_THEME}>
             <AntdApp>
-                <AuthProvider>
+                <AuthProvider initialKind={initialAccountKind}>
                     <AppShell>{children}</AppShell>
                 </AuthProvider>
             </AntdApp>
@@ -97,9 +104,10 @@ const ThemedShell = ({ children }: { children: ReactNode }) => {
 interface IProps {
     children: ReactNode
     initialScheme: InitialScheme
+    initialAccountKind: AccountKind | null
 }
 
-export function Providers({ children, initialScheme }: IProps) {
+export function Providers({ children, initialScheme, initialAccountKind }: IProps) {
     const [queryClient] = useState(createQueryClient)
 
     return (
@@ -107,7 +115,7 @@ export function Providers({ children, initialScheme }: IProps) {
             <AntdStyleRegistry>
                 <ThemeProvider initial={initialScheme}>
                     <QueryClientProvider client={queryClient}>
-                        <ThemedShell>{children}</ThemedShell>
+                        <ThemedShell initialAccountKind={initialAccountKind}>{children}</ThemedShell>
                     </QueryClientProvider>
                 </ThemeProvider>
             </AntdStyleRegistry>

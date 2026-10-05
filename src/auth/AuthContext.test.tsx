@@ -1,3 +1,4 @@
+import { ACCOUNT_KIND_COOKIE } from '@/auth/account-kind-cookie'
 import { signOut as signOutRequest } from '@/auth/authClient'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
@@ -21,8 +22,6 @@ const MEMBER_SESSION = {
 
 const ADMIN_SESSION = { user: { ...MEMBER_SESSION.user, isAdmin: true } }
 
-const SNAPSHOT_KEY = 'adlens_account_kind'
-
 const UNCONFIRMED_SESSION = {
     user: { id: 'member-2', email: 'bob@example.com', name: 'Bob', isAnonymous: false, emailVerified: false },
 }
@@ -38,14 +37,18 @@ const ANONYMOUS_SESSION = {
     },
 }
 
-const renderAuth = (queryClient: QueryClient = createTestQueryClient()) =>
+const renderAuth = (queryClient: QueryClient = createTestQueryClient(), initialKind: AccountKind | null = null) =>
     renderHook(() => useAuth(), {
         wrapper: ({ children }: { children: ReactNode }) => (
             <QueryClientProvider client={queryClient}>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider initialKind={initialKind}>{children}</AuthProvider>
             </QueryClientProvider>
         ),
     })
+
+const rememberKind = (kind: AccountKind) => {
+    document.cookie = `${ACCOUNT_KIND_COOKIE}=${kind}; path=/`
+}
 
 describe('AuthProvider', () => {
     beforeEach(() => {
@@ -116,7 +119,9 @@ describe('AuthProvider', () => {
     })
 
     describe('the account kind snapshot', () => {
-        afterEach(() => localStorage.clear())
+        afterEach(() => {
+            document.cookie = `${ACCOUNT_KIND_COOKIE}=; max-age=0; path=/`
+        })
 
         it.each([
             [AccountKind.Member, MEMBER_SESSION],
@@ -129,33 +134,32 @@ describe('AuthProvider', () => {
             const { result } = renderAuth()
 
             expect(result.current.accountKind).toBe(kind)
-            expect(localStorage.getItem(SNAPSHOT_KEY)).toBe(kind)
-            expect(localStorage).toHaveLength(1)
+            expect(document.cookie).toBe(`${ACCOUNT_KIND_COOKIE}=${kind}`)
         })
 
         it('forgets the kind when the session loads as none', () => {
-            localStorage.setItem(SNAPSHOT_KEY, AccountKind.Member)
+            rememberKind(AccountKind.Member)
             mockUseSession.mockReturnValue({ data: null, isPending: false })
 
             renderAuth()
 
-            expect(localStorage.getItem(SNAPSHOT_KEY)).toBeNull()
+            expect(document.cookie).toBe('')
         })
 
         it('keeps the kind when the session couldn’t be loaded', () => {
-            localStorage.setItem(SNAPSHOT_KEY, AccountKind.Member)
+            rememberKind(AccountKind.Member)
             mockUseSession.mockReturnValue({ data: null, isPending: false, error: { status: 0 } })
 
             renderAuth()
 
-            expect(localStorage.getItem(SNAPSHOT_KEY)).toBe(AccountKind.Member)
+            expect(document.cookie).toBe(`${ACCOUNT_KIND_COOKIE}=${AccountKind.Member}`)
         })
 
-        it('gives the remembered kind while the session loads, and leaves it alone', () => {
-            localStorage.setItem(SNAPSHOT_KEY, AccountKind.Anonymous)
+        it('gives the kind the server read while the session loads, and leaves the cookie alone', () => {
+            rememberKind(AccountKind.Anonymous)
             mockUseSession.mockReturnValue({ data: null, isPending: true })
 
-            const { result } = renderAuth()
+            const { result } = renderAuth(createTestQueryClient(), AccountKind.Anonymous)
 
             expect(result.current).toMatchObject({
                 isInitializing: true,
@@ -163,16 +167,23 @@ describe('AuthProvider', () => {
                 accountKind: null,
                 snapshotKind: AccountKind.Anonymous,
             })
-            expect(localStorage.getItem(SNAPSHOT_KEY)).toBe(AccountKind.Anonymous)
+            expect(document.cookie).toBe(`${ACCOUNT_KIND_COOKIE}=${AccountKind.Anonymous}`)
         })
 
         it('gives the real account once the session has loaded, not the snapshot', () => {
-            localStorage.setItem(SNAPSHOT_KEY, AccountKind.Anonymous)
             mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
 
-            const { result } = renderAuth()
+            const { result } = renderAuth(createTestQueryClient(), AccountKind.Anonymous)
 
             expect(result.current).toMatchObject({ accountKind: AccountKind.Member, snapshotKind: null })
+        })
+
+        it('gives no snapshot once the session loads as none, even with one from the server', () => {
+            mockUseSession.mockReturnValue({ data: null, isPending: false })
+
+            const { result } = renderAuth(createTestQueryClient(), AccountKind.Member)
+
+            expect(result.current).toMatchObject({ isSignedIn: false, accountKind: null, snapshotKind: null })
         })
 
         it('forgets the kind on sign-out', async () => {
@@ -182,7 +193,7 @@ describe('AuthProvider', () => {
 
             await result.current.signOut()
 
-            expect(localStorage.getItem(SNAPSHOT_KEY)).toBeNull()
+            expect(document.cookie).toBe('')
         })
     })
 

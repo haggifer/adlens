@@ -1,33 +1,28 @@
 import { AccountKind } from '@/auth/types'
 
-// The kind of account this browser's last session had, so the header can draw its shape before the session loads.
-// Only the kind is kept: never an email, name or id, and never anything per-user data could be read with.
-const SNAPSHOT_KEY = 'adlens_account_kind'
+// The kind of account this browser's last session had, so the server can draw the header's shape before the session
+// loads. Only the kind is kept: never an email, name or id, and never anything per-user data could be read with.
+// It only shapes the first paint and is never trusted for access or data: the session decides those.
+export const ACCOUNT_KIND_COOKIE = 'adlens_account_kind'
+
+const ONE_YEAR_S = 31_536_000
 
 const ACCOUNT_KINDS = new Set<string>(Object.values(AccountKind))
 
-const isAccountKind = (value: string | null): value is AccountKind => value !== null && ACCOUNT_KINDS.has(value)
+const isAccountKind = (value?: string): value is AccountKind => value !== undefined && ACCOUNT_KINDS.has(value)
 
-// Storage throws when the browser blocks it (some private modes, disabled site data); the header then waits instead.
-export const readAccountKind = (): AccountKind | null => {
-    try {
-        const value = localStorage.getItem(SNAPSHOT_KEY)
+export const parseAccountKind = (cookieValue?: string): AccountKind | null =>
+    isAccountKind(cookieValue) ? cookieValue : null
 
-        return isAccountKind(value) ? value : null
-    } catch {
-        return null
-    }
+// Host-only (no Domain), so it never reaches the API's host. Secure only over HTTPS, so local HTTP development keeps it.
+export const getAccountKindCookie = (kind: AccountKind | null, isSecure: boolean) => {
+    const value = kind ?? ''
+    const maxAge = kind ? ONE_YEAR_S : 0
+    const secure = isSecure ? '; secure' : ''
+
+    return `${ACCOUNT_KIND_COOKIE}=${value}; path=/; max-age=${maxAge}; samesite=lax${secure}`
 }
 
-export const rememberAccountKind = (kind: AccountKind | null) => {
-    try {
-        if (kind) {
-            localStorage.setItem(SNAPSHOT_KEY, kind)
-            return
-        }
-
-        localStorage.removeItem(SNAPSHOT_KEY)
-    } catch {
-        // Without storage the next load simply shows the placeholder.
-    }
+export const writeAccountKindCookie = (kind: AccountKind | null) => {
+    document.cookie = getAccountKindCookie(kind, location.protocol === 'https:')
 }

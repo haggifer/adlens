@@ -1,44 +1,62 @@
-import { readAccountKind, rememberAccountKind } from '@/auth/account-kind-snapshot'
+import {
+    ACCOUNT_KIND_COOKIE,
+    getAccountKindCookie,
+    parseAccountKind,
+    writeAccountKindCookie,
+} from '@/auth/account-kind-cookie'
 import { AccountKind } from '@/auth/types'
 
-const SNAPSHOT_KEY = 'adlens_account_kind'
-
-describe('account kind snapshot', () => {
-    afterEach(() => {
-        jest.restoreAllMocks()
-        localStorage.clear()
+describe('parseAccountKind', () => {
+    it.each(Object.values(AccountKind))('reads the kind %s', (kind) => {
+        expect(parseAccountKind(kind)).toBe(kind)
     })
 
-    it('remembers only the kind of account, and reads it back', () => {
-        rememberAccountKind(AccountKind.Unconfirmed)
-
-        expect(localStorage.getItem(SNAPSHOT_KEY)).toBe('unconfirmed')
-        expect(readAccountKind()).toBe(AccountKind.Unconfirmed)
-    })
-
-    it('forgets the kind when there is no session', () => {
-        rememberAccountKind(AccountKind.Member)
-        rememberAccountKind(null)
-
-        expect(localStorage.getItem(SNAPSHOT_KEY)).toBeNull()
-        expect(readAccountKind()).toBeNull()
+    it('reads nothing when there is no cookie', () => {
+        expect(parseAccountKind(undefined)).toBeNull()
     })
 
     it('ignores a value it doesn’t know', () => {
-        localStorage.setItem(SNAPSHOT_KEY, 'superuser')
+        expect(parseAccountKind('superuser')).toBeNull()
+        expect(parseAccountKind('')).toBeNull()
+    })
+})
 
-        expect(readAccountKind()).toBeNull()
+describe('getAccountKindCookie', () => {
+    it('keeps the kind for a year on this host only, sent with same-site requests', () => {
+        expect(getAccountKindCookie(AccountKind.Member, false)).toBe(
+            `${ACCOUNT_KIND_COOKIE}=member; path=/; max-age=31536000; samesite=lax`,
+        )
     })
 
-    it('carries on without a snapshot when storage is blocked', () => {
-        jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-            throw new DOMException('blocked', 'SecurityError')
-        })
-        jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-            throw new DOMException('blocked', 'SecurityError')
-        })
+    it('expires the cookie at once when there is no kind to keep', () => {
+        expect(getAccountKindCookie(null, false)).toBe(`${ACCOUNT_KIND_COOKIE}=; path=/; max-age=0; samesite=lax`)
+    })
 
-        expect(() => rememberAccountKind(AccountKind.Member)).not.toThrow()
-        expect(readAccountKind()).toBeNull()
+    it('is sent only over HTTPS when the page is served over HTTPS', () => {
+        expect(getAccountKindCookie(AccountKind.Anonymous, true)).toBe(
+            `${ACCOUNT_KIND_COOKIE}=anonymous; path=/; max-age=31536000; samesite=lax; secure`,
+        )
+        expect(getAccountKindCookie(null, true)).toBe(
+            `${ACCOUNT_KIND_COOKIE}=; path=/; max-age=0; samesite=lax; secure`,
+        )
+    })
+})
+
+describe('writeAccountKindCookie', () => {
+    afterEach(() => {
+        document.cookie = `${ACCOUNT_KIND_COOKIE}=; max-age=0; path=/`
+    })
+
+    it('remembers only the kind of account, in the cookie the root layout reads', () => {
+        writeAccountKindCookie(AccountKind.Unconfirmed)
+
+        expect(document.cookie).toBe(`${ACCOUNT_KIND_COOKIE}=unconfirmed`)
+    })
+
+    it('forgets the kind when there is no session', () => {
+        writeAccountKindCookie(AccountKind.Member)
+        writeAccountKindCookie(null)
+
+        expect(document.cookie).toBe('')
     })
 })

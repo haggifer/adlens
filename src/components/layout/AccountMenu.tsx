@@ -12,6 +12,7 @@ import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@an
 import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { type KeyboardEvent, useState } from 'react'
+import { getSessionControlProps } from './session-control'
 import { useStyles } from './styles'
 
 enum AccountMenuKey {
@@ -33,7 +34,7 @@ export function AccountMenu() {
     const { styles } = useStyles()
     const router = useRouter()
     const { user } = useAuth()
-    // While the session loads, the remembered kind is drawn with every session action disabled.
+    // While the session loads, the remembered kind is drawn as it will be, with every session action ignored.
     const { kind, isInert } = useShownAccountKind()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
@@ -56,6 +57,10 @@ export function AccountMenu() {
 
     // Escape and Tab are handled by the dropdown itself, which closes the menu and returns focus to the trigger.
     const handleOpenChange = (isNextOpen: boolean) => {
+        if (isInert) {
+            return
+        }
+
         setIsOpen(isNextOpen)
 
         if (!isNextOpen) {
@@ -65,7 +70,7 @@ export function AccountMenu() {
 
     // A click trigger already opens from the keyboard, since Enter and Space click a button.
     const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-        if (!isHoverCapable || !OPEN_KEYS.has(event.key)) {
+        if (isInert || !isHoverCapable || !OPEN_KEYS.has(event.key)) {
             return
         }
 
@@ -90,13 +95,11 @@ export function AccountMenu() {
         }
     }
 
+    // Signed out, or nothing remembered while the session loads: most visitors have no session, so Sign In is drawn at
+    // once rather than after the session request.
     if (!kind) {
-        // Nothing remembered: hold the button's place, since the session may still turn out to exist.
-        // Separate keys: reusing the placeholder's element would fade Sign In in through antd's visibility transition.
-        return isInert ? (
-            <Button key="placeholder" aria-hidden="true" tabIndex={-1} className={styles.accountPlaceholder} />
-        ) : (
-            <Button key="sign-in" type="primary" onClick={() => setView('signin')}>
+        return (
+            <Button type="primary" {...getSessionControlProps(isInert, () => setView('signin'))}>
                 Sign In
             </Button>
         )
@@ -105,12 +108,12 @@ export function AccountMenu() {
     if (kind === AccountKind.Anonymous) {
         return (
             <span className="d-flex gap-2">
-                <Button type="text" disabled={isInert} onClick={forgetBrowser}>
+                <Button type="text" {...getSessionControlProps(isInert, () => void forgetBrowser())}>
                     Forget this browser
                 </Button>
                 {/* Signing in or up in this browser moves the anonymous history to the account, so one entry point
                     is enough; the dialog links to sign-up. */}
-                <Button type="primary" disabled={isInert} onClick={() => setView('signin')}>
+                <Button type="primary" {...getSessionControlProps(isInert, () => setView('signin'))}>
                     Sign In
                 </Button>
             </span>
@@ -121,34 +124,21 @@ export function AccountMenu() {
     if (kind === AccountKind.Unconfirmed) {
         return (
             <span className="d-flex gap-2">
-                <Button type="primary" disabled={isInert} onClick={() => setView('confirm')}>
+                <Button type="primary" {...getSessionControlProps(isInert, () => setView('confirm'))}>
                     Confirm email
                 </Button>
-                <Button type="text" disabled={isInert} onClick={() => void signOut()}>
+                <Button type="text" {...getSessionControlProps(isInert, () => void signOut())}>
                     Sign Out
                 </Button>
             </span>
         )
     }
 
-    if (isInert) {
-        return (
-            <button
-                type="button"
-                className={styles.accountAvatar}
-                aria-label="Account menu"
-                aria-disabled="true"
-                tabIndex={-1}
-            >
-                <Avatar size={32} icon={<UserOutlined />} />
-            </button>
-        )
-    }
-
+    // The same dropdown while inert, held shut, so the avatar the session wires is the one already drawn.
     return (
         <Dropdown
             trigger={isHoverCapable ? HOVER_TRIGGERS : TOUCH_TRIGGERS}
-            open={isOpen}
+            open={isOpen && !isInert}
             onOpenChange={handleOpenChange}
             autoFocus={isOpenedByKeyboard}
             placement="bottomRight"
@@ -158,8 +148,9 @@ export function AccountMenu() {
                 type="button"
                 className={styles.accountAvatar}
                 aria-label="Account menu"
-                aria-haspopup="menu"
-                aria-expanded={isOpen}
+                aria-disabled={isInert || undefined}
+                aria-haspopup={isInert ? undefined : 'menu'}
+                aria-expanded={isInert ? undefined : isOpen}
                 onKeyDown={handleTriggerKeyDown}
             >
                 <Avatar size={32} icon={<UserOutlined />} />

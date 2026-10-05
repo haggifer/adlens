@@ -195,12 +195,6 @@ export const useStyles = createStyles(({ token, css }) => ({
             color: ${token.colorError};
         }
 
-        &:disabled {
-            background: none;
-            color: ${token.colorTextDisabled};
-            cursor: not-allowed;
-        }
-
         &:focus-visible {
             outline: 2px solid ${token.colorPrimary};
             outline-offset: -2px;
@@ -236,14 +230,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         border: none;
         background: none;
         cursor: pointer;
-
-        &[aria-disabled='true'] {
-            cursor: default;
-        }
-    `,
-
-    accountPlaceholder: css`
-        visibility: hidden;
     `,
 
     footer: css`

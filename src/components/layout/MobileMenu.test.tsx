@@ -24,13 +24,13 @@ const FORGET_WARNING = 'Analyses you ran here without an account will no longer 
 const openMenu = async (auth: AuthContextValue) => {
     mockUseAuth.mockReturnValue(auth)
 
-    const { user } = renderWithProviders(<MobileMenu />)
+    const { user, rerender } = renderWithProviders(<MobileMenu />)
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
 
     const menu = await screen.findByRole('dialog', { name: 'Menu' })
 
-    return { user, menu: within(menu) }
+    return { user, rerender, menu: within(menu) }
 }
 
 // Each test opens antd's drawer, and some a confirmation on top: seconds of work under a full parallel run.
@@ -49,36 +49,80 @@ describe('MobileMenu', () => {
             mockQuota = undefined
         })
 
-        it('shows a remembered anonymous visitor’s Sign In and Forget this browser, disabled', async () => {
-            const { menu } = await openMenu(initializingAuth(AccountKind.Anonymous))
+        const expectInert = (button: HTMLElement) => {
+            expect(button).toHaveAttribute('aria-disabled', 'true')
+            expect(button).not.toHaveAttribute('disabled')
+        }
 
-            expect(menu.getByRole('button', { name: 'Sign In' })).toBeDisabled()
-            expect(menu.getByRole('button', { name: /Forget this browser/ })).toBeDisabled()
+        it('shows a remembered anonymous visitor’s Sign In and Forget this browser, but ignores them', async () => {
+            const { user, menu } = await openMenu(initializingAuth(AccountKind.Anonymous))
+            const signIn = menu.getByRole('button', { name: 'Sign In' })
+            const forget = menu.getByRole('button', { name: /Forget this browser/ })
+
+            expectInert(signIn)
+            expectInert(forget)
+
+            await user.click(signIn)
+            await user.click(forget)
+
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument()
         })
 
-        it('shows a remembered unconfirmed account’s Confirm email and Sign Out, disabled', async () => {
-            const { menu } = await openMenu(initializingAuth(AccountKind.Unconfirmed))
+        it('shows a remembered unconfirmed account’s Confirm email and Sign Out, but ignores them', async () => {
+            const auth = initializingAuth(AccountKind.Unconfirmed)
+            const { user, menu } = await openMenu(auth)
+            const confirm = menu.getByRole('button', { name: 'Confirm email' })
+            const signOut = menu.getByRole('button', { name: /Sign Out/ })
 
-            expect(menu.getByRole('button', { name: 'Confirm email' })).toBeDisabled()
-            expect(menu.getByRole('button', { name: /Sign Out/ })).toBeDisabled()
+            expectInert(confirm)
+            expectInert(signOut)
+
+            await user.click(confirm)
+            await user.click(signOut)
+
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(auth.signOut).not.toHaveBeenCalled()
         })
 
         it.each([AccountKind.Member, AccountKind.Admin])(
-            'shows a remembered %s Sign Out, disabled, and no email',
+            'shows a remembered %s Sign Out, ignored, and no email',
             async (kind) => {
-                const { menu } = await openMenu(initializingAuth(kind))
+                const auth = initializingAuth(kind)
+                const { user, menu } = await openMenu(auth)
+                const signOut = menu.getByRole('button', { name: /Sign Out/ })
 
-                expect(menu.getByRole('button', { name: /Sign Out/ })).toBeDisabled()
+                expectInert(signOut)
+
+                await user.click(signOut)
+
+                expect(auth.signOut).not.toHaveBeenCalled()
                 expect(menu.getByRole('link', { name: /Account/ })).toBeInTheDocument()
                 expect(menu.queryByText(/@/)).not.toBeInTheDocument()
             },
         )
 
-        it('offers no Sign In when nothing is remembered', async () => {
+        it('offers no Sign In when nothing is remembered, since the bar already shows it', async () => {
             const { menu } = await openMenu(initializingAuth())
 
             expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
             expect(menu.queryByRole('button', { name: /Sign Out|Forget this browser/ })).not.toBeInTheDocument()
+        })
+
+        it('wires the same Sign Out once the session loads', async () => {
+            const auth = memberAuth()
+            const { user, rerender, menu } = await openMenu(initializingAuth(AccountKind.Member))
+            const signOut = menu.getByRole('button', { name: /Sign Out/ })
+
+            mockUseAuth.mockReturnValue(auth)
+            rerender(<MobileMenu />)
+
+            expect(menu.getByRole('button', { name: /Sign Out/ })).toBe(signOut)
+            expect(signOut).not.toHaveAttribute('aria-disabled')
+
+            await user.click(signOut)
+
+            expect(auth.signOut).toHaveBeenCalledTimes(1)
         })
     })
 

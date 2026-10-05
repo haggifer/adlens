@@ -64,10 +64,13 @@ describe('Header', () => {
         expect(screen.getByText('1/1 analyses left')).toBeInTheDocument()
     })
 
-    it('shows no Sign In while the session loads and nothing is remembered', () => {
+    it('draws Sign In at once while the session loads and nothing is remembered, but inert', () => {
         renderHeader(initializingAuth())
 
-        expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+        const signIn = screen.getByRole('button', { name: 'Sign In' })
+
+        expect(signIn).toHaveAttribute('aria-disabled', 'true')
+        expect(signIn).not.toHaveAttribute('disabled')
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
     })
 

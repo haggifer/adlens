@@ -1,12 +1,12 @@
 'use client'
 
 import { isConfirmedKind } from '@/auth/account-kind'
-import { readAccountKind, rememberAccountKind } from '@/auth/account-kind-snapshot'
+import { writeAccountKindCookie } from '@/auth/account-kind-cookie'
 import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
 import { AccountKind } from '@/auth/types'
 import { type QueryClient, useQueryClient } from '@tanstack/react-query'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef } from 'react'
 
 export interface AuthUser {
     id: string
@@ -26,8 +26,9 @@ export interface AuthContextValue {
     user: AuthUser | null
     // null when signed out or still initializing.
     accountKind: AccountKind | null
-    // While initializing, the kind this browser's last session had (null if none), so the header can show its shape
-    // before the session loads; null once it has. Never use it to load per-user data.
+    // While initializing, the kind this browser's last session had (null if none), as the server read it from the
+    // cookie, so the header can show its shape before the session loads; null once it has. Never use it to load
+    // per-user data.
     snapshotKind: AccountKind | null
     // Rejects with an AuthError (describeError gives its copy) on a refused or unreachable sign-out; clears the
     // query cache only once it succeeds.
@@ -84,7 +85,7 @@ const signOutAndClear = async (queryClient: QueryClient) => {
     }
 
     queryClient.clear()
-    rememberAccountKind(null)
+    writeAccountKindCookie(null)
 }
 
 const createAuthValue = (
@@ -119,19 +120,14 @@ const invalidateChangedAccount = (queryClient: QueryClient, previous: SessionAcc
     }
 }
 
-// The snapshot is only read, never watched: this tab writes it itself, and only once its session has loaded.
-const subscribeToNothing = () => () => {}
-
-// The server has no storage, so the first render (and hydration) shows no snapshot; the browser's follows at once.
-const getServerAccountKind = () => null
-
 interface IProps {
     children: ReactNode
+    // The kind the root layout read from the cookie, so the server's HTML and hydration draw the same header.
+    initialKind: AccountKind | null
 }
 
-export function AuthProvider({ children }: IProps) {
+export function AuthProvider({ children, initialKind }: IProps) {
     const queryClient = useQueryClient()
-    const rememberedKind = useSyncExternalStore(subscribeToNothing, readAccountKind, getServerAccountKind)
 
     // The account the session last resolved to, null until it first has, to tell a change from the first load.
     const lastAccount = useRef<SessionAccount | null>(null)
@@ -142,7 +138,7 @@ export function AuthProvider({ children }: IProps) {
     const userId = user?.id ?? null
     const accountKind = getAccountKind(user)
     const isEmailConfirmed = isConfirmedKind(accountKind)
-    const snapshotKind = isPending ? rememberedKind : null
+    const snapshotKind = isPending ? initialKind : null
     const value = useMemo(
         () => createAuthValue({ user, isPending, accountKind, isEmailConfirmed, snapshotKind }, queryClient),
         [user, isPending, accountKind, isEmailConfirmed, snapshotKind, queryClient],
@@ -151,7 +147,7 @@ export function AuthProvider({ children }: IProps) {
     // A failed session request says nothing about the account, so it keeps the snapshot.
     useEffect(() => {
         if (!isPending && !error) {
-            rememberAccountKind(accountKind)
+            writeAccountKindCookie(accountKind)
         }
     }, [isPending, error, accountKind])
 

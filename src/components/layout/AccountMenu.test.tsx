@@ -45,12 +45,31 @@ describe('AccountMenu', () => {
     })
 
     describe('while the session loads', () => {
-        it('holds the place of Sign In with an empty placeholder when nothing is remembered', () => {
-            const { container } = renderMenu(initializingAuth())
+        const expectInert = (button: HTMLElement) => {
+            expect(button).toHaveAttribute('aria-disabled', 'true')
+            expect(button).not.toHaveAttribute('disabled')
+        }
 
-            expect(screen.queryByRole('button')).not.toBeInTheDocument()
-            expect(container).toHaveTextContent('')
-            expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument()
+        it('draws Sign In at once when nothing is remembered, and wires the same button once the session is ready', async () => {
+            const { rerender, user } = renderMenu(initializingAuth())
+            const signIn = screen.getByRole('button', { name: 'Sign In' })
+
+            expectInert(signIn)
+            expect(signIn).toHaveClass('ant-btn-primary')
+
+            await user.click(signIn)
+
+            expect(useAuthModalStore.getState().view).toBeNull()
+
+            mockUseAuth.mockReturnValue(signedOutAuth())
+            rerender(<AccountMenu />)
+
+            expect(screen.getByRole('button', { name: 'Sign In' })).toBe(signIn)
+            expect(signIn).not.toHaveAttribute('aria-disabled')
+
+            await user.click(signIn)
+
+            expect(useAuthModalStore.getState().view).toBe('signin')
         })
 
         it.each([AccountKind.Member, AccountKind.Admin])(
@@ -60,32 +79,63 @@ describe('AccountMenu', () => {
                 const { user } = renderMenu(initializingAuth(kind))
                 const avatar = screen.getByRole('button', { name: 'Account menu' })
 
-                expect(avatar).toHaveAttribute('aria-disabled', 'true')
-                expect(avatar).toHaveAttribute('tabindex', '-1')
+                expectInert(avatar)
                 expect(avatar).not.toHaveAttribute('aria-haspopup')
 
                 await user.hover(avatar)
                 await user.click(avatar)
-                await user.tab()
+                avatar.focus()
+                await user.keyboard('{Enter}')
 
-                expect(avatar).not.toHaveFocus()
                 expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
                 expect(screen.queryByText(MEMBER_EMAIL)).not.toBeInTheDocument()
             },
         )
 
-        it('shows a remembered anonymous visitor’s buttons, disabled', () => {
-            renderMenu(initializingAuth(AccountKind.Anonymous))
+        it('shows a remembered anonymous visitor’s buttons as they will be, but ignores them', async () => {
+            const { user } = renderMenu(initializingAuth(AccountKind.Anonymous))
+            const forget = screen.getByRole('button', { name: 'Forget this browser' })
+            const signIn = screen.getByRole('button', { name: 'Sign In' })
 
-            expect(screen.getByRole('button', { name: 'Forget this browser' })).toBeDisabled()
-            expect(screen.getByRole('button', { name: 'Sign In' })).toBeDisabled()
+            expectInert(forget)
+            expectInert(signIn)
+
+            await user.click(forget)
+            await user.click(signIn)
+
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument()
         })
 
-        it('shows a remembered unconfirmed account’s buttons, disabled', () => {
-            renderMenu(initializingAuth(AccountKind.Unconfirmed))
+        it('shows a remembered unconfirmed account’s buttons as they will be, but ignores them', async () => {
+            const auth = initializingAuth(AccountKind.Unconfirmed)
+            const { user } = renderMenu(auth)
+            const confirm = screen.getByRole('button', { name: 'Confirm email' })
+            const signOut = screen.getByRole('button', { name: 'Sign Out' })
 
-            expect(screen.getByRole('button', { name: 'Confirm email' })).toBeDisabled()
-            expect(screen.getByRole('button', { name: 'Sign Out' })).toBeDisabled()
+            expectInert(confirm)
+            expectInert(signOut)
+
+            await user.click(confirm)
+            await user.click(signOut)
+
+            expect(useAuthModalStore.getState().view).toBeNull()
+            expect(auth.signOut).not.toHaveBeenCalled()
+        })
+
+        it('wires the same avatar once the session loads as the remembered member', async () => {
+            const { rerender, user } = renderMenu(initializingAuth(AccountKind.Member))
+            const avatar = screen.getByRole('button', { name: 'Account menu' })
+
+            mockUseAuth.mockReturnValue(memberAuth())
+            rerender(<AccountMenu />)
+
+            expect(screen.getByRole('button', { name: 'Account menu' })).toBe(avatar)
+            expect(avatar).not.toHaveAttribute('aria-disabled')
+
+            await user.click(avatar)
+
+            expect(await screen.findByText(MEMBER_EMAIL)).toBeInTheDocument()
         })
 
         it('switches to the real session once it loads, even when it differs from the remembered one', async () => {
@@ -109,7 +159,7 @@ describe('AccountMenu', () => {
             mockUseAuth.mockReturnValue(signedOutAuth())
             rerender(<AccountMenu />)
 
-            expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled()
+            expect(screen.getByRole('button', { name: 'Sign In' })).not.toHaveAttribute('aria-disabled')
             expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
         })
     })

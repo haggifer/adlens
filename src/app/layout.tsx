@@ -1,3 +1,4 @@
+import { ACCOUNT_KIND_COOKIE, parseAccountKind } from '@/auth/account-kind-cookie'
 import { config } from '@/config'
 import { resolveInitialScheme, SCHEME_COOKIE, SCHEME_HINT_HEADER } from '@/design/scheme-cookie'
 import { FONT_VARIABLE_CLASSES } from '@/fonts'
@@ -41,7 +42,8 @@ interface IProps {
     children: ReactNode
 }
 
-// Reading the scheme cookie and hint makes every route dynamic; accepted so the first paint has the right scheme.
+// Reading the cookies and the scheme hint makes every route dynamic; accepted so the first paint has the right scheme
+// and the header the shape of this browser's last session.
 export default async function RootLayout({ children }: IProps) {
     const cookieStore = await cookies()
     const headerList = await headers()
@@ -50,12 +52,15 @@ export default async function RootLayout({ children }: IProps) {
         cookieStore.get(SCHEME_COOKIE)?.value,
         headerList.get(SCHEME_HINT_HEADER) ?? undefined,
     )
+    const initialAccountKind = parseAccountKind(cookieStore.get(ACCOUNT_KIND_COOKIE)?.value)
     const { scheme } = initialScheme
 
     return (
         <html lang="en" data-scheme={scheme} style={{ colorScheme: scheme }} className={FONT_VARIABLE_CLASSES}>
             <body>
-                <Providers initialScheme={initialScheme}>{children}</Providers>
+                <Providers initialScheme={initialScheme} initialAccountKind={initialAccountKind}>
+                    {children}
+                </Providers>
             </body>
         </html>
     )
