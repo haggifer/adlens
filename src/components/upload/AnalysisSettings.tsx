@@ -34,13 +34,6 @@ import type { AnalysisSource } from './types'
 
 type SessionCheck = 'active' | 'none' | 'unknown'
 
-enum RunStage {
-    Idle = 'idle',
-    Creating = 'creating',
-    Uploading = 'uploading',
-    Starting = 'starting',
-}
-
 const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))
 
 const MARKET_OPTIONS = Object.values(Market).map((value) => ({ value, label: MARKET_LABELS[value] }))
@@ -123,7 +116,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
 
-    const [stage, setStage] = useState<RunStage>(RunStage.Idle)
+    const [isUploading, setIsUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
     const { control, handleSubmit, getValues, setValue } = useForm<
@@ -153,7 +146,6 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         if (source.kind === 'sample') {
             const job = await createSampleJob({ sampleId: source.sample.id, settings, challengeToken })
 
-            setStage(RunStage.Starting)
             await startAnalysis(job.id)
 
             return job.id
@@ -166,9 +158,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             challengeToken,
         })
 
-        setStage(RunStage.Uploading)
+        setIsUploading(true)
         await uploadToSignedUrl({ target: upload, file, onProgress: setUploadProgress })
-        setStage(RunStage.Starting)
+        setIsUploading(false)
         await startAnalysis(job.id)
 
         return job.id
@@ -182,7 +174,6 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             throw new ApiRequestError(RequestErrorCode.Unavailable)
         }
 
-        setStage(RunStage.Creating)
         setUploadProgress(0)
 
         // Without an account, or with one whose email isn't confirmed, the API always asks for the check, so it
@@ -234,7 +225,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         onError: (error) => {
             const { code } = toApiRequestError(error)
 
-            setStage(RunStage.Idle)
+            setIsUploading(false)
             onRunningChange?.(false)
 
             if (LIMIT_CODES.includes(code)) {
@@ -296,17 +287,13 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             return <Alert type="error" showIcon title={error.message} action={renderErrorAction(error.code)} />
         }
 
-        if (stage === RunStage.Uploading) {
+        if (isUploading) {
             return (
                 <div>
                     <p className={styles.hint}>Uploading your video…</p>
                     <Progress percent={Math.round(uploadProgress * 100)} size="small" />
                 </div>
             )
-        }
-
-        if (stage === RunStage.Creating || stage === RunStage.Starting) {
-            return <p className={styles.hint}>Starting the analysis…</p>
         }
 
         return null
