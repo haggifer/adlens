@@ -1,12 +1,14 @@
 'use client'
 
 import { signIn } from '@/auth/authClient'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeError, runAuthQuery, runAuthRequest } from '@/auth/errors'
+import { getSocialSignInDoneUrl } from '@/auth/social-sign-in'
 import type { SocialProvider } from '@/auth/types'
+import { useSocialSignInResult } from '@/hooks/useSocialSignInResult'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
-import { GithubOutlined } from '@ant-design/icons'
+import { GithubOutlined, LoadingOutlined } from '@ant-design/icons'
 import { App, Button, Divider } from 'antd'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useCallback, useRef, useState } from 'react'
 
 // Google's sign-in branding requires its four-colour "G"; the brand colours are fixed, not theme tokens.
 const GOOGLE_LOGO = (
@@ -37,24 +39,94 @@ const PROVIDER_ICONS: Record<SocialProvider, ReactNode> = {
 
 const PROVIDERS: SocialProvider[] = ['google', 'github']
 
+// One named window, so starting over reuses the popup rather than opening another.
+const POPUP_NAME = 'adlens-social-sign-in'
+const POPUP_WIDTH = 500
+const POPUP_HEIGHT = 650
+
+const getPopupFeatures = () => {
+    const left = Math.round(window.screenX + (window.outerWidth - POPUP_WIDTH) / 2)
+    const top = Math.round(window.screenY + (window.outerHeight - POPUP_HEIGHT) / 2)
+
+    return `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top}`
+}
+
+// Must run before any await: popup blockers allow window.open only inside the click itself. Null when blocked.
+const openSignInPopup = () => window.open('', POPUP_NAME, getPopupFeatures())
+
+// The provider's URL, without Better Auth navigating this tab to it.
+const startPopupSignIn = (provider: SocialProvider) =>
+    runAuthQuery(() =>
+        signIn.social({
+            provider,
+            callbackURL: getSocialSignInDoneUrl(),
+            errorCallbackURL: getSocialSignInDoneUrl(),
+            disableRedirect: true,
+        }),
+    )
+
+// Both callbacks return to the current page: the API appends ?error=<code> when the sign-in fails.
+const startRedirectSignIn = (provider: SocialProvider) =>
+    runAuthRequest(() =>
+        signIn.social({ provider, callbackURL: window.location.href, errorCallbackURL: window.location.href }),
+    )
+
+// Google and GitHub sign in in a popup, so this page keeps its selected video and settings; only when the browser
+// blocks the popup does the sign-in take over this tab.
 export function SocialButtons() {
     const { notification } = App.useApp()
 
     const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null)
+    // The latest click: a request answered after the visitor started over must not steer the popup.
+    const latestAttempt = useRef(0)
 
-    // Both callbacks return to the current page: the API appends ?error=<code> when the sign-in fails.
-    const handleSignIn = async (provider: SocialProvider) => {
-        setPendingProvider(provider)
+    const clearPending = useCallback(() => setPendingProvider(null), [])
 
-        const error = await runAuthRequest(() =>
-            signIn.social({ provider, callbackURL: window.location.href, errorCallbackURL: window.location.href }),
-        )
+    const notifyFailure = (error: AuthError | null) => {
+        setPendingProvider(null)
+        notification.error({ title: describeError(error), placement: 'bottomRight' })
+    }
+
+    const handleRedirectSignIn = async (provider: SocialProvider) => {
+        const error = await startRedirectSignIn(provider)
 
         if (error) {
-            setPendingProvider(null)
-            notification.error({ title: describeError(error), placement: 'bottomRight' })
+            notifyFailure(error)
         }
     }
+
+    // The popup's closed flag can't tell a cancelled sign-in: it reads true once the provider's page loads, under its
+    // Cross-Origin-Opener-Policy. So the buttons stay clickable, and a new click starts over.
+    const handleSignIn = async (provider: SocialProvider) => {
+        const popup = openSignInPopup()
+
+        latestAttempt.current += 1
+        const attempt = latestAttempt.current
+        setPendingProvider(provider)
+
+        if (!popup) {
+            await handleRedirectSignIn(provider)
+            return
+        }
+
+        popup.focus()
+
+        const { data, error } = await startPopupSignIn(provider)
+
+        if (attempt !== latestAttempt.current) {
+            return
+        }
+
+        if (error || !data?.url) {
+            popup.close()
+            notifyFailure(error)
+            return
+        }
+
+        popup.location.href = data.url
+    }
+
+    useSocialSignInResult({ isPending: pendingProvider !== null, onSettled: clearPending })
 
     return (
         <>
@@ -65,9 +137,9 @@ export function SocialButtons() {
                         key={provider}
                         size="large"
                         block
-                        icon={PROVIDER_ICONS[provider]}
-                        loading={pendingProvider === provider}
-                        disabled={pendingProvider !== null && pendingProvider !== provider}
+                        // Not antd's loading state, which swallows clicks: a click on the pending provider starts over.
+                        icon={pendingProvider === provider ? <LoadingOutlined /> : PROVIDER_ICONS[provider]}
+                        aria-busy={pendingProvider === provider}
                         onClick={() => handleSignIn(provider)}
                     >
                         Continue with {SOCIAL_PROVIDER_LABELS[provider]}

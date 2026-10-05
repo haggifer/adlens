@@ -13,7 +13,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
 - **Ant Design 6** (`antd`, `antd-style`) with `@ant-design/nextjs-registry` for SSR; Bootstrap 5 utility classes
   for layout
 - **Better Auth** React client: email and password with email verification and password reset, plus Google and GitHub
-  sign-in (`signIn.social`; a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
+  sign-in (`signIn.social` in a popup that reports back from `/auth/done`; when the popup is blocked, in the tab
+  itself, where a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
   anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
   analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
 - **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts or a contact
@@ -67,6 +68,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one) |
 | `/confirm-email`  | Landing page of the email confirmation link; confirms for the signed-in account, then goes home                                                                           |
 | `/reset-password` | Landing page of the password-reset link                                                                                                                                   |
+| `/auth/done`      | Landing page of the Google / GitHub sign-in popup; reports the outcome to the tab that opened it, then closes                                                             |
 | `/terms`          | Terms of Use                                                                                                                                                              |
 | `/privacy`        | Privacy Policy                                                                                                                                                            |
 
@@ -131,6 +133,14 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this
   browser" (header and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
   its analyses can no longer be reached, and the API deletes them with the anonymous user about a week later.
+- **Google and GitHub sign in in a popup**, so the page keeps the visitor's selected video (a file held only in memory)
+  and analysis settings. The click opens a blank named window at once (blockers allow it only inside the click), then
+  points it at the provider's URL, which Better Auth returns without redirecting (`disableRedirect`). The popup comes
+  back to `/auth/done`, which reports the outcome over a same-origin `BroadcastChannel`, not `window.opener`: the
+  providers' pages set Cross-Origin-Opener-Policy, which severs the opener. For the same reason the popup's `closed`
+  flag can't tell a cancelled sign-in, so the buttons stay clickable and a new click starts over. When the browser
+  blocks the popup (some in-app browsers), the sign-in runs in the tab itself as a full-page redirect, and the
+  page's state is lost; nothing is saved to restore it.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
   is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can

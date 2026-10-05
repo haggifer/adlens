@@ -4,9 +4,10 @@ import { useSignInErrorNotice } from './useSignInErrorNotice'
 
 const mockReplace = jest.fn()
 let mockSearch = ''
+let mockPathname = '/history'
 
 jest.mock('next/navigation', () => ({
-    usePathname: () => '/history',
+    usePathname: () => mockPathname,
     useRouter: () => ({ replace: mockReplace }),
     useSearchParams: () => new URLSearchParams(mockSearch),
 }))
@@ -17,8 +18,9 @@ const Probe = () => {
     return null
 }
 
-const renderAt = (search: string) => {
+const renderAt = (search: string, pathname = '/history') => {
     mockSearch = search
+    mockPathname = pathname
     renderWithProviders(<Probe />)
 }
 
@@ -38,6 +40,13 @@ describe('useSignInErrorNotice', () => {
         expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
         expect(screen.queryByText(/state cookie/)).not.toBeInTheDocument()
         expect(mockReplace).toHaveBeenCalledWith('/history', { scroll: false })
+    })
+
+    it('leaves the social sign-in popup’s landing page to report its own error', () => {
+        renderAt('error=access_denied', '/auth/done')
+
+        expect(screen.queryByText('Sign-in was cancelled.')).not.toBeInTheDocument()
+        expect(mockReplace).not.toHaveBeenCalled()
     })
 
     it('does nothing without an error', () => {

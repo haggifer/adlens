@@ -35,3 +35,35 @@ class MessageChannelStub {
 }
 
 Object.defineProperty(window, 'MessageChannel', { writable: true, value: MessageChannelStub })
+
+// The social sign-in popup reports back over a BroadcastChannel, which jsdom doesn't implement. This one delivers to
+// every other open channel of the same name, a task later, as browsers do.
+class BroadcastChannelStub {
+    static openChannels = new Set<BroadcastChannelStub>()
+
+    onmessage: ((event: MessageEvent) => void) | null = null
+
+    constructor(readonly name: string) {
+        BroadcastChannelStub.openChannels.add(this)
+    }
+
+    postMessage(data: unknown) {
+        BroadcastChannelStub.openChannels.forEach((channel) => {
+            if (channel === this || channel.name !== this.name) {
+                return
+            }
+
+            setTimeout(() => {
+                if (BroadcastChannelStub.openChannels.has(channel)) {
+                    channel.onmessage?.(new MessageEvent('message', { data }))
+                }
+            })
+        })
+    }
+
+    close() {
+        BroadcastChannelStub.openChannels.delete(this)
+    }
+}
+
+Object.defineProperty(window, 'BroadcastChannel', { writable: true, value: BroadcastChannelStub })

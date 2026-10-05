@@ -1,49 +1,96 @@
 import { signIn } from '@/auth/authClient'
+import { refreshSession } from '@/auth/session'
+import { postSocialSignInOutcome } from '@/auth/social-sign-in'
+import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { SocialButtons } from './SocialButtons'
 
-jest.mock('@/auth/authClient', () => ({ signIn: { social: jest.fn(async () => ({ error: null })) } }))
+jest.mock('@/auth/authClient', () => ({
+    signIn: { social: jest.fn(async () => ({ data: { url: MOCK_PROVIDER_URL, redirect: false }, error: null })) },
+}))
+jest.mock('@/auth/session', () => ({ refreshSession: jest.fn() }))
+
+const MOCK_PROVIDER_URL = 'https://accounts.google.com/o/oauth2/auth?state=abc'
+const DONE_URL = `${window.location.origin}/auth/done`
 
 const googleButton = () => screen.getByRole('button', { name: /continue with google/i })
 
 const githubButton = () => screen.getByRole('button', { name: /continue with github/i })
 
+const createPopup = () => ({ location: { href: '' }, focus: jest.fn(), close: jest.fn() })
+
 describe('SocialButtons', () => {
-    beforeEach(() => jest.mocked(signIn.social).mockClear())
+    let popup: ReturnType<typeof createPopup>
+    let open: jest.SpyInstance
+
+    beforeEach(() => {
+        jest.clearAllMocks()
+        useAuthModalStore.setState({ view: 'signin', isOtherAddressLink: false })
+        popup = createPopup()
+        open = jest.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
+    })
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('starts Google sign-in and comes back to the current page, whether it succeeds or fails', async () => {
+    it('opens the provider in a popup and keeps this page as it is', async () => {
         const { user } = renderWithProviders(<SocialButtons />)
 
         await user.click(googleButton())
 
+        expect(open).toHaveBeenCalledWith('', expect.any(String), expect.stringMatching(/width=\d+,height=\d+/))
         expect(signIn.social).toHaveBeenCalledWith({
             provider: 'google',
+            callbackURL: DONE_URL,
+            errorCallbackURL: DONE_URL,
+            disableRedirect: true,
+        })
+        await waitFor(() => expect(popup.location.href).toBe(MOCK_PROVIDER_URL))
+    })
+
+    it('signs in in this tab, back to the current page, when the browser blocks the popup', async () => {
+        open.mockReturnValue(null)
+        const { user } = renderWithProviders(<SocialButtons />)
+
+        await user.click(githubButton())
+
+        expect(signIn.social).toHaveBeenCalledWith({
+            provider: 'github',
             callbackURL: window.location.href,
             errorCallbackURL: window.location.href,
         })
     })
 
-    it('starts GitHub sign-in and keeps the other provider unavailable while it redirects', async () => {
+    it('lets the visitor start over with either provider while the popup is open', async () => {
         const { user } = renderWithProviders(<SocialButtons />)
 
+        await user.click(googleButton())
         await user.click(githubButton())
+        await user.click(googleButton())
 
-        expect(signIn.social).toHaveBeenCalledWith(expect.objectContaining({ provider: 'github' }))
-        expect(googleButton()).toBeDisabled()
+        expect(open).toHaveBeenCalledTimes(3)
+        expect(signIn.social).toHaveBeenLastCalledWith(expect.objectContaining({ provider: 'google' }))
     })
 
-    it('shows the reason when the API refuses to start the sign-in, and lets the visitor try again', async () => {
-        jest.mocked(signIn.social).mockResolvedValueOnce({ error: { status: 429 } } as never)
+    it('closes the dialog once the popup reports the user signed in', async () => {
+        const { user } = renderWithProviders(<SocialButtons />)
+
+        await user.click(googleButton())
+        postSocialSignInOutcome({ errorCode: null })
+
+        await waitFor(() => expect(useAuthModalStore.getState().view).toBeNull())
+        expect(refreshSession).toHaveBeenCalled()
+    })
+
+    it('closes the popup and shows the reason when the API refuses to start the sign-in', async () => {
+        jest.mocked(signIn.social).mockResolvedValueOnce({ data: null, error: { status: 429 } } as never)
         const { user } = renderWithProviders(<SocialButtons />)
 
         await user.click(googleButton())
 
         expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
-        expect(googleButton()).toBeEnabled()
-        expect(githubButton()).toBeEnabled()
+        expect(popup.close).toHaveBeenCalled()
+        expect(popup.location.href).toBe('')
     })
 
     it('shows a connection problem when the API can’t be reached', async () => {
@@ -56,6 +103,18 @@ describe('SocialButtons', () => {
         expect(
             await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
         ).toBeInTheDocument()
+        expect(popup.close).toHaveBeenCalled()
         expect(consoleError).toHaveBeenCalled()
+    })
+
+    it('shows the reason when the API refuses a sign-in in this tab', async () => {
+        open.mockReturnValue(null)
+        jest.mocked(signIn.social).mockResolvedValueOnce({ data: null, error: { status: 429 } } as never)
+        const { user } = renderWithProviders(<SocialButtons />)
+
+        await user.click(googleButton())
+
+        expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(googleButton()).toBeEnabled()
     })
 })

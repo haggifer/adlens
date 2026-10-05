@@ -68,4 +68,4 @@ npm test             # Jest + React Testing Library
   while `next build` renders the pages. `VERCEL_ENV` isn't inlined, so the check never runs in the browser.
 - Better Auth's client throws on network failure instead of returning `{ error }`.
 - Jest transforms antd's and Better Auth's ESM packages (see `jest.config.mjs`), and `jest.setup.ts` polyfills
-  `matchMedia`, `ResizeObserver` and `MessageChannel` for antd.
+  `matchMedia`, `ResizeObserver` and `MessageChannel` for antd, and `BroadcastChannel` for the social sign-in popup.

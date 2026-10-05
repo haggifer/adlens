@@ -1,4 +1,5 @@
 import { describeError } from '@/auth/errors'
+import { SOCIAL_SIGN_IN_DONE_PATH } from '@/auth/social-sign-in'
 import { App } from 'antd'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
@@ -16,15 +17,17 @@ const getQueryWithoutError = (searchParams: URLSearchParams) => {
     return rest.toString()
 }
 
-// A failed Google / GitHub sign-in comes back to the page it started on with ?error=<code>: explain it once, then
-// drop the parameters so a reload or a shared link doesn't repeat it.
+// A failed Google / GitHub sign-in that ran in this tab, because its popup was blocked, comes back to the page it
+// started on with ?error=<code>: explain it once, then drop the parameters so a reload or a shared link doesn't
+// repeat it.
 export function useSignInErrorNotice(): void {
     const searchParams = useSearchParams()
     const pathname = usePathname()
     const router = useRouter()
     const { notification } = App.useApp()
 
-    const code = searchParams.get('error')
+    // The sign-in popup's landing page reports its own error, and needs the code to stay in its address.
+    const code = pathname === SOCIAL_SIGN_IN_DONE_PATH ? null : searchParams.get('error')
 
     useEffect(() => {
         if (!code) {
