@@ -24,7 +24,7 @@ describe('SampleRow', () => {
 
         expect(screen.getByText('Running shoes')).toBeInTheDocument()
         expect(screen.getByText('0:15')).toBeInTheDocument()
-        expect(screen.getByText('YouTube (Google Ads)')).toBeInTheDocument()
+        expect(screen.getByText('Google')).toBeInTheDocument()
         expect(screen.getByText(SAMPLE.description)).toBeInTheDocument()
         expect(getPreview(container)).toHaveAttribute('src', SAMPLE.previewUrl)
     })
