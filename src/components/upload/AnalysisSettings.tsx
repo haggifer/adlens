@@ -132,6 +132,8 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     const [isUploading, setIsUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState(0)
+    // When the API last refused a run: an admission answer from then on reflects that refusal.
+    const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
     const { control, handleSubmit, getValues, setValue } = useForm<
         AnalysisSettingsInput,
@@ -246,6 +248,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
             // A stale tab may not know the limit was reached; both answers catch up with the refusal.
             if (isAdmissionRefusal(code)) {
+                setRefusedAt(Date.now())
                 void queryClient.invalidateQueries({ queryKey: ['quota'] })
                 void queryClient.invalidateQueries({ queryKey: ['admission'] })
             }
@@ -260,8 +263,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const runError = run.error ? toApiRequestError(run.error) : null
     // A refused run keeps Run disabled until a newer admission answer replaces it (signing up, say, lifts it); when that
     // answer can't be had, the refusal itself still holds.
-    const runRefusal =
-        runError && isAdmissionRefusal(runError.code) && updatedAt <= run.submittedAt ? runError.code : null
+    const runRefusal = runError && isAdmissionRefusal(runError.code) && updatedAt < refusedAt ? runError.code : null
     const quotaRefusal = hasQuotaLeft ? null : getQuotaRefusal(isEmailConfirmed, isAnonymous)
     // While a run moves on, its own charge would read as a refusal.
     const blockingRefusal = isRunning ? null : (runRefusal ?? refusal ?? quotaRefusal)
