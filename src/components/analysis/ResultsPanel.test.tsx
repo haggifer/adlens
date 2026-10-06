@@ -125,6 +125,25 @@ describe('ResultsPanel', () => {
         expect(screen.queryByText('blocker')).not.toBeInTheDocument()
     })
 
+    it('marks only the results nobody could decide, not how sure the others are', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    findings: [
+                        buildFinding({ id: 'sure', verdict: 'fail' }),
+                        buildFinding({ id: 'probable', verdict: 'warning' }),
+                        buildFinding({ id: 'unclear', verdict: 'unknown' }),
+                    ],
+                    metadataChecks: [buildCheck({ verdict: 'unknown' })],
+                })}
+            />,
+        )
+
+        expect(screen.getAllByText('couldn’t check')).toHaveLength(2)
+        expect(screen.queryByText('fails')).not.toBeInTheDocument()
+        expect(screen.queryByText('at risk')).not.toBeInTheDocument()
+    })
+
     it('links each finding to its source in a new tab', () => {
         render(<ResultsPanel analysis={buildAnalysis({ findings: [buildFinding()] })} />)
 

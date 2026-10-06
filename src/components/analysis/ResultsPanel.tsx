@@ -17,23 +17,13 @@ import { useStyles } from './styles'
 
 const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'gold', info: 'blue' }
 
-// Apart from every severity and verdict colour, so a placement or platform reads as where the ad runs, not as a
-// judgement.
+// Apart from every severity colour, so a placement or platform reads as where the ad runs, not as a judgement.
 const TARGET_TAG_COLOR = 'purple'
 
-const VERDICT_COLORS: Record<Finding['verdict'] | MetadataCheck['verdict'], string> = {
-    fail: 'red',
-    warning: 'gold',
-    unknown: 'default',
-    pass: 'green',
-}
-
-const VERDICT_LABELS: Record<Finding['verdict'] | MetadataCheck['verdict'], string> = {
-    fail: 'fails',
-    warning: 'at risk',
-    unknown: 'couldn’t check',
-    pass: 'passes',
-}
+// The severity tag already carries how sure the verdict is (see findingSeverity); only a result nobody could decide
+// needs its own mark, since the user has to check it themselves.
+const renderUncheckedTag = (verdict: Finding['verdict'] | MetadataCheck['verdict']) =>
+    verdict === 'unknown' && <Tag>couldn’t check</Tag>
 
 const renderPlatforms = (platforms: RulePlatform[]) => (
     <span>{platforms.map((platform) => RULE_PLATFORM_LABELS[platform]).join(', ')}</span>
@@ -65,7 +55,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
             <div key={finding.id} className={styles.findingCard}>
                 <div className={styles.findingHead}>
                     <Tag color={SEVERITY_COLORS[severity]}>{severity}</Tag>
-                    <Tag color={VERDICT_COLORS[finding.verdict]}>{VERDICT_LABELS[finding.verdict]}</Tag>
+                    {renderUncheckedTag(finding.verdict)}
                     <span className={styles.findingTopic}>{finding.topic}</span>
                 </div>
                 <p className={styles.findingEvidence}>{finding.evidence}</p>
@@ -98,7 +88,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                     </Tag>
                 ))}
                 <Tag color={SEVERITY_COLORS[check.severity]}>{check.severity}</Tag>
-                <Tag color={VERDICT_COLORS[check.verdict]}>{VERDICT_LABELS[check.verdict]}</Tag>
+                {renderUncheckedTag(check.verdict)}
                 <span className={styles.findingTopic}>{check.check ?? check.topic}</span>
             </div>
             <p className={styles.findingEvidence}>{describeCheck(check)}</p>
