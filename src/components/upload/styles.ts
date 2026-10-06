@@ -5,8 +5,8 @@ import { createStyles } from 'antd-style'
 // (a shadow has to be lighter than the near-black backdrop to show); light derives its tint from the text colour.
 const FRAME_SHADOW_SHAPE = '0 6px 29px -2px'
 
-// 380px: below it the settings panel and the drop zone stop fitting; the page scrolls rather than squeeze them.
-const WORKSPACE_MIN_HEIGHT = '23.75rem'
+// 400px: below it the settings panel and the drop zone stop fitting; the page scrolls rather than squeeze them.
+const WORKSPACE_MIN_HEIGHT = '25rem'
 
 const buildFrameShadow = (textColor: string, isDark: boolean) =>
     `${FRAME_SHADOW_SHAPE} ${isDark ? '#404040' : `color-mix(in srgb, ${textColor} 14%, transparent)`}`
@@ -97,15 +97,15 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         align-items: stretch;
         gap: 2.5rem;
         --col-w: min(35rem, 100%);
-        /* Its content mustn't size the grid row: the square drop zone and the settings panel take the row's height,
-           not the other way round. */
-        contain: size;
+        /* A size container: its content mustn't size the grid row (the square drop zone and the settings panel take
+           the row's height, not the other way round), and the player sizes off its height in cqh. */
+        container-type: size;
 
         @media (max-width: 991.98px) {
             flex-direction: column;
             align-items: center;
             gap: 1.5rem;
-            contain: none;
+            container-type: normal;
         }
     `,
 
@@ -252,11 +252,11 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         font-size: 0.85rem;
     `,
 
-    /* The same Vidstack 16/9 override as the analysis player. --stage-h mirrors the flex column height (set by
-       AdWorkspace). */
+    /* The same Vidstack 16/9 override as the analysis player. A video hugged to its own width can't take a % height
+       from its column, so it sizes off the workspace container's height instead. */
     player: css`
-        height: var(--stage-h, 60vh);
-        max-height: var(--stage-h, 60vh);
+        height: 100cqh;
+        max-height: 100cqh;
         max-width: var(--col-w);
         width: auto;
         border-radius: 0.5rem;

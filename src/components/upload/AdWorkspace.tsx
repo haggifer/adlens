@@ -1,7 +1,7 @@
 'use client'
 
 import type { Sample } from 'adlens-shared'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { AnalysisSettings } from './AnalysisSettings'
 import { SamplesModal } from './SamplesModal'
 import { useStyles } from './styles'
@@ -35,7 +35,6 @@ export function AdWorkspace() {
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
-    const workspaceRef = useRef<HTMLDivElement>(null)
 
     const video = toSelectedVideo(source)
 
@@ -55,25 +54,6 @@ export function AdWorkspace() {
         setSource(null)
     }
 
-    // The square and panel size off the flex column height directly (100%). A hugged (fit-content) video
-    // can't: CSS can't hand a % height to a fit-content parent's child. So mirror the column's flex-computed
-    // height into --stage-h (a real px length) for the video's max-height to scale against.
-    useEffect(() => {
-        const el = workspaceRef.current
-
-        if (!el) {
-            return
-        }
-
-        const sync = () => el.style.setProperty('--stage-h', `${el.clientHeight}px`)
-        sync()
-
-        const observer = new ResizeObserver(sync)
-        observer.observe(el)
-
-        return () => observer.disconnect()
-    }, [])
-
     return (
         <div className={styles.page}>
             <header className={styles.hero}>
@@ -86,7 +66,7 @@ export function AdWorkspace() {
                     every finding timestamped and cited
                 </p>
             </header>
-            <div className={styles.workspace} ref={workspaceRef}>
+            <div className={styles.workspace}>
                 <div className={styles.left}>
                     <UploadPanel
                         video={video}
