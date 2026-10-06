@@ -1,7 +1,8 @@
+import { formatPlacementLabel } from '@/labels'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { RulePlatform } from 'adlens-shared'
+import { Placement, RulePlatform } from 'adlens-shared'
 import { ResultsPanel } from './ResultsPanel'
 
 const APPROVAL_HEADING = 'Will it be approved?'
@@ -146,5 +147,48 @@ describe('ResultsPanel', () => {
         await userEvent.click(screen.getByRole('button', { name: /Transcript/ }))
 
         expect(await screen.findByText('No speech detected.')).toBeInTheDocument()
+    })
+
+    it('tags a failed placement spec with its placement and says the video won’t work there, and why', () => {
+        const bumper = formatPlacementLabel(Placement.YouTubeBumper)
+
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    metadataChecks: [
+                        buildCheck({
+                            id: 'bumper',
+                            platform: [RulePlatform.YouTube],
+                            placements: [Placement.YouTubeBumper],
+                            topic: 'creative_spec:duration',
+                            check: 'Bumper ads must be at most 6 seconds long.',
+                            detail: 'It’s 30.4 seconds long, longer than the 6 seconds allowed.',
+                        }),
+                    ],
+                })}
+            />,
+        )
+
+        expect(screen.getByText(bumper)).toHaveClass('ant-tag-purple')
+        expect(screen.getByText('Bumper ads must be at most 6 seconds long.')).toBeInTheDocument()
+        expect(
+            screen.getByText(
+                `This video won’t work for ${bumper}. It’s 30.4 seconds long, longer than the 6 seconds allowed.`,
+            ),
+        ).toBeInTheDocument()
+        expect(screen.queryByText('creative_spec:duration')).not.toBeInTheDocument()
+    })
+
+    it('shows a result stored before checks named their placements as it was', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    metadataChecks: [buildCheck({ topic: 'Bumper duration', detail: 'Duration 30.4s vs max 6s' })],
+                })}
+            />,
+        )
+
+        expect(screen.getByText('Bumper duration')).toBeInTheDocument()
+        expect(screen.getByText('Duration 30.4s vs max 6s')).toBeInTheDocument()
     })
 })

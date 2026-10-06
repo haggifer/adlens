@@ -1,5 +1,5 @@
 import type { SocialProvider } from '@/auth/types'
-import { JobStatus, Market, Placement, Platform, RulePlatform } from 'adlens-shared'
+import { JobStatus, Market, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
 
@@ -45,6 +45,10 @@ export const PLACEMENT_LABELS: Record<Placement, string> = {
     [Placement.LinkedInSingleVideo]: 'Single video',
     [Placement.AmazonSponsoredBrandsVideo]: 'Sponsored Brands video',
 }
+
+// "YouTube · Bumper": a placement name alone (Feed, In-feed) doesn't say whose it is.
+export const formatPlacementLabel = (placement: Placement): string =>
+    `${PLACEMENT_PLATFORM[placement]} · ${PLACEMENT_LABELS[placement]}`
 
 export const MARKET_LABELS: Record<Market, string> = {
     [Market.US]: 'United States',

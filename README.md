@@ -129,6 +129,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **Platforms and placements select each other** (`src/components/upload/platform-placements.ts`): choosing a platform
   selects all of its placements, and removing a platform's last placement removes the platform, so a platform is
   never checked without the specs of where it runs. A sample's saved platforms get all their placements the same way.
+  In the report a failed placement spec carries its placement as a tag in its own colour and says the video won't work
+  there, and why ("This video won't work for YouTube · Bumper (6 s). It's 30.4 seconds long, …"), so selecting every
+  placement of a platform shows exactly which formats the video doesn't fit.
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
   crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
   analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In

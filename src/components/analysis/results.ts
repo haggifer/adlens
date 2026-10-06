@@ -1,3 +1,4 @@
+import { formatPlacementLabel } from '@/labels'
 import type { Analysis, Finding, MetadataCheck, Severity, TimeRange } from 'adlens-shared'
 
 export interface ResultSections {
@@ -58,3 +59,10 @@ export const formatSeconds = (totalSeconds: number): string => {
 
 export const formatTimeRange = ({ startS, endS }: TimeRange): string =>
     endS !== undefined && endS > startS ? `${formatSeconds(startS)}–${formatSeconds(endS)}` : formatSeconds(startS)
+
+// A failed placement spec says which placement the video won't work for, then why; any other check says what was
+// measured. Results stored before checks named their placements keep their own detail.
+export const describeCheck = ({ verdict, placements, detail }: MetadataCheck): string =>
+    verdict === 'fail' && placements?.length
+        ? `This video won’t work for ${placements.map(formatPlacementLabel).join(', ')}. ${detail}`
+        : detail

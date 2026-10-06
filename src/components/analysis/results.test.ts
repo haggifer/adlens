@@ -1,6 +1,15 @@
+import { formatPlacementLabel } from '@/labels'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
-import type { Analysis, Finding, MetadataCheck } from 'adlens-shared'
-import { countIssues, findingSeverity, formatCount, formatSeconds, formatTimeRange, splitResults } from './results'
+import { type Analysis, type Finding, type MetadataCheck, Placement } from 'adlens-shared'
+import {
+    countIssues,
+    describeCheck,
+    findingSeverity,
+    formatCount,
+    formatSeconds,
+    formatTimeRange,
+    splitResults,
+} from './results'
 
 const analysis = (findings: Finding[], metadataChecks: MetadataCheck[]): Analysis =>
     buildAnalysis({ findings, metadataChecks })
@@ -134,5 +143,24 @@ describe('formatTimeRange', () => {
         expect(formatTimeRange({ startS: 3 })).toBe('0:03')
         expect(formatTimeRange({ startS: 3, endS: 3 })).toBe('0:03')
         expect(formatTimeRange({ startS: 5, endS: 2 })).toBe('0:05')
+    })
+})
+
+describe('describeCheck', () => {
+    const DETAIL = 'It’s 30.4 seconds long, longer than the 6 seconds allowed.'
+
+    it('says which placement a failed spec rules the video out of, then why', () => {
+        expect(describeCheck(buildCheck({ placements: [Placement.YouTubeBumper], detail: DETAIL }))).toBe(
+            `This video won’t work for ${formatPlacementLabel(Placement.YouTubeBumper)}. ${DETAIL}`,
+        )
+    })
+
+    it('keeps the detail alone for a passed or unmeasured spec, a platform-wide one, or an older result', () => {
+        const bumper = { placements: [Placement.YouTubeBumper], detail: DETAIL }
+
+        expect(describeCheck(buildCheck({ ...bumper, verdict: 'pass' }))).toBe(DETAIL)
+        expect(describeCheck(buildCheck({ ...bumper, verdict: 'unknown' }))).toBe(DETAIL)
+        expect(describeCheck(buildCheck({ placements: [], detail: DETAIL }))).toBe(DETAIL)
+        expect(describeCheck(buildCheck({ detail: DETAIL }))).toBe(DETAIL)
     })
 })

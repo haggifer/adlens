@@ -10,7 +10,7 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useAdmission } from '@/hooks/useAdmission'
 import { useQuota } from '@/hooks/useQuota'
-import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
+import { formatPlacementLabel, MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -67,10 +67,7 @@ const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
 const getPlacementOptions = (platforms: Platform[]) =>
     platforms.map((platform) => ({
         label: PLATFORM_LABELS[platform],
-        options: getPlatformPlacements(platform).map((value) => ({
-            value,
-            label: `${platform} · ${PLACEMENT_LABELS[value]}`,
-        })),
+        options: getPlatformPlacements(platform).map((value) => ({ value, label: formatPlacementLabel(value) })),
     }))
 
 // What a spent quota means the API would refuse: an account's week is used up, while an anonymous session or an
