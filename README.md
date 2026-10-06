@@ -132,10 +132,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
   crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
   analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In
-  (its dialog links to sign-up): signing in or signing up moves the analyses and runs to the account at once and deletes
-  the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this
-  browser" (header and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
-  its analyses can no longer be reached, and the API deletes them with the anonymous user about a week later.
+  (its dialog links to sign-up) and no count, which only accounts show: signing in or signing up moves the analyses and
+  runs to the account at once and deletes the anonymous user. The anonymous placeholder email never reaches the UI
+  (`AuthContext` gives `null`). There is no separate way to end an anonymous session: it holds at most one analysis,
+  which History can delete, and the API deletes the anonymous user a week after its last use.
 - **Google and GitHub sign in in a popup**, so the page keeps the visitor's selected video (a file held only in memory)
   and analysis settings. The click opens a blank named window at once (blockers allow it only inside the click), then
   points it at the provider's URL, which Better Auth returns without redirecting (`disableRedirect`). The popup comes

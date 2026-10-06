@@ -47,13 +47,13 @@ describe('Header', () => {
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
-    it('offers an anonymous visitor Sign In instead of an account menu, and still shows the count', () => {
-        renderHeader(anonymousAuth(), QUOTA)
+    it('offers an anonymous visitor only Sign In: no account menu and no count', () => {
+        renderHeader(anonymousAuth(), { used: 1, limit: 1, nextFreeAt: null })
 
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
-        expect(screen.getByText('2/3 analyses left')).toBeInTheDocument()
+        expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
     it('offers an account whose email isn’t confirmed a Confirm email button instead of the account menu', () => {

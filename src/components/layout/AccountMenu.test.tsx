@@ -15,8 +15,6 @@ jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/hooks/useHoverCapable', () => ({ useHoverCapable: () => mockIsHoverCapable() }))
 
-const FORGET_WARNING = 'Analyses you ran here without an account will no longer be reachable.'
-
 const renderMenu = (auth: AuthContextValue) => {
     mockUseAuth.mockReturnValue(auth)
 
@@ -92,19 +90,15 @@ describe('AccountMenu', () => {
             },
         )
 
-        it('shows a remembered anonymous visitor’s buttons as they will be, but ignores them', async () => {
+        it('shows a remembered anonymous visitor’s Sign In as it will be, but ignores it', async () => {
             const { user } = renderMenu(initializingAuth(AccountKind.Anonymous))
-            const forget = screen.getByRole('button', { name: 'Forget this browser' })
             const signIn = screen.getByRole('button', { name: 'Sign In' })
 
-            expectInert(forget)
             expectInert(signIn)
 
-            await user.click(forget)
             await user.click(signIn)
 
             expect(useAuthModalStore.getState().view).toBeNull()
-            expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument()
         })
 
         it('shows a remembered unconfirmed account’s buttons as they will be, but ignores them', async () => {
@@ -174,57 +168,6 @@ describe('AccountMenu', () => {
 
             expect(useAuthModalStore.getState().view).toBe('signin')
         })
-
-        it('forgets this browser and goes home once the visitor confirms', async () => {
-            const auth = anonymousAuth()
-            const { user } = renderMenu(auth)
-
-            await user.click(screen.getByRole('button', { name: 'Forget this browser' }))
-
-            expect(await screen.findByText(FORGET_WARNING)).toBeInTheDocument()
-            expect(auth.signOut).not.toHaveBeenCalled()
-
-            await user.click(screen.getByRole('button', { name: 'Forget' }))
-
-            expect(auth.signOut).toHaveBeenCalledTimes(1)
-            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
-        })
-
-        it('keeps the anonymous session when the visitor cancels', async () => {
-            const auth = anonymousAuth()
-            const { user } = renderMenu(auth)
-
-            await user.click(screen.getByRole('button', { name: 'Forget this browser' }))
-            await user.click(await screen.findByRole('button', { name: 'Cancel' }))
-
-            expect(auth.signOut).not.toHaveBeenCalled()
-            expect(mockPush).not.toHaveBeenCalled()
-        })
-
-        it('keeps the confirmation open and says so when forgetting fails, and a second try works', async () => {
-            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-            const auth = anonymousAuth()
-
-            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
-            const { user } = renderMenu(auth)
-
-            await user.click(screen.getByRole('button', { name: 'Forget this browser' }))
-            await user.click(await screen.findByRole('button', { name: 'Forget' }))
-
-            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
-            await waitFor(() =>
-                expect(screen.getByRole('button', { name: 'Forget' })).not.toHaveClass('ant-btn-loading'),
-            )
-            expect(screen.getByText(FORGET_WARNING)).toBeInTheDocument()
-            expect(mockPush).not.toHaveBeenCalled()
-            expect(consoleError).toHaveBeenCalledTimes(1)
-
-            await user.click(screen.getByRole('button', { name: 'Forget' }))
-
-            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
-            expect(auth.signOut).toHaveBeenCalledTimes(2)
-            await waitFor(() => expect(screen.queryByText(FORGET_WARNING)).not.toBeInTheDocument())
-        })
     })
 
     describe('for an account whose email isn’t confirmed', () => {
@@ -232,7 +175,6 @@ describe('AccountMenu', () => {
             const { user } = renderMenu(unconfirmedAuth())
 
             expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
-            expect(screen.queryByRole('button', { name: 'Forget this browser' })).not.toBeInTheDocument()
 
             await user.click(screen.getByRole('button', { name: 'Confirm email' }))
 
@@ -259,11 +201,10 @@ describe('AccountMenu', () => {
             return user
         }
 
-        it('shows the email and offers no way to forget the browser', async () => {
+        it('shows the email and no Sign In', async () => {
             await openMenu()
 
             expect(await screen.findByText(MEMBER_EMAIL)).toBeInTheDocument()
-            expect(screen.queryByRole('button', { name: 'Forget this browser' })).not.toBeInTheDocument()
             expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         })
 

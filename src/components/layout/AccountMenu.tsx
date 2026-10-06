@@ -4,7 +4,6 @@ import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
@@ -39,7 +38,6 @@ export function AccountMenu() {
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
-    const forgetBrowser = useForgetBrowser()
     const isHoverCapable = useHoverCapable()
 
     const [isOpen, setIsOpen] = useState(false)
@@ -96,27 +94,13 @@ export function AccountMenu() {
     }
 
     // Signed out, or nothing remembered while the session loads: most visitors have no session, so Sign In is drawn at
-    // once rather than after the session request.
-    if (!kind) {
+    // once rather than after the session request. An anonymous session gets the same single entry point: signing in or
+    // up in this browser moves its history to the account, and the dialog links to sign-up.
+    if (!kind || kind === AccountKind.Anonymous) {
         return (
             <Button type="primary" {...getSessionControlProps(isInert, () => setView('signin'))}>
                 Sign In
             </Button>
-        )
-    }
-
-    if (kind === AccountKind.Anonymous) {
-        return (
-            <span className="d-flex gap-2">
-                <Button type="text" {...getSessionControlProps(isInert, () => void forgetBrowser())}>
-                    Forget this browser
-                </Button>
-                {/* Signing in or up in this browser moves the anonymous history to the account, so one entry point
-                    is enough; the dialog links to sign-up. */}
-                <Button type="primary" {...getSessionControlProps(isInert, () => setView('signin'))}>
-                    Sign In
-                </Button>
-            </span>
         )
     }
 

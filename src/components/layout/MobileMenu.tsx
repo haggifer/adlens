@@ -7,7 +7,6 @@ import { formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { useForgetBrowser } from '@/hooks/useForgetBrowser'
 import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
@@ -53,7 +52,7 @@ const isLinkAllowed = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed
 }
 
 export function MobileMenu() {
-    const { styles, cx } = useStyles()
+    const { styles } = useStyles()
     const pathname = usePathname()
     const { user } = useAuth()
     // While the session loads, the remembered kind is drawn as it will be, with every session action ignored.
@@ -61,7 +60,6 @@ export function MobileMenu() {
     const setView = useAuthModalStore((s) => s.setView)
     const setIsContactOpen = useContactModalStore((s) => s.setIsOpen)
     const signOut = useSignOut()
-    const forgetBrowser = useForgetBrowser()
 
     const [isOpen, setIsOpen] = useState(false)
 
@@ -84,11 +82,6 @@ export function MobileMenu() {
     const handleSignOut = () => {
         handleClose()
         void signOut()
-    }
-
-    const handleForgetBrowser = () => {
-        handleClose()
-        void forgetBrowser()
     }
 
     const handleSignIn = () => {
@@ -142,8 +135,7 @@ export function MobileMenu() {
                     </div>
                 )}
                 {isAnonymous && (
-                    <div className={cx(styles.drawerUser, 'gap-2')}>
-                        {quota && <span className={styles.drawerUserQuota}>{formatQuotaLeft(quota)}</span>}
+                    <div className={styles.drawerUser}>
                         <Button type="primary" block {...getSessionControlProps(isInert, handleSignIn)}>
                             Sign In
                         </Button>
@@ -181,17 +173,6 @@ export function MobileMenu() {
                     >
                         <LogoutOutlined />
                         Sign Out
-                    </button>
-                )}
-                {isAnonymous && (
-                    <button
-                        type="button"
-                        className={styles.drawerItem}
-                        data-danger="true"
-                        {...getSessionControlProps(isInert, handleForgetBrowser)}
-                    >
-                        <LogoutOutlined />
-                        Forget this browser
                     </button>
                 )}
             </Drawer>

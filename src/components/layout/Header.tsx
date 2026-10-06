@@ -1,5 +1,6 @@
 'use client'
 
+import { AccountKind } from '@/auth/types'
 import { Logo } from '@/components/brand/Logo'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
@@ -26,6 +27,8 @@ export function Header() {
     const { quota } = useQuota()
 
     const isSignedIn = kind !== null
+    // Only an account shows its count: an anonymous session's single analysis is what the settings panel explains.
+    const hasAccount = isSignedIn && kind !== AccountKind.Anonymous
 
     return (
         <header className={styles.header}>
@@ -53,7 +56,7 @@ export function Header() {
                 <div className={styles.headerRight}>
                     {/* Below the md breakpoint the account and theme controls move into the menu drawer; the Sign In
                         button stays in the bar because it is the one action a signed-out visitor needs. */}
-                    {isSignedIn && quota && (
+                    {hasAccount && quota && (
                         <span className={cx(styles.headerGroup, styles.desktopOnly)}>
                             <span className={styles.quotaLabel}>{formatQuotaLeft(quota)}</span>
                             <Divider orientation="vertical" className={styles.headerDivider} />
