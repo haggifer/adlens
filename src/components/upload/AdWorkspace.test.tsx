@@ -17,7 +17,13 @@ const mockGetToken = jest.fn<Promise<string>, []>()
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({ authClient: { getSession: jest.fn() }, signIn: { anonymous: jest.fn() } }))
-jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(), startAnalysis: jest.fn() }))
+jest.mock('@/api/jobs', () => ({
+    ...jest.requireActual<typeof import('@/api/jobs')>('@/api/jobs'),
+    createJob: jest.fn(),
+    createSampleJob: jest.fn(),
+    getAdmissionRefusal: jest.fn(async () => null),
+    startAnalysis: jest.fn(),
+}))
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn(async () => []) }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn(async () => undefined) }))

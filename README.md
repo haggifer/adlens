@@ -136,6 +136,11 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   runs to the account at once and deletes the anonymous user. The anonymous placeholder email never reaches the UI
   (`AuthContext` gives `null`). There is no separate way to end an anonymous session: it holds at most one analysis,
   which History can delete, and the API deletes the anonymous user a week after its last use.
+- **Run is disabled before a refusal, not after.** `useAdmission` asks the API's `GET /v1/admission` whether a new
+  analysis would be admitted (for a visitor without a session too, judged as the anonymous user a first run creates)
+  and keeps the answer in the query cache per user, refreshed after every run, refusal, sign-in and sign-out. A refusal
+  disables Run and says why above it. A refusal from creating the job is the fallback: it disables Run the same way
+  until a newer answer replaces it.
 - **Google and GitHub sign in in a popup**, so the page keeps the visitor's selected video (a file held only in memory)
   and analysis settings. The click opens a blank named window at once (blockers allow it only inside the click), then
   points it at the provider's URL, which Better Auth returns without redirecting (`disableRedirect`). The popup comes

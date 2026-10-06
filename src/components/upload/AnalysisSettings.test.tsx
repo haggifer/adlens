@@ -1,5 +1,5 @@
 import { ApiRequestError } from '@/api/errors'
-import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
+import { createJob, createSampleJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { getQuota } from '@/api/me'
 import { authClient, signIn } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
@@ -30,7 +30,13 @@ jest.mock('@/auth/authClient', () => ({
     authClient: { getSession: jest.fn() },
     signIn: { anonymous: jest.fn() },
 }))
-jest.mock('@/api/jobs', () => ({ createJob: jest.fn(), createSampleJob: jest.fn(), startAnalysis: jest.fn() }))
+jest.mock('@/api/jobs', () => ({
+    ...jest.requireActual<typeof import('@/api/jobs')>('@/api/jobs'),
+    createJob: jest.fn(),
+    createSampleJob: jest.fn(),
+    getAdmissionRefusal: jest.fn(),
+    startAnalysis: jest.fn(),
+}))
 jest.mock('@/api/me', () => ({ getQuota: jest.fn() }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => mockUseQuota() }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
@@ -77,6 +83,9 @@ const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_
 
 const runButton = () => screen.getByRole('button', { name: /run analysis/i })
 
+const isAboveRun = (element: Element) =>
+    Boolean(element.compareDocumentPosition(runButton()) & Node.DOCUMENT_POSITION_FOLLOWING)
+
 const run = async (user: UserEvent) => {
     await user.click(runButton())
 }
@@ -90,6 +99,7 @@ describe('AnalysisSettings', () => {
         useContactModalStore.setState({ isOpen: false })
         jest.mocked(authClient.getSession).mockResolvedValue({ data: null, error: null } as never)
         jest.mocked(signIn.anonymous).mockResolvedValue({ data: null, error: null } as never)
+        jest.mocked(getAdmissionRefusal).mockResolvedValue(null)
         jest.mocked(createSampleJob).mockResolvedValue(JOB)
         jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
@@ -256,6 +266,10 @@ describe('AnalysisSettings', () => {
         })
 
         it('offers the contact form when the network hit its hard limit', async () => {
+            // The check before the run still allowed it; the one after says what the run was told.
+            jest.mocked(getAdmissionRefusal)
+                .mockResolvedValueOnce(null)
+                .mockResolvedValue(RequestErrorCode.NetworkQuotaExceeded)
             jest.mocked(createSampleJob).mockRejectedValueOnce(
                 new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded),
             )
@@ -311,6 +325,9 @@ describe('AnalysisSettings', () => {
         })
 
         it('offers Confirm email when the API asks for a confirmed address', async () => {
+            jest.mocked(getAdmissionRefusal)
+                .mockResolvedValueOnce(null)
+                .mockResolvedValue(RequestErrorCode.EmailConfirmationRequired)
             jest.mocked(createSampleJob).mockRejectedValueOnce(
                 new ApiRequestError(RequestErrorCode.EmailConfirmationRequired),
             )
@@ -349,6 +366,52 @@ describe('AnalysisSettings', () => {
         await user.click(screen.getByRole('button', { name: 'Sign up' }))
 
         expect(useAuthModalStore.getState().view).toBe('signup')
+    })
+
+    describe('checking in advance whether the analysis would be admitted', () => {
+        it('disables Run and says why, above it, before a visitor without a session tries', async () => {
+            jest.mocked(getAdmissionRefusal).mockResolvedValue(RequestErrorCode.SignUpRequired)
+            const { user } = renderSettings(signedOutAuth())
+
+            const notice = await screen.findByText(SIGN_UP_REQUIRED_COPY)
+
+            expect(runButton()).toBeDisabled()
+            expect(isAboveRun(notice)).toBe(true)
+
+            await user.click(screen.getByRole('button', { name: 'Sign up' }))
+
+            expect(useAuthModalStore.getState().view).toBe('signup')
+            expect(createSampleJob).not.toHaveBeenCalled()
+        })
+
+        it('falls back on a refused run: its message goes above Run and Run stays disabled', async () => {
+            jest.mocked(getAdmissionRefusal)
+                .mockResolvedValueOnce(null)
+                .mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+            jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
+            const { user } = renderSettings(anonymousAuth())
+
+            await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(1))
+            await run(user)
+
+            const notice = await screen.findByText(SIGN_UP_REQUIRED_COPY)
+
+            await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(2))
+            expect(runButton()).toBeDisabled()
+            expect(isAboveRun(notice)).toBe(true)
+        })
+
+        it('lets Run go again once a newer answer admits the analysis', async () => {
+            jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.QuotaExceeded))
+            const { user } = renderSettings(memberAuth())
+
+            await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(1))
+            await run(user)
+
+            await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(2))
+            await waitFor(() => expect(runButton()).toBeEnabled())
+            expect(screen.queryByText(/used all your analyses/)).not.toBeInTheDocument()
+        })
     })
 
     it('keeps the limit message hidden while a run that just used the analysis moves on', async () => {

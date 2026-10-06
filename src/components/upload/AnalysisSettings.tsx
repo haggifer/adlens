@@ -1,13 +1,14 @@
 'use client'
 
 import { ApiRequestError, describeRequestError, toApiRequestError } from '@/api/errors'
-import { createJob, createSampleJob, startAnalysis } from '@/api/jobs'
+import { createJob, createSampleJob, isAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { authClient, signIn } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useAdmission } from '@/hooks/useAdmission'
 import { useQuota } from '@/hooks/useQuota'
 import { MARKET_LABELS, PLACEMENT_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
@@ -49,14 +50,6 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     markets: [],
 }
 
-// Refusals that mean the visitor's quota is spent, which a stale tab may not know yet.
-const LIMIT_CODES: ApiErrorCode[] = [
-    RequestErrorCode.SignUpRequired,
-    RequestErrorCode.EmailConfirmationRequired,
-    RequestErrorCode.QuotaExceeded,
-    RequestErrorCode.NetworkQuotaExceeded,
-]
-
 const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
     if (source.kind !== 'sample') {
         return DEFAULT_VALUES
@@ -79,6 +72,16 @@ const getPlacementOptions = (platforms: Platform[]) =>
             label: `${platform} · ${PLACEMENT_LABELS[value]}`,
         })),
     }))
+
+// What a spent quota means the API would refuse: an account's week is used up, while an anonymous session or an
+// unconfirmed account had a single analysis and needs an account or a confirmed email for more.
+const getQuotaRefusal = (isEmailConfirmed: boolean, isAnonymous: boolean): RequestErrorCode => {
+    if (isEmailConfirmed) {
+        return RequestErrorCode.QuotaExceeded
+    }
+
+    return isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
+}
 
 const formatNextFree = (nextFreeAt: string) =>
     new Date(nextFreeAt).toLocaleString(undefined, {
@@ -144,6 +147,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const platforms = useWatch({ control, name: 'platforms' }) ?? []
 
     const { quota } = useQuota()
+    const { refusal, updatedAt } = useAdmission()
 
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
@@ -233,6 +237,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
             // invalidating by prefix catches the new user's queries too, not just the one active before the run.
             void queryClient.invalidateQueries({ queryKey: ['quota'] })
+            void queryClient.invalidateQueries({ queryKey: ['admission'] })
             void queryClient.invalidateQueries({ queryKey: ['jobs'] })
             router.push(`/analyses/${jobId}`)
         },
@@ -242,8 +247,10 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             setIsUploading(false)
             onRunningChange?.(false)
 
-            if (LIMIT_CODES.includes(code)) {
+            // A stale tab may not know the limit was reached; both answers catch up with the refusal.
+            if (isAdmissionRefusal(code)) {
                 void queryClient.invalidateQueries({ queryKey: ['quota'] })
+                void queryClient.invalidateQueries({ queryKey: ['admission'] })
             }
 
             if (code === RequestErrorCode.SignUpRequired) {
@@ -253,6 +260,14 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     })
 
     const isRunning = run.isPending || run.isSuccess
+    const runError = run.error ? toApiRequestError(run.error) : null
+    // A refused run keeps Run disabled until a newer admission answer replaces it (signing up, say, lifts it); when that
+    // answer can't be had, the refusal itself still holds.
+    const runRefusal =
+        runError && isAdmissionRefusal(runError.code) && updatedAt <= run.submittedAt ? runError.code : null
+    const quotaRefusal = hasQuotaLeft ? null : getQuotaRefusal(isEmailConfirmed, isAnonymous)
+    // While a run moves on, its own charge would read as a refusal.
+    const blockingRefusal = isRunning ? null : (runRefusal ?? refusal ?? quotaRefusal)
 
     const handlePlatformsChange = (next: Platform[]) => {
         setValue(
@@ -285,53 +300,12 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         return undefined
     }
 
-    const renderStatus = () => {
-        if (run.error) {
-            const error = toApiRequestError(run.error)
-
-            // The refreshed quota says the same, with the date the next analysis is free.
-            if (error.code === RequestErrorCode.QuotaExceeded && !hasQuotaLeft && quota?.nextFreeAt) {
-                return null
-            }
-
-            return <Alert type="error" showIcon title={error.message} action={renderErrorAction(error.code)} />
-        }
-
-        if (isUploading) {
-            return (
-                <div>
-                    <p className={styles.hint}>Uploading your video…</p>
-                    <Progress percent={Math.round(uploadProgress * 100)} size="small" />
-                </div>
-            )
-        }
-
-        return null
-    }
-
-    const renderQuota = () => {
-        // A run charges the quota before the page moves on to the analysis, which would flash the limit message.
-        if (!quota || isRunning) {
+    const renderNotice = () => {
+        if (isRunning) {
             return null
         }
 
-        if (quota.limit === null) {
-            return <p className={styles.hint}>Unlimited analyses</p>
-        }
-
-        // Without a confirmed account the one analysis doesn't come back with time: the next needs an account.
-        if (!hasQuotaLeft && !isEmailConfirmed) {
-            // Once a run is refused, its error under Run says this, with the same button.
-            if (run.error) {
-                return null
-            }
-
-            const code = isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
-
-            return <Alert type="info" showIcon title={describeRequestError(code)} action={renderErrorAction(code)} />
-        }
-
-        if (!hasQuotaLeft && quota.nextFreeAt) {
+        if (blockingRefusal === RequestErrorCode.QuotaExceeded && quota?.nextFreeAt) {
             return (
                 <p className={styles.hint}>
                     You’ve used all {quota.limit} analyses for the last 7 days. The next one is available on{' '}
@@ -340,8 +314,32 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             )
         }
 
-        return null
+        if (blockingRefusal) {
+            return (
+                <Alert
+                    type="info"
+                    showIcon
+                    title={describeRequestError(blockingRefusal)}
+                    action={renderErrorAction(blockingRefusal)}
+                />
+            )
+        }
+
+        // A refusal a newer admission answer has replaced is no longer true.
+        if (runError && !isAdmissionRefusal(runError.code)) {
+            return <Alert type="error" showIcon title={runError.message} action={renderErrorAction(runError.code)} />
+        }
+
+        return quota?.limit === null ? <p className={styles.hint}>Unlimited analyses</p> : null
     }
+
+    const renderUpload = () =>
+        isUploading && (
+            <div>
+                <p className={styles.hint}>Uploading your video…</p>
+                <Progress percent={Math.round(uploadProgress * 100)} size="small" />
+            </div>
+        )
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
@@ -406,7 +404,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                 </div>
             </div>
             <HumanCheck ref={humanCheck} action="start the analysis" />
-            {renderQuota()}
+            {renderNotice()}
             <Button
                 type="primary"
                 size="large"
@@ -417,11 +415,11 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                 loading={isRunning}
                 // Waiting out `isInitializing` keeps a member's still-loading session from being replaced by an
                 // anonymous one.
-                disabled={isRunning || !hasQuotaLeft || isInitializing}
+                disabled={isRunning || isInitializing || Boolean(blockingRefusal)}
             >
                 Run Analysis
             </Button>
-            {renderStatus()}
+            {renderUpload()}
         </form>
     )
 }
