@@ -351,6 +351,22 @@ describe('AnalysisSettings', () => {
         expect(useAuthModalStore.getState().view).toBe('signup')
     })
 
+    it('keeps the limit message hidden while a run that just used the analysis moves on', async () => {
+        mockQuota = { used: 0, limit: 1, nextFreeAt: null }
+        jest.mocked(startAnalysis).mockImplementation(async () => {
+            // The run charged the analysis, and the refreshed quota says so before the page navigates away.
+            mockQuota = { used: 1, limit: 1, nextFreeAt: null }
+
+            return JOB
+        })
+        const { user } = renderSettings(anonymousAuth())
+
+        await run(user)
+
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+        expect(screen.queryByText(SIGN_UP_REQUIRED_COPY)).not.toBeInTheDocument()
+    })
+
     it('opens sign-up when the network’s analyses without an account are used up', async () => {
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
         const { user } = renderSettings(anonymousAuth())

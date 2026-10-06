@@ -271,27 +271,15 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     const renderErrorAction = (code: ApiErrorCode) => {
         if (code === RequestErrorCode.NetworkQuotaExceeded) {
-            return (
-                <Button size="small" onClick={() => setIsContactOpen(true)}>
-                    Contact us
-                </Button>
-            )
+            return <Button onClick={() => setIsContactOpen(true)}>Contact us</Button>
         }
 
         if (code === RequestErrorCode.EmailConfirmationRequired) {
-            return (
-                <Button size="small" onClick={() => setView('confirm')}>
-                    Confirm email
-                </Button>
-            )
+            return <Button onClick={() => setView('confirm')}>Confirm email</Button>
         }
 
         if (code === RequestErrorCode.SignUpRequired) {
-            return (
-                <Button size="small" onClick={() => setView('signup')}>
-                    Sign up
-                </Button>
-            )
+            return <Button onClick={() => setView('signup')}>Sign up</Button>
         }
 
         return undefined
@@ -322,7 +310,8 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     }
 
     const renderQuota = () => {
-        if (!quota) {
+        // A run charges the quota before the page moves on to the analysis, which would flash the limit message.
+        if (!quota || isRunning) {
             return null
         }
 
