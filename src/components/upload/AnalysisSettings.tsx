@@ -21,7 +21,6 @@ import {
     type ApiErrorCode,
     Market,
     Placement,
-    PLACEMENT_PLATFORM,
     Platform,
     RequestErrorCode,
 } from 'adlens-shared'
@@ -29,6 +28,12 @@ import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
+import {
+    getPlatformPlacements,
+    toPlacementsForPlatforms,
+    toPlatformsForPlacements,
+    withPlatformPlacements,
+} from './platform-placements'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -52,19 +57,28 @@ const LIMIT_CODES: ApiErrorCode[] = [
     RequestErrorCode.NetworkQuotaExceeded,
 ]
 
-const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput =>
-    source.kind === 'sample' ? { ...DEFAULT_VALUES, ...source.sample.settings } : DEFAULT_VALUES
+const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
+    if (source.kind !== 'sample') {
+        return DEFAULT_VALUES
+    }
+
+    const { settings } = source.sample
+
+    return {
+        ...DEFAULT_VALUES,
+        ...settings,
+        placements: withPlatformPlacements(settings.platforms, settings.placements),
+    }
+}
 
 const getPlacementOptions = (platforms: Platform[]) =>
     platforms.map((platform) => ({
         label: PLATFORM_LABELS[platform],
-        options: Object.values(Placement)
-            .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
-            .map((value) => ({ value, label: `${platform} · ${PLACEMENT_LABELS[value]}` })),
+        options: getPlatformPlacements(platform).map((value) => ({
+            value,
+            label: `${platform} · ${PLACEMENT_LABELS[value]}`,
+        })),
     }))
-
-const keepPlacementsFor = (placements: Placement[], platforms: Platform[]) =>
-    placements.filter((placement) => platforms.includes(PLACEMENT_PLATFORM[placement]))
 
 const formatNextFree = (nextFreeAt: string) =>
     new Date(nextFreeAt).toLocaleString(undefined, {
@@ -241,8 +255,16 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const isRunning = run.isPending || run.isSuccess
 
     const handlePlatformsChange = (next: Platform[]) => {
+        setValue(
+            'placements',
+            toPlacementsForPlatforms(getValues('placements') ?? [], getValues('platforms') ?? [], next),
+        )
         setValue('platforms', next)
-        setValue('placements', keepPlacementsFor(getValues('placements') ?? [], next))
+    }
+
+    const handlePlacementsChange = (next: Placement[]) => {
+        setValue('placements', next)
+        setValue('platforms', toPlatformsForPlacements(getValues('platforms') ?? [], next))
     }
 
     const onSubmit = (settings: AnalysisSettingsValues) => run.mutate(settings)
@@ -362,7 +384,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                         control={control}
                         render={({ field }) => (
                             <Select
-                                {...field}
+                                value={field.value}
+                                onChange={handlePlacementsChange}
+                                onBlur={field.onBlur}
                                 mode="multiple"
                                 placeholder={
                                     platforms.length ? 'Adds the specs of each placement' : 'Pick a platform first'

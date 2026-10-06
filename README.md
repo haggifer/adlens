@@ -126,6 +126,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **Legal documents are MDX in the repo**, rendered in the app's layout and theme, not Termly's embed script. They
   are generated with Termly, then edited as plain text, so they load no third-party script and each change is a
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.
+- **Platforms and placements select each other** (`src/components/upload/platform-placements.ts`): choosing a platform
+  selects all of its placements, and removing a platform's last placement removes the platform, so a platform is
+  never checked without the specs of where it runs. A sample's saved platforms get all their placements the same way.
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
   crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
   analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In

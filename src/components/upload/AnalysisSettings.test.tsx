@@ -14,6 +14,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { type Job, type Quota, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
 import { AnalysisSettings } from './AnalysisSettings'
+import { withPlatformPlacements } from './platform-placements'
 import type { AnalysisSource } from './types'
 
 const mockPush = jest.fn()
@@ -48,6 +49,12 @@ jest.mock('@/components/human-check/HumanCheck', () => {
 const SAMPLE = buildSample()
 
 const SAMPLE_SOURCE: AnalysisSource = { kind: 'sample', sample: SAMPLE }
+
+// The sample names its platforms only; each brings all of its placements.
+const SAMPLE_RUN_SETTINGS = {
+    ...SAMPLE.settings,
+    placements: withPlatformPlacements(SAMPLE.settings.platforms, SAMPLE.settings.placements),
+}
 
 const JOB: Job = buildJob({ id: 'job-7' })
 
@@ -109,7 +116,7 @@ describe('AnalysisSettings', () => {
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
             expect(createSampleJob).toHaveBeenCalledWith({
                 sampleId: SAMPLE.id,
-                settings: SAMPLE.settings,
+                settings: SAMPLE_RUN_SETTINGS,
                 challengeToken: mockChallengeToken,
             })
             // No anonymous user is created for a visitor who can't pass the check.
@@ -225,7 +232,7 @@ describe('AnalysisSettings', () => {
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
             expect(createSampleJob).toHaveBeenCalledWith({
                 sampleId: SAMPLE.id,
-                settings: SAMPLE.settings,
+                settings: SAMPLE_RUN_SETTINGS,
                 challengeToken: undefined,
             })
             expect(authClient.getSession).not.toHaveBeenCalled()
@@ -243,7 +250,7 @@ describe('AnalysisSettings', () => {
             expect(mockGetToken).toHaveBeenCalledTimes(1)
             expect(createSampleJob).toHaveBeenLastCalledWith({
                 sampleId: SAMPLE.id,
-                settings: SAMPLE.settings,
+                settings: SAMPLE_RUN_SETTINGS,
                 challengeToken: mockChallengeToken,
             })
         })
@@ -296,7 +303,7 @@ describe('AnalysisSettings', () => {
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
             expect(createSampleJob).toHaveBeenCalledWith({
                 sampleId: SAMPLE.id,
-                settings: SAMPLE.settings,
+                settings: SAMPLE_RUN_SETTINGS,
                 challengeToken: mockChallengeToken,
             })
             expect(authClient.getSession).not.toHaveBeenCalled()
