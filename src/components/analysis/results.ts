@@ -66,3 +66,7 @@ export const describeCheck = ({ verdict, placements, detail }: MetadataCheck): s
     verdict === 'fail' && placements?.length
         ? `This video won’t work for ${placements.map(formatPlacementLabel).join(', ')}. ${detail}`
         : detail
+
+// Under the specs that failed or couldn't be checked: how many of the rest passed.
+export const describePassedChecks = (count: number): string =>
+    count === 1 ? 'The other spec passes.' : `The other ${count} specs pass.`

@@ -4,6 +4,7 @@ import { type Analysis, type Finding, type MetadataCheck, Placement } from 'adle
 import {
     countIssues,
     describeCheck,
+    describePassedChecks,
     findingSeverity,
     formatCount,
     formatSeconds,
@@ -162,5 +163,12 @@ describe('describeCheck', () => {
         expect(describeCheck(buildCheck({ ...bumper, verdict: 'unknown' }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ placements: [], detail: DETAIL }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ detail: DETAIL }))).toBe(DETAIL)
+    })
+})
+
+describe('describePassedChecks', () => {
+    it('counts the specs that passed besides the ones listed', () => {
+        expect(describePassedChecks(1)).toBe('The other spec passes.')
+        expect(describePassedChecks(3)).toBe('The other 3 specs pass.')
     })
 })

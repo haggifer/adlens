@@ -41,7 +41,7 @@ describe('ResultsPanel', () => {
     it('puts each finding under its section, and lists only the specs that didn’t pass', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
-        const passedSpecs = screen.getByText('1 spec passes.')
+        const passedSpecs = screen.getByText('The other spec passes.')
 
         expectBetween('Misleading claims', heading(APPROVAL_HEADING), heading(BEST_PRACTICE_HEADING))
         expectBetween('Weak hook', heading(BEST_PRACTICE_HEADING), heading(SPECS_HEADING))
@@ -75,7 +75,7 @@ describe('ResultsPanel', () => {
         expect(screen.queryByRole('heading', { name: ADVISORIES_HEADING })).not.toBeInTheDocument()
     })
 
-    it('counts passing specs in the plural', () => {
+    it('says no spec has an issue when every one passes', () => {
         render(
             <ResultsPanel
                 analysis={buildAnalysis({
@@ -85,7 +85,8 @@ describe('ResultsPanel', () => {
         )
 
         expect(heading(SPECS_HEADING)).toBeInTheDocument()
-        expect(screen.getByText('2 specs pass.')).toBeInTheDocument()
+        expect(screen.getByText('No placement spec issues found.')).toBeInTheDocument()
+        expect(screen.queryByText(/specs? pass/)).not.toBeInTheDocument()
     })
 
     it('lists the rules to confirm in the campaign setup', () => {
