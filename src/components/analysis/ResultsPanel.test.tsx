@@ -38,16 +38,17 @@ const expectBetween = (text: string, start: HTMLElement, end: HTMLElement) => {
 }
 
 describe('ResultsPanel', () => {
-    it('puts each finding under its section, and lists only the specs that didn’t pass', () => {
+    it('puts each finding under its section, and neither lists nor counts the specs that passed', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
-        const passedSpecs = screen.getByText('The other spec passes.')
+        const transcript = screen.getByRole('button', { name: /Transcript/ })
 
         expectBetween('Misleading claims', heading(APPROVAL_HEADING), heading(BEST_PRACTICE_HEADING))
         expectBetween('Weak hook', heading(BEST_PRACTICE_HEADING), heading(SPECS_HEADING))
-        expectBetween('Bumper duration', heading(SPECS_HEADING), passedSpecs)
-        expectBetween('Aspect ratio', heading(SPECS_HEADING), passedSpecs)
+        expectBetween('Bumper duration', heading(SPECS_HEADING), transcript)
+        expectBetween('Aspect ratio', heading(SPECS_HEADING), transcript)
         expect(screen.queryByText('File size')).not.toBeInTheDocument()
+        expect(screen.queryByText(/specs? pass/)).not.toBeInTheDocument()
     })
 
     it('counts failed spec blockers but not specs that could not be checked', () => {

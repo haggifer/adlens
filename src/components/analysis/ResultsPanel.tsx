@@ -4,15 +4,7 @@ import { formatPlacementLabel, RULE_PLATFORM_LABELS } from '@/labels'
 import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
-import {
-    countIssues,
-    describeCheck,
-    describePassedChecks,
-    findingSeverity,
-    formatCount,
-    formatTimeRange,
-    splitResults,
-} from './results'
+import { countIssues, describeCheck, findingSeverity, formatCount, formatTimeRange, splitResults } from './results'
 import { useStyles } from './styles'
 
 const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'gold', info: 'blue' }
@@ -46,9 +38,9 @@ interface IProps {
 export function ResultsPanel({ analysis, onSeek }: IProps) {
     const { styles } = useStyles()
 
-    const { compliance, bestPractice, placementIssues, passedChecks } = splitResults(analysis)
+    const { compliance, bestPractice, placementIssues } = splitResults(analysis)
     const { blockers, warnings } = countIssues(analysis)
-    const { advisories, transcript } = analysis
+    const { metadataChecks, advisories, transcript } = analysis
 
     const renderSource = (ref: string, quote: string) => (
         <a className={styles.sourceLink} href={ref} target="_blank" rel="noreferrer" title={quote}>
@@ -145,16 +137,13 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 ) : (
                     <Alert type="success" showIcon title="No gaps against the platforms’ best practices." />
                 )}
-                {(placementIssues.length > 0 || passedChecks > 0) && (
+                {metadataChecks.length > 0 && (
                     <>
                         <h3 className={styles.sectionLabel}>Placement specs</h3>
                         {placementIssues.length ? (
                             placementIssues.map(renderCheck)
                         ) : (
                             <Alert type="success" showIcon title="No placement spec issues found." />
-                        )}
-                        {placementIssues.length > 0 && passedChecks > 0 && (
-                            <p className={styles.hint}>{describePassedChecks(passedChecks)}</p>
                         )}
                     </>
                 )}

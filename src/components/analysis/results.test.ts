@@ -4,7 +4,6 @@ import { type Analysis, type Finding, type MetadataCheck, Placement } from 'adle
 import {
     countIssues,
     describeCheck,
-    describePassedChecks,
     findingSeverity,
     formatCount,
     formatSeconds,
@@ -36,8 +35,8 @@ describe('splitResults', () => {
         expect(ids(bestPractice)).toEqual(['captions', 'hook'])
     })
 
-    it('lists specs that failed or couldn’t be measured, and only counts the ones that passed', () => {
-        const { placementIssues, passedChecks } = splitResults(
+    it('lists only the specs that failed or couldn’t be measured', () => {
+        const { placementIssues } = splitResults(
             analysis(
                 [],
                 [
@@ -50,7 +49,6 @@ describe('splitResults', () => {
         )
 
         expect(ids(placementIssues)).toEqual(['duration', 'ratio'])
-        expect(passedChecks).toBe(2)
     })
 })
 
@@ -163,12 +161,5 @@ describe('describeCheck', () => {
         expect(describeCheck(buildCheck({ ...bumper, verdict: 'unknown' }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ placements: [], detail: DETAIL }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ detail: DETAIL }))).toBe(DETAIL)
-    })
-})
-
-describe('describePassedChecks', () => {
-    it('counts the specs that passed besides the ones listed', () => {
-        expect(describePassedChecks(1)).toBe('The other spec passes.')
-        expect(describePassedChecks(3)).toBe('The other 3 specs pass.')
     })
 })

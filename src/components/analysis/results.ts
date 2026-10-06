@@ -4,9 +4,8 @@ import type { Analysis, Finding, MetadataCheck, Severity, TimeRange } from 'adle
 export interface ResultSections {
     compliance: Finding[]
     bestPractice: Finding[]
-    // Specs that failed or couldn't be measured; passing ones are only counted.
+    // Specs that failed or couldn't be measured: the user only sees what needs their attention.
     placementIssues: MetadataCheck[]
-    passedChecks: number
 }
 
 export interface IssueCounts {
@@ -32,7 +31,6 @@ export const splitResults = ({ findings, metadataChecks }: Analysis): ResultSect
     compliance: findings.filter((f) => f.scope === 'compliance').sort(byFindingSeverity),
     bestPractice: findings.filter((f) => f.scope === 'best_practice').sort(byFindingSeverity),
     placementIssues: metadataChecks.filter((c) => c.verdict !== 'pass').sort(bySeverity),
-    passedChecks: metadataChecks.filter((c) => c.verdict === 'pass').length,
 })
 
 // A spec check only counts once it has actually failed: `unknown` means it couldn't be measured.
@@ -66,7 +64,3 @@ export const describeCheck = ({ verdict, placements, detail }: MetadataCheck): s
     verdict === 'fail' && placements?.length
         ? `This video won’t work for ${placements.map(formatPlacementLabel).join(', ')}. ${detail}`
         : detail
-
-// Under the specs that failed or couldn't be checked: how many of the rest passed.
-export const describePassedChecks = (count: number): string =>
-    count === 1 ? 'The other spec passes.' : `The other ${count} specs pass.`
