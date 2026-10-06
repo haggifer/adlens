@@ -5,6 +5,9 @@ import { createStyles } from 'antd-style'
 // (a shadow has to be lighter than the near-black backdrop to show); light derives its tint from the text colour.
 const FRAME_SHADOW_SHAPE = '0 6px 29px -2px'
 
+// 380px: below it the settings panel and the drop zone stop fitting; the page scrolls rather than squeeze them.
+const WORKSPACE_MIN_HEIGHT = '23.75rem'
+
 const buildFrameShadow = (textColor: string, isDark: boolean) =>
     `${FRAME_SHADOW_SHAPE} ${isDark ? '#404040' : `color-mix(in srgb, ${textColor} 14%, transparent)`}`
 
@@ -12,14 +15,19 @@ const buildFrameDragShadow = (textColor: string, isDark: boolean) =>
     `${FRAME_SHADOW_SHAPE} ${isDark ? '#777' : `color-mix(in srgb, ${textColor} 30%, transparent)`}`
 
 export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
+    /* Side by side, the page fills the screen without scrolling until the workspace would drop below
+       WORKSPACE_MIN_HEIGHT; then the page grows and scrolls instead. A grid row (not a flex item) keeps the
+       workspace's height definite under a min-height, so its columns can still size off 100%. */
     page: css`
-        display: flex;
-        flex-direction: column;
-        height: calc(100dvh - var(--header-h) - var(--footer-h));
+        display: grid;
+        grid-template-rows: auto minmax(${WORKSPACE_MIN_HEIGHT}, 1fr);
+        min-height: calc(100dvh - var(--header-h) - var(--footer-h));
         padding: 2.5rem 0 0.5rem;
 
         @media (max-width: 991.98px) {
-            height: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: auto;
             flex: 1;
             padding: 1.5rem 0 2rem;
         }
@@ -85,16 +93,19 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
     workspace: css`
         display: flex;
-        flex: 1;
         min-height: 0;
         align-items: stretch;
         gap: 2.5rem;
         --col-w: min(35rem, 100%);
+        /* Its content mustn't size the grid row: the square drop zone and the settings panel take the row's height,
+           not the other way round. */
+        contain: size;
 
         @media (max-width: 991.98px) {
             flex-direction: column;
             align-items: center;
             gap: 1.5rem;
+            contain: none;
         }
     `,
 
