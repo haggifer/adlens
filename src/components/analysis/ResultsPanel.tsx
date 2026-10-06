@@ -1,16 +1,25 @@
 'use client'
 
-import { formatPlacementLabel, RULE_PLATFORM_LABELS } from '@/labels'
+import { RULE_PLATFORM_LABELS } from '@/labels'
 import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag } from 'antd'
-import { countIssues, describeCheck, findingSeverity, formatCount, formatTimeRange, splitResults } from './results'
+import {
+    countIssues,
+    describeCheck,
+    findingSeverity,
+    formatCount,
+    formatTimeRange,
+    getCheckTargets,
+    splitResults,
+} from './results'
 import { useStyles } from './styles'
 
 const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'gold', info: 'blue' }
 
-// Apart from every severity and verdict colour, so a placement reads as where the ad runs, not as a judgement.
-const PLACEMENT_TAG_COLOR = 'purple'
+// Apart from every severity and verdict colour, so a placement or platform reads as where the ad runs, not as a
+// judgement.
+const TARGET_TAG_COLOR = 'purple'
 
 const VERDICT_COLORS: Record<Finding['verdict'] | MetadataCheck['verdict'], string> = {
     fail: 'red',
@@ -83,9 +92,9 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
     const renderCheck = (check: MetadataCheck) => (
         <div key={check.id} className={styles.findingCard}>
             <div className={styles.findingHead}>
-                {check.placements?.map((placement) => (
-                    <Tag key={placement} color={PLACEMENT_TAG_COLOR}>
-                        {formatPlacementLabel(placement)}
+                {getCheckTargets(check).map((target) => (
+                    <Tag key={target} color={TARGET_TAG_COLOR}>
+                        {target}
                     </Tag>
                 ))}
                 <Tag color={SEVERITY_COLORS[check.severity]}>{check.severity}</Tag>
@@ -93,10 +102,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 <span className={styles.findingTopic}>{check.check ?? check.topic}</span>
             </div>
             <p className={styles.findingEvidence}>{describeCheck(check)}</p>
-            <div className={styles.findingFooter}>
-                {check.platform && renderPlatforms(check.platform)}
-                {renderSource(check.ref, check.quote)}
-            </div>
+            <div className={styles.findingFooter}>{renderSource(check.ref, check.quote)}</div>
         </div>
     )
 

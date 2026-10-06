@@ -181,6 +181,23 @@ describe('ResultsPanel', () => {
         expect(screen.queryByText('creative_spec:duration')).not.toBeInTheDocument()
     })
 
+    it('tags a failed platform-wide spec with its platform', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    metadataChecks: [
+                        buildCheck({
+                            platform: [RulePlatform.YouTube],
+                            check: 'YouTube video ads need at least SD resolution.',
+                        }),
+                    ],
+                })}
+            />,
+        )
+
+        expect(screen.getByText('YouTube')).toHaveClass('ant-tag-purple')
+    })
+
     it('shows a result stored before checks named their placements as it was', () => {
         render(
             <ResultsPanel

@@ -1,4 +1,4 @@
-import { formatPlacementLabel } from '@/labels'
+import { formatPlacementLabel, RULE_PLATFORM_LABELS } from '@/labels'
 import type { Analysis, Finding, MetadataCheck, Severity, TimeRange } from 'adlens-shared'
 
 export interface ResultSections {
@@ -64,3 +64,10 @@ export const describeCheck = ({ verdict, placements, detail }: MetadataCheck): s
     verdict === 'fail' && placements?.length
         ? `This video won’t work for ${placements.map(formatPlacementLabel).join(', ')}. ${detail}`
         : detail
+
+// Where a spec binds: the selected placements it names, or its platforms when it binds every placement of them.
+// Results stored before checks named either get no label.
+export const getCheckTargets = ({ placements, platform }: MetadataCheck): string[] =>
+    placements?.length
+        ? placements.map(formatPlacementLabel)
+        : (platform ?? []).map((rulePlatform) => RULE_PLATFORM_LABELS[rulePlatform])

@@ -1,6 +1,6 @@
 import { formatPlacementLabel } from '@/labels'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
-import { type Analysis, type Finding, type MetadataCheck, Placement } from 'adlens-shared'
+import { type Analysis, type Finding, type MetadataCheck, Placement, RulePlatform } from 'adlens-shared'
 import {
     countIssues,
     describeCheck,
@@ -8,6 +8,7 @@ import {
     formatCount,
     formatSeconds,
     formatTimeRange,
+    getCheckTargets,
     splitResults,
 } from './results'
 
@@ -161,5 +162,21 @@ describe('describeCheck', () => {
         expect(describeCheck(buildCheck({ ...bumper, verdict: 'unknown' }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ placements: [], detail: DETAIL }))).toBe(DETAIL)
         expect(describeCheck(buildCheck({ detail: DETAIL }))).toBe(DETAIL)
+    })
+})
+
+describe('getCheckTargets', () => {
+    it('names the placements a spec binds, or its platforms when it binds them all', () => {
+        const youTube = { platform: [RulePlatform.YouTube] }
+
+        expect(getCheckTargets(buildCheck({ ...youTube, placements: [Placement.YouTubeBumper] }))).toEqual([
+            formatPlacementLabel(Placement.YouTubeBumper),
+        ])
+        expect(getCheckTargets(buildCheck(youTube))).toEqual(['YouTube'])
+        expect(getCheckTargets(buildCheck({ ...youTube, placements: [] }))).toEqual(['YouTube'])
+    })
+
+    it('names nothing for a result stored before checks named their platform', () => {
+        expect(getCheckTargets(buildCheck())).toEqual([])
     })
 })
