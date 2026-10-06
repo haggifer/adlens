@@ -125,7 +125,7 @@ describe('ResultsPanel', () => {
         expect(screen.queryByText('blocker')).not.toBeInTheDocument()
     })
 
-    it('marks only the results nobody could decide, not how sure the others are', () => {
+    it('labels each finding with how sure the AI is, and a spec only when it couldn’t be measured', () => {
         render(
             <ResultsPanel
                 analysis={buildAnalysis({
@@ -134,14 +134,18 @@ describe('ResultsPanel', () => {
                         buildFinding({ id: 'probable', verdict: 'warning' }),
                         buildFinding({ id: 'unclear', verdict: 'unknown' }),
                     ],
-                    metadataChecks: [buildCheck({ verdict: 'unknown' })],
+                    metadataChecks: [
+                        buildCheck({ id: 'measured' }),
+                        buildCheck({ id: 'unmeasured', verdict: 'unknown' }),
+                    ],
                 })}
             />,
         )
 
-        expect(screen.getAllByText('couldn’t check')).toHaveLength(2)
-        expect(screen.queryByText('fails')).not.toBeInTheDocument()
-        expect(screen.queryByText('at risk')).not.toBeInTheDocument()
+        expect(screen.getByText('AI: sure')).toBeInTheDocument()
+        expect(screen.getByText('AI: likely')).toBeInTheDocument()
+        expect(screen.getByText('AI: unsure')).toBeInTheDocument()
+        expect(screen.getAllByText('couldn’t measure')).toHaveLength(1)
     })
 
     it('links each finding to its source in a new tab', () => {

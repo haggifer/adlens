@@ -3,7 +3,7 @@
 import { RULE_PLATFORM_LABELS } from '@/labels'
 import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
-import { Alert, Button, Collapse, Tag } from 'antd'
+import { Alert, Button, Collapse, Tag, Tooltip } from 'antd'
 import {
     countIssues,
     describeCheck,
@@ -20,10 +20,21 @@ const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'go
 // Apart from every severity colour, so a placement or platform reads as where the ad runs, not as a judgement.
 const TARGET_TAG_COLOR = 'purple'
 
-// The severity tag already carries how sure the verdict is (see findingSeverity); only a result nobody could decide
-// needs its own mark, since the user has to check it themselves.
-const renderUncheckedTag = (verdict: Finding['verdict'] | MetadataCheck['verdict']) =>
-    verdict === 'unknown' && <Tag>couldn’t check</Tag>
+// Labelled as the AI's own certainty, so it doesn't read as a second severity.
+const CONFIDENCE_LABELS: Record<Finding['verdict'], string> = {
+    fail: 'AI: sure',
+    warning: 'AI: likely',
+    unknown: 'AI: unsure',
+}
+
+const renderConfidenceTag = (verdict: Finding['verdict']) => (
+    <Tooltip title="How sure the AI is that the video breaks this rule">
+        <Tag>{CONFIDENCE_LABELS[verdict]}</Tag>
+    </Tooltip>
+)
+
+// Specs are measured, not judged, so only one that couldn't be measured needs a mark.
+const renderUnmeasuredTag = (verdict: MetadataCheck['verdict']) => verdict === 'unknown' && <Tag>couldn’t measure</Tag>
 
 const renderPlatforms = (platforms: RulePlatform[]) => (
     <span>{platforms.map((platform) => RULE_PLATFORM_LABELS[platform]).join(', ')}</span>
@@ -55,7 +66,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
             <div key={finding.id} className={styles.findingCard}>
                 <div className={styles.findingHead}>
                     <Tag color={SEVERITY_COLORS[severity]}>{severity}</Tag>
-                    {renderUncheckedTag(finding.verdict)}
+                    {renderConfidenceTag(finding.verdict)}
                     <span className={styles.findingTopic}>{finding.topic}</span>
                 </div>
                 <p className={styles.findingEvidence}>{finding.evidence}</p>
@@ -88,7 +99,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                     </Tag>
                 ))}
                 <Tag color={SEVERITY_COLORS[check.severity]}>{check.severity}</Tag>
-                {renderUncheckedTag(check.verdict)}
+                {renderUnmeasuredTag(check.verdict)}
                 <span className={styles.findingTopic}>{check.check ?? check.topic}</span>
             </div>
             <p className={styles.findingEvidence}>{describeCheck(check)}</p>
