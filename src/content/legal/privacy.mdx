@@ -149,9 +149,10 @@ We may need to share your personal information in the following situations:
 
 **_In Short:_** _We use only the cookies that the Services need to work._
 
-We use cookies only to keep you signed in, to remember the color theme you choose, and to let the page header show the right buttons while it loads. We do not use analytics or advertising cookies, and we do not allow third parties to place tracking technologies on our Services. We use the following cookies:
+We use cookies only to keep you signed in, to keep the free analysis without an account to one per browser, to remember the color theme you choose, and to let the page header show the right buttons while it loads. We do not use analytics or advertising cookies, and we do not allow third parties to place tracking technologies on our Services. We use the following cookies:
 
 - **better-auth.session_token** (on our live site, **\_\_Secure-better-auth.session_token**): keeps you signed in. It is set when you sign in, or when you start your first analysis without an account, and removed when you sign out; otherwise it expires after 7 days without use.
+- **adlens_free_run**: set by our API when you start an analysis without an account. It holds the identifier of that anonymous account, so this browser gets one free analysis even if you then sign in and out, and expires after 7 days.
 - **adlens_scheme**: remembers whether you chose the light or dark theme. It is set only when you switch the theme, and expires after one year.
 - **adlens_account_kind**: remembers whether this browser was last using AdLens without an account or signed in, so the page header can show the right buttons while it loads. It holds no identifier, is removed when you sign out, and expires after one year.
 
