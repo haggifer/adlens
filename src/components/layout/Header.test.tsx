@@ -38,13 +38,12 @@ describe('Header', () => {
         expect(screen.getByRole('link', { name: 'History' })).not.toHaveAttribute('aria-current')
     })
 
-    // A quota is given even here, so the count is hidden by the sign-in check, not by a missing quota.
-    it('shows a signed-out visitor only Sign In: no navigation and no count', () => {
-        renderHeader(signedOutAuth(), QUOTA)
+    it('shows a signed-out visitor what their first analysis allows next to Sign In, with no navigation', () => {
+        renderHeader(signedOutAuth(), { used: 0, limit: 1, nextFreeAt: null })
 
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+        expect(screen.getByText('1/1 analyses left')).toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
-        expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
     it('offers an anonymous visitor Sign In instead of an account menu, and still shows the count', () => {

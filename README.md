@@ -128,7 +128,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   reviewable diff. `src/mdx-components.tsx` gives headings ids for in-document links.
 - **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
   crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
-  analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In
+  analysis; then the settings panel asks the visitor to sign up instead of naming a date. Before any session, the header
+  shows what that first analysis allows, read from the API's public `GET /v1/quota/visitor`, so the web never
+  hard-codes the limit. The header offers only Sign In
   (its dialog links to sign-up): signing in or signing up moves the analyses and runs to the account at once and deletes
   the anonymous user. The anonymous placeholder email never reaches the UI (`AuthContext` gives `null`). "Forget this
   browser" (header and phone menu, after a confirmation) signs the anonymous session out for a shared computer;
