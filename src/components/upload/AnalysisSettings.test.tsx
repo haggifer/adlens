@@ -363,9 +363,9 @@ describe('AnalysisSettings', () => {
         expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
         expect(runButton()).toBeDisabled()
 
-        await user.click(screen.getByRole('button', { name: 'Sign up' }))
+        await user.click(screen.getByRole('button', { name: 'Sign In' }))
 
-        expect(useAuthModalStore.getState().view).toBe('signup')
+        expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
     describe('checking in advance whether the analysis would be admitted', () => {
@@ -378,9 +378,9 @@ describe('AnalysisSettings', () => {
             expect(runButton()).toBeDisabled()
             expect(isAboveRun(notice)).toBe(true)
 
-            await user.click(screen.getByRole('button', { name: 'Sign up' }))
+            await user.click(screen.getByRole('button', { name: 'Sign In' }))
 
-            expect(useAuthModalStore.getState().view).toBe('signup')
+            expect(useAuthModalStore.getState().view).toBe('signin')
             expect(createSampleJob).not.toHaveBeenCalled()
         })
 
@@ -430,13 +430,13 @@ describe('AnalysisSettings', () => {
         expect(screen.queryByText(SIGN_UP_REQUIRED_COPY)).not.toBeInTheDocument()
     })
 
-    it('opens sign-up when the network’s analyses without an account are used up', async () => {
+    it('opens sign-in when the network’s analyses without an account are used up', async () => {
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
         const { user } = renderSettings(anonymousAuth())
 
         await run(user)
 
-        await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signup'))
+        await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signin'))
         expect(signIn.anonymous).not.toHaveBeenCalled()
     })
 
@@ -458,7 +458,7 @@ describe('AnalysisSettings', () => {
         await waitFor(() => expect(getQuota).toHaveBeenCalledTimes(2))
         await waitFor(() => expect(runButton()).toBeDisabled())
         expect(screen.getAllByText(SIGN_UP_REQUIRED_COPY)).toHaveLength(1)
-        expect(screen.getAllByRole('button', { name: 'Sign up' })).toHaveLength(1)
+        expect(screen.getAllByRole('button', { name: 'Sign In' })).toHaveLength(1)
     })
 
     it('lets the refreshed quota say when a member’s next analysis is free, instead of a second limit message', async () => {

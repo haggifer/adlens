@@ -253,8 +253,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                 void queryClient.invalidateQueries({ queryKey: ['admission'] })
             }
 
+            // The same entry point as the header's Sign In: its dialog links to sign-up.
             if (code === RequestErrorCode.SignUpRequired) {
-                setView('signup')
+                setView('signin')
             }
         },
     })
@@ -293,7 +294,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         }
 
         if (code === RequestErrorCode.SignUpRequired) {
-            return <Button onClick={() => setView('signup')}>Sign up</Button>
+            return <Button onClick={() => setView('signin')}>Sign In</Button>
         }
 
         return undefined
