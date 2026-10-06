@@ -6,9 +6,3 @@ export const getQuota = async (): Promise<Quota> => {
 
     return data.quota
 }
-
-export const getVisitorQuota = async (): Promise<Quota> => {
-    const { data } = await api.get<QuotaResponse>('/v1/quota/visitor')
-
-    return data.quota
-}
