@@ -433,7 +433,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         &.ant-divider {
             align-self: stretch;
             margin: 0 0 0.2rem;
-            color: ${token.colorTextTertiary};
+            color: ${token.colorTextSecondary};
             font-size: 0.8rem;
         }
     `,

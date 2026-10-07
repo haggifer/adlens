@@ -6,7 +6,7 @@ import { refreshSession } from '@/auth/session'
 import { AccountKind } from '@/auth/types'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { ANTD_THEME } from '@/design/theme'
+import { ANTD_THEMES } from '@/design/theme'
 import { ThemeProvider, useTheme } from '@/design/ThemeContext'
 import { InitialScheme } from '@/design/types'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
@@ -91,7 +91,7 @@ const ThemedShell = ({
     // antd-style's ThemeProvider renders the antd ConfigProvider internally: `appearance` selects the
     // light/dark algorithm AND feeds createStyles' `isDarkMode`, keeping tokens and isDarkMode in sync.
     return (
-        <StyleThemeProvider appearance={scheme} theme={ANTD_THEME}>
+        <StyleThemeProvider appearance={scheme} theme={ANTD_THEMES[scheme]}>
             <AntdApp>
                 <AuthProvider initialKind={initialAccountKind}>
                     <AppShell>{children}</AppShell>

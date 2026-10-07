@@ -1,4 +1,4 @@
-import { ANTD_THEME } from '@/design/theme'
+import { ANTD_THEMES } from '@/design/theme'
 // antd's entry is a client module, so on the server `theme` from 'antd' is only a reference; this file isn't.
 import getDesignToken from 'antd/es/theme/getDesignToken'
 import { ImageResponse } from 'next/og'
@@ -32,7 +32,7 @@ const TAGLINE =
 const DOMAIN = 'useadlens.com'
 
 // Light-scheme tokens: the image is rendered once, for every viewer.
-const TOKEN = getDesignToken(ANTD_THEME)
+const TOKEN = getDesignToken(ANTD_THEMES.light)
 
 // Satori reads TrueType or OpenType, not the WOFF2 next/font serves, so the brand fonts come from Google Fonts' CSS
 // API, which hands TrueType to a client that doesn't ask for anything newer. Fetched once, when the image is built.

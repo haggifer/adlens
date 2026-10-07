@@ -1,18 +1,22 @@
 import { BODY_FONT_STACK } from '@/fonts'
 import { ThemeConfig } from 'antd'
+import type { ColorScheme } from './types'
 
-// Seed-only theme: antd derives the whole palette from this one primary. The light/dark algorithm is
+// Seed-only theme: antd derives the whole palette from one primary per scheme. The light/dark algorithm is
 // intentionally not set here — antd-style's ThemeProvider applies it via `appearance` (see Providers.tsx).
-const PRIMARY_COLOR = '#0d9488'
+// White text on a primary button needs 4.5:1. Light mode gets a deeper teal (5.5:1; #0d9488 gave 3.7:1). Dark mode
+// keeps #0d9488: the algorithm already deepens it for buttons (4.8:1), and a darker seed would sink teal text on the
+// dark background to about 3:1.
+const PRIMARY_COLORS: Record<ColorScheme, string> = { light: '#0f766e', dark: '#0d9488' }
 const BORDER_RADIUS = 10
 // Every modal is at least this wide on screens that fit it; antd shrinks them to the viewport on phones.
 export const MODAL_WIDTH = 600
 
-export const ANTD_THEME: ThemeConfig = {
+const buildTheme = (primaryColor: string): ThemeConfig => ({
     token: {
-        colorPrimary: PRIMARY_COLOR,
-        colorInfo: PRIMARY_COLOR,
-        colorLink: PRIMARY_COLOR,
+        colorPrimary: primaryColor,
+        colorInfo: primaryColor,
+        colorLink: primaryColor,
         borderRadius: BORDER_RADIUS,
         fontFamily: BODY_FONT_STACK,
     },
@@ -31,4 +35,9 @@ export const ANTD_THEME: ThemeConfig = {
             innerMaxMargin: 22,
         },
     },
+})
+
+export const ANTD_THEMES: Record<ColorScheme, ThemeConfig> = {
+    light: buildTheme(PRIMARY_COLORS.light),
+    dark: buildTheme(PRIMARY_COLORS.dark),
 }
