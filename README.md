@@ -63,6 +63,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | Route             | What it does                                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/`               | Upload a video and choose the analysis settings                                                                                                                           |
+| `/demo`           | Example reports: a tab per demo analysis (`GET /v1/demos`), each with a summary of what it found, the video and the full report; linked from What you’ll get              |
 | `/analyses/[id]`  | Live status of one analysis, then its results next to the replayed video                                                                                                  |
 | `/history`        | Every analysis, newest first                                                                                                                                              |
 | `/account`        | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one) |
@@ -71,7 +72,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/auth/done`      | Landing page of the Google / GitHub sign-in popup; reports the outcome to the tab that opened it, then closes                                                             |
 | `/terms`          | Terms of Use                                                                                                                                                              |
 | `/privacy`        | Privacy Policy                                                                                                                                                            |
-| `/sitemap.xml`    | The public pages (`/`, `/terms`, `/privacy`), each also declaring itself canonical, so the http and non-www copies point at www                                           |
+| `/sitemap.xml`    | The public pages (`/`, `/demo`, `/terms`, `/privacy`), each also declaring itself canonical, so the http and non-www copies point at www                                  |
 | `/robots.txt`     | Allows every page and names the sitemap; the private pages stay out of the index through their noindex tag, which a crawler must fetch the page to read                   |
 
 ## Structure

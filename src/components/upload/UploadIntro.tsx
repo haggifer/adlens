@@ -1,6 +1,8 @@
 'use client'
 
-import { CheckCircleFilled } from '@ant-design/icons'
+import { CheckCircleFilled, FileSearchOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
+import { useRouter } from 'next/navigation'
 import { useStyles } from './styles'
 
 const FEATURES = [
@@ -12,6 +14,7 @@ const FEATURES = [
 
 export function UploadIntro() {
     const { styles } = useStyles()
+    const router = useRouter()
 
     return (
         <div className={styles.panel}>
@@ -24,6 +27,9 @@ export function UploadIntro() {
                     </li>
                 ))}
             </ul>
+            <Button className="align-self-start" icon={<FileSearchOutlined />} onClick={() => router.push('/demo')}>
+                See example reports
+            </Button>
         </div>
     )
 }

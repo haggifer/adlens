@@ -6,7 +6,12 @@ const { origin } = new URL(config.siteUrl)
 
 describe('sitemap', () => {
     it('lists only the public pages, as absolute addresses on the site', () => {
-        expect(sitemap().map(({ url }) => url)).toEqual([`${origin}/`, `${origin}/privacy`, `${origin}/terms`])
+        expect(sitemap().map(({ url }) => url)).toEqual([
+            `${origin}/`,
+            `${origin}/demo`,
+            `${origin}/privacy`,
+            `${origin}/terms`,
+        ])
     })
 })
 
