@@ -4,8 +4,11 @@
     margin: 0;
 }
 
+/* The gutter keeps the scrollbar's space whether or not a page scrolls, so the centred layout doesn't shift sideways
+   between a page that fits the screen (Analyze) and one that scrolls (History). */
 html {
     height: 100%;
+    scrollbar-gutter: stable;
 }
 
 html,
