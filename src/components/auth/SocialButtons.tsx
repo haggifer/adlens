@@ -8,7 +8,7 @@ import { useSocialSignInResult } from '@/hooks/useSocialSignInResult'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { GithubOutlined, LoadingOutlined } from '@ant-design/icons'
 import { App, Button, Divider } from 'antd'
-import { type ReactNode, useCallback, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 
 // Google's sign-in branding requires its four-colour "G"; the brand colours are fixed, not theme tokens.
 const GOOGLE_LOGO = (
@@ -76,14 +76,20 @@ const startRedirectSignIn = (provider: SocialProvider) =>
 export function SocialButtons() {
     const { notification } = App.useApp()
 
+    // The provider whose button spins while its popup is in front.
     const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null)
+    // Longer than the spinner: a popup the visitor left in the background can still finish the sign-in.
+    const [isAwaitingOutcome, setIsAwaitingOutcome] = useState(false)
     // The latest click: a request answered after the visitor started over must not steer the popup.
     const latestAttempt = useRef(0)
 
-    const clearPending = useCallback(() => setPendingProvider(null), [])
+    const clearPending = useCallback(() => {
+        setPendingProvider(null)
+        setIsAwaitingOutcome(false)
+    }, [])
 
     const notifyFailure = (error: AuthError | null) => {
-        setPendingProvider(null)
+        clearPending()
         notification.error({ title: describeError(error), placement: 'bottomRight' })
     }
 
@@ -103,6 +109,7 @@ export function SocialButtons() {
         latestAttempt.current += 1
         const attempt = latestAttempt.current
         setPendingProvider(provider)
+        setIsAwaitingOutcome(true)
 
         if (!popup) {
             await handleRedirectSignIn(provider)
@@ -126,7 +133,21 @@ export function SocialButtons() {
         popup.location.href = data.url
     }
 
-    useSocialSignInResult({ isPending: pendingProvider !== null, onSettled: clearPending })
+    useSocialSignInResult({ isPending: isAwaitingOutcome, onSettled: clearPending })
+
+    // For the same reason as above, a closed popup can't be told from an open one, so the spinner stops once this
+    // window has focus again: the browser gives it back when the popup closes, or when the visitor clicks back here.
+    useEffect(() => {
+        if (!pendingProvider) {
+            return
+        }
+
+        const handleReturn = () => setPendingProvider(null)
+
+        window.addEventListener('focus', handleReturn)
+
+        return () => window.removeEventListener('focus', handleReturn)
+    }, [pendingProvider])
 
     return (
         <>

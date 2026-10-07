@@ -3,7 +3,7 @@ import { refreshSession } from '@/auth/session'
 import { postSocialSignInOutcome } from '@/auth/social-sign-in'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { SocialButtons } from './SocialButtons'
 
 jest.mock('@/auth/authClient', () => ({
@@ -70,6 +70,21 @@ describe('SocialButtons', () => {
 
         expect(open).toHaveBeenCalledTimes(3)
         expect(signIn.social).toHaveBeenLastCalledWith(expect.objectContaining({ provider: 'google' }))
+    })
+
+    it('stops the spinner once this window has focus again, and still takes a sign-in finished later', async () => {
+        const { user } = renderWithProviders(<SocialButtons />)
+
+        await user.click(googleButton())
+        expect(googleButton()).toHaveAttribute('aria-busy', 'true')
+
+        fireEvent.focus(window)
+
+        expect(googleButton()).toHaveAttribute('aria-busy', 'false')
+
+        postSocialSignInOutcome({ errorCode: null })
+
+        await waitFor(() => expect(useAuthModalStore.getState().view).toBeNull())
     })
 
     it('closes the dialog once the popup reports the user signed in', async () => {

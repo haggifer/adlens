@@ -153,7 +153,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   points it at the provider's URL, which Better Auth returns without redirecting (`disableRedirect`). The popup comes
   back to `/auth/done`, which reports the outcome over a same-origin `BroadcastChannel`, not `window.opener`: the
   providers' pages set Cross-Origin-Opener-Policy, which severs the opener. For the same reason the popup's `closed`
-  flag can't tell a cancelled sign-in, so the buttons stay clickable and a new click starts over. When the browser
+  flag can't tell a cancelled sign-in, so the buttons stay clickable, a new click starts over, and a button's spinner
+  stops once the tab has focus again. When the browser
   blocks the popup (some in-app browsers), the sign-in runs in the tab itself as a full-page redirect: the settings
   come back with the address, but the video is lost.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
