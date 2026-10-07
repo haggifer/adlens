@@ -105,6 +105,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
         jest.mocked(uploadToSignedUrl).mockResolvedValue(undefined)
         mockGetToken.mockResolvedValue(mockChallengeToken)
+        window.history.replaceState(null, '', '/')
     })
 
     afterEach(() => jest.restoreAllMocks())

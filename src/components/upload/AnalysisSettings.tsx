@@ -27,7 +27,7 @@ import {
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import {
     getPlatformPlacements,
@@ -35,6 +35,7 @@ import {
     toPlatformsForPlacements,
     withPlatformPlacements,
 } from './platform-placements'
+import { readSettingsParams, writeSettingsToUrl } from './settings-url'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -50,9 +51,11 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     markets: [],
 }
 
+// A file takes the settings in the address: the ones applied before a reload, or to the video this one replaces.
+// Rendered only once a video is chosen, so `window` is always there. A sample brings the settings it was published with.
 const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
     if (source.kind !== 'sample') {
-        return DEFAULT_VALUES
+        return readSettingsParams(window.location.search)
     }
 
     const { settings } = source.sample
@@ -143,11 +146,12 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         resolver: zodResolver(analysisSettingsSchema),
         defaultValues: getDefaultValues(source),
     })
-    const platforms = useWatch({ control, name: 'platforms' }) ?? []
+    const values = useWatch({ control })
 
     const { quota } = useQuota()
     const { refusal, updatedAt } = useAdmission()
 
+    const platforms = values.platforms ?? []
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
 
@@ -340,6 +344,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                 <Progress percent={Math.round(uploadProgress * 100)} size="small" />
             </div>
         )
+
+    // The address holds the applied settings, so a reload or the next video keeps them.
+    useEffect(() => writeSettingsToUrl(values), [values])
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>

@@ -78,7 +78,8 @@ export function AdWorkspace() {
                 </div>
                 <div className={styles.right}>
                     {source ? (
-                        // A key per source, so no settings or run error carry over to the next video.
+                        // A key per source, so no run error carries over to the next video; the settings do, through
+                        // the address.
                         <AnalysisSettings
                             key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
                             source={source}

@@ -1,12 +1,13 @@
 import { ApiRequestError } from '@/api/errors'
 import { createJob, startAnalysis } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
-import { RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
+import { Market, Placement, Platform, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
 import type { ReactNode } from 'react'
 import { AdWorkspace } from './AdWorkspace'
 
@@ -109,6 +110,7 @@ describe('AdWorkspace', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
+        window.history.replaceState(null, '', '/')
     })
 
     it('locks the video and its settings from Run until the run fails, then unlocks them', async () => {
@@ -204,5 +206,23 @@ describe('AdWorkspace', () => {
         await user.upload(fileInput(), buildFile('second-cut.mp4'))
 
         await waitFor(() => expect(screen.queryByText(UNAVAILABLE_COPY)).not.toBeInTheDocument())
+    })
+
+    it('applies the settings in the address, keeps them there, and keeps them for a replacement video', async () => {
+        window.history.replaceState(null, '', '/?platform=Meta&market=US')
+        const { user } = renderWorkspace()
+
+        await chooseFile(user, buildFile('launch.mp4'))
+
+        expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
+        await waitFor(() => expect(window.location.search).toContain(`placement=${Placement.MetaFeed}`))
+
+        await user.upload(fileInput(), buildFile('second-cut.mp4'))
+
+        await waitFor(() =>
+            expect(URL.createObjectURL).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'second-cut.mp4' })),
+        )
+        expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
+        expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
     })
 })

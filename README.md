@@ -113,6 +113,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   server internals never reach the screen and wording can change without an API release.
 - **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
   a valid request is.
+- **The applied settings live in the address** (`/?platform=YouTube&placement=youtube_bumper&market=US`, one repeated
+  key per value), written with `history.replaceState` so Back still leaves the page. A reload, a replaced video and a
+  redirect sign-in keep them, and a link can carry them. A sample still brings its own settings. Unknown values and
+  placements without their platform are dropped on reading.
 - **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
@@ -150,8 +154,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   back to `/auth/done`, which reports the outcome over a same-origin `BroadcastChannel`, not `window.opener`: the
   providers' pages set Cross-Origin-Opener-Policy, which severs the opener. For the same reason the popup's `closed`
   flag can't tell a cancelled sign-in, so the buttons stay clickable and a new click starts over. When the browser
-  blocks the popup (some in-app browsers), the sign-in runs in the tab itself as a full-page redirect, and the
-  page's state is lost; nothing is saved to restore it.
+  blocks the popup (some in-app browsers), the sign-in runs in the tab itself as a full-page redirect: the settings
+  come back with the address, but the video is lost.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
   is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
   deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
