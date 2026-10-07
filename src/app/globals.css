@@ -39,6 +39,46 @@ a {
     }
 }
 
+/* antd fills a coloured tag with its shade 1 and writes in shade 7 (status tags in shade 6), under 4.5:1 for gold, green
+   and the teal status in light mode and purple in dark. Shades 2 and 9 pass 6:1 in both schemes, and the dark algorithm
+   flips the palette, so the same pair works there. Status tags take the nearest palette (processing: cyan, nearest the
+   teal primary). :root and :not() raise the rules above antd's. */
+:root .ant-tag.ant-tag-filled:not(.ant-tag-disabled) {
+    &.ant-tag-red,
+    &.ant-tag-error {
+        background: var(--ant-red-2);
+        color: var(--ant-red-9);
+    }
+
+    &.ant-tag-gold,
+    &.ant-tag-warning {
+        background: var(--ant-gold-2);
+        color: var(--ant-gold-9);
+    }
+
+    &.ant-tag-green,
+    &.ant-tag-success {
+        background: var(--ant-green-2);
+        color: var(--ant-green-9);
+    }
+
+    &.ant-tag-blue {
+        background: var(--ant-blue-2);
+        color: var(--ant-blue-9);
+    }
+
+    &.ant-tag-cyan,
+    &.ant-tag-processing {
+        background: var(--ant-cyan-2);
+        color: var(--ant-cyan-9);
+    }
+
+    &.ant-tag-purple {
+        background: var(--ant-purple-2);
+        color: var(--ant-purple-9);
+    }
+}
+
 /* Phones get bigger controls to avoid mis-taps; desktop keeps antd's 32/24/40px. antd reads these sizes from CSS
    variables on its css-var classes, and :root raises the override above antd's single-class rules. Small controls
    match the default ones here, so a compact desktop button is still a comfortable tap target. */
