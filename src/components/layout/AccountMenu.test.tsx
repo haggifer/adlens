@@ -269,7 +269,7 @@ describe('AccountMenu', () => {
         it('opens the contact form', async () => {
             const user = await openMenu()
 
-            await user.click(await screen.findByRole('menuitem', { name: /Contact support/ }))
+            await user.click(await screen.findByRole('menuitem', { name: /Contact us/ }))
 
             expect(useContactModalStore.getState().isOpen).toBe(true)
         })

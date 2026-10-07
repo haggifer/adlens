@@ -24,7 +24,7 @@ export function Footer() {
                     /
                 </span>
                 <button type="button" className={styles.footerLink} onClick={() => setIsContactOpen(true)}>
-                    Contact
+                    Contact us
                 </button>
             </nav>
             <span className={cx(styles.footerSep, styles.footerCopySep)} aria-hidden="true">

@@ -157,7 +157,7 @@ export function MobileMenu() {
                     ))}
                     <button type="button" className={styles.drawerItem} onClick={handleContact}>
                         <MailOutlined />
-                        Contact support
+                        Contact us
                     </button>
                 </nav>
                 <div className={styles.drawerThemeRow}>

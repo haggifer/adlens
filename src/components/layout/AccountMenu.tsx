@@ -48,7 +48,7 @@ export function AccountMenu() {
         { key: AccountMenuKey.Email, label: user?.email, disabled: true },
         { type: 'divider' },
         { key: AccountMenuKey.Account, label: 'Account', icon: <SettingOutlined /> },
-        { key: AccountMenuKey.Contact, label: 'Contact support', icon: <MailOutlined /> },
+        { key: AccountMenuKey.Contact, label: 'Contact us', icon: <MailOutlined /> },
         { type: 'divider' },
         { key: AccountMenuKey.SignOut, label: 'Sign Out', icon: <LogoutOutlined />, danger: true },
     ]

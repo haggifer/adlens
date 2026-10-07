@@ -205,7 +205,7 @@ describe('MobileMenu', () => {
         it('opens the contact form', async () => {
             const { user, menu } = await openMenu(memberAuth())
 
-            await user.click(menu.getByRole('button', { name: /Contact support/ }))
+            await user.click(menu.getByRole('button', { name: /Contact us/ }))
 
             expect(useContactModalStore.getState().isOpen).toBe(true)
         })
