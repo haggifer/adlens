@@ -142,7 +142,7 @@ describe('ResultsPanel', () => {
             />,
         )
 
-        expect(screen.getByText('AI: sure')).toBeInTheDocument()
+        expect(screen.getByText('AI: sure')).toHaveClass('ant-tag-cyan')
         expect(screen.getByText('AI: likely')).toBeInTheDocument()
         expect(screen.getByText('AI: unsure')).toBeInTheDocument()
         expect(screen.getAllByText('couldn’t measure')).toHaveLength(1)

@@ -20,16 +20,19 @@ const SEVERITY_COLORS: Record<Severity, string> = { blocker: 'red', warning: 'go
 // Apart from every severity colour, so a placement or platform reads as where the ad runs, not as a judgement.
 const TARGET_TAG_COLOR = 'purple'
 
-// Labelled as the AI's own certainty, so it doesn't read as a second severity.
+// Labelled as the AI's own certainty, and in a colour apart from the severities and the placement tags, so it doesn't
+// read as a second severity.
 const CONFIDENCE_LABELS: Record<Finding['verdict'], string> = {
     fail: 'AI: sure',
     warning: 'AI: likely',
     unknown: 'AI: unsure',
 }
 
+const CONFIDENCE_TAG_COLOR = 'cyan'
+
 const renderConfidenceTag = (verdict: Finding['verdict']) => (
     <Tooltip title="How sure the AI is that the video breaks this rule">
-        <Tag>{CONFIDENCE_LABELS[verdict]}</Tag>
+        <Tag color={CONFIDENCE_TAG_COLOR}>{CONFIDENCE_LABELS[verdict]}</Tag>
     </Tooltip>
 )
 
