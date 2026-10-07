@@ -17,6 +17,14 @@ const SKELETON_PARAGRAPH: SkeletonProps['paragraph'] = { rows: 2 }
 // The preview's own controls must work without selecting the row around it.
 const stopPropagation = (event: SyntheticEvent) => event.stopPropagation()
 
+// One preview plays at a time. A media event doesn't bubble, so the list catches `play` on its way down instead.
+const pauseOtherPreviews = (event: SyntheticEvent<HTMLDivElement>) =>
+    event.currentTarget.querySelectorAll('video').forEach((video) => {
+        if (video !== event.target) {
+            video.pause()
+        }
+    })
+
 export const SampleRow = ({ sample, onSelect }: { sample: Sample; onSelect: (sample: Sample) => void }) => {
     const { styles } = useStyles()
     const { platforms } = sample.settings
@@ -101,7 +109,9 @@ export function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
                 Pick an ad to see what AdLens checks. Its platforms and markets are filled in for you, and you can
                 change them before running the analysis.
             </p>
-            <div className={styles.sampleList}>{renderBody()}</div>
+            <div className={styles.sampleList} onPlayCapture={pauseOtherPreviews}>
+                {renderBody()}
+            </div>
         </Modal>
     )
 }

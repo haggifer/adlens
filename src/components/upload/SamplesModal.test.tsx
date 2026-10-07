@@ -2,7 +2,7 @@ import { ApiRequestError } from '@/api/errors'
 import { listSamples } from '@/api/samples'
 import { buildSample } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Placement, Platform, RequestErrorCode } from 'adlens-shared'
 import { SampleRow, SamplesModal } from './SamplesModal'
@@ -95,6 +95,20 @@ describe('SamplesModal', () => {
         renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
 
         expect(await screen.findByText('No sample ads are available yet.')).toBeInTheDocument()
+    })
+
+    it('pauses the other previews when one starts playing', async () => {
+        const pause = jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {})
+        jest.mocked(listSamples).mockResolvedValue([SAMPLE, buildSample({ id: 'sample-2', title: 'Coffee' })])
+        renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
+
+        await screen.findByRole('button', { name: ROW_NAME })
+        const [first, second] = Array.from(document.querySelectorAll('video'))
+
+        fireEvent.play(second)
+
+        expect(pause.mock.contexts).toEqual([first])
+        pause.mockRestore()
     })
 
     it('shows the copy for a failed load', async () => {
