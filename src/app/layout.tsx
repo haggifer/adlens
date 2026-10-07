@@ -8,32 +8,23 @@ import { cookies, headers } from 'next/headers'
 import type { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './Providers'
-
-const TITLE = 'AdLens — Find out why your video ads underperform'
-const DESCRIPTION =
-    'Upload a video ad and AdLens checks it against the ad policies and creative best practices of the platforms you target, with timestamps and cited sources for every finding.'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_OPEN_GRAPH, SITE_TITLE } from './site-metadata'
 
 export const metadata: Metadata = {
     metadataBase: new URL(config.siteUrl),
     title: {
-        default: TITLE,
-        template: '%s · AdLens',
+        default: SITE_TITLE,
+        template: `%s · ${SITE_NAME}`,
     },
-    description: DESCRIPTION,
-    applicationName: 'AdLens',
+    description: SITE_DESCRIPTION,
+    applicationName: SITE_NAME,
     keywords: ['video ads', 'ad policy check', 'ad approval', 'creative best practices', 'AI video analysis'],
-    openGraph: {
-        type: 'website',
-        siteName: 'AdLens',
-        url: '/',
-        title: TITLE,
-        description: DESCRIPTION,
-        locale: 'en_US',
-    },
+    openGraph: SITE_OPEN_GRAPH,
+    // The large card shows opengraph-image.tsx, which X reads in place of a twitter:image of its own.
     twitter: {
-        card: 'summary',
-        title: TITLE,
-        description: DESCRIPTION,
+        card: 'summary_large_image',
+        title: SITE_TITLE,
+        description: SITE_DESCRIPTION,
     },
     robots: { index: true, follow: true },
 }

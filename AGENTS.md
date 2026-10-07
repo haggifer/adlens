@@ -48,8 +48,8 @@ npm test             # Jest + React Testing Library
 ## Conventions
 
 - Named exports only (`export function Header`, `export function useJob`). Default exports only where Next.js
-  requires them: `page.tsx`, `layout.tsx`, `error.tsx` and `not-found.tsx` under `src/app/`, `src/app/robots.ts` and
-  `src/app/sitemap.ts`, and the root config files.
+  requires them: `page.tsx`, `layout.tsx`, `error.tsx` and `not-found.tsx` under `src/app/`, `src/app/robots.ts`,
+  `src/app/sitemap.ts` and `src/app/opengraph-image.tsx`, and the root config files.
 - A new public (indexable) page gets `alternates.canonical` in its metadata and an entry in `src/app/sitemap.ts`; every
   other page sets `robots: { index: false }`.
 - Client providers are composed in `src/app/Providers.tsx`; add new global providers there.

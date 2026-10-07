@@ -115,6 +115,11 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   server internals never reach the screen and wording can change without an API release.
 - **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
   a valid request is.
+- **Only `/`, `/terms` and `/privacy` are for search engines.** They're in the sitemap and name themselves canonical;
+  every other page is noindex. The home page also carries JSON-LD (WebSite, Organization, WebApplication) and the only
+  `og:url`, since an address set in the root layout would be inherited by every page. `src/app/site-metadata.ts` holds
+  the shared title, description and Open Graph tags. The share image (`opengraph-image.tsx`) is drawn at build time
+  with the brand fonts fetched from Google Fonts, so a build needs to reach them, as `next/font` already does.
 - **The applied settings live in the address** (`/?platform=YouTube&placement=youtube_bumper&market=US`, one repeated
   key per value), written with `history.replaceState` so Back still leaves the page. A reload, a replaced video and a
   redirect sign-in keep them, and a link can carry them. A sample still brings its own settings. Unknown values and
