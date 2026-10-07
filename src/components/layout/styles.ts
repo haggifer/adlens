@@ -284,7 +284,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     footerCopy: css`
-        color: ${token.colorTextTertiary};
+        color: ${token.colorTextSecondary};
 
         @media (max-width: 575.98px) {
             flex-basis: 100%;
