@@ -71,6 +71,8 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/auth/done`      | Landing page of the Google / GitHub sign-in popup; reports the outcome to the tab that opened it, then closes                                                             |
 | `/terms`          | Terms of Use                                                                                                                                                              |
 | `/privacy`        | Privacy Policy                                                                                                                                                            |
+| `/sitemap.xml`    | The public pages (`/`, `/terms`, `/privacy`), each also declaring itself canonical, so the http and non-www copies point at www                                           |
+| `/robots.txt`     | Allows every page and names the sitemap; the private pages stay out of the index through their noindex tag, which a crawler must fetch the page to read                   |
 
 ## Structure
 

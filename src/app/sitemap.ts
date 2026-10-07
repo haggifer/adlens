@@ -1,0 +1,9 @@
+import { config } from '@/config'
+import type { MetadataRoute } from 'next'
+
+// The pages open to search engines; every other page is noindex. Each of these also declares itself canonical.
+const PUBLIC_PATHS = ['/', '/privacy', '/terms']
+
+export default function sitemap(): MetadataRoute.Sitemap {
+    return PUBLIC_PATHS.map((path) => ({ url: new URL(path, config.siteUrl).toString() }))
+}
