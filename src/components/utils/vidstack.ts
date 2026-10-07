@@ -1,21 +1,4 @@
-import type { DefaultVideoLayoutSlots } from '@vidstack/react/player/layouts/default'
 import type { CSSProperties } from 'react'
-// Vidstack's layout stylesheet overrides its theme at equal specificity, so the theme must load first. It loads here,
-// ahead of the layout each player imports, because Organize Imports also sorts side-effect imports.
-import '@vidstack/react/player/styles/default/theme.css'
-
-// The MIME types Vidstack recognises as video. Neither a blob: object URL nor a signed GCS URL has a file extension,
-// so Vidstack relies entirely on this type to pick the native video provider — anything it doesn't list is never
-// loaded and the player spins forever. So map other types onto a recognised one (the browser still sniffs the real
-// codec when the <source> is attached).
-const VIDSTACK_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/3gp', 'video/ogg', 'video/avi', 'video/mpeg'] as const
-
-type VidstackVideoType = (typeof VIDSTACK_VIDEO_TYPES)[number]
-
-export const NO_CAST_SLOTS: DefaultVideoLayoutSlots = { googleCastButton: null, airPlayButton: null }
-
-export const toVidstackType = (mime: string): VidstackVideoType =>
-    (VIDSTACK_VIDEO_TYPES as readonly string[]).includes(mime) ? (mime as VidstackVideoType) : 'video/mp4'
 
 // Vidstack sizes the player at 16:9 whatever the media, which crops portrait ads once the layout sizes the player by
 // width. Players set this ratio as --media-ratio on stacked layouts instead.

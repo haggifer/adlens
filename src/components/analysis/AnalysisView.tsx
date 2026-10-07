@@ -1,35 +1,23 @@
 'use client'
 
 import { BackButton } from '@/components/utils/BackButton'
-import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
 import { useJob } from '@/hooks/useJob'
 import { useJobVideo } from '@/hooks/useJobVideo'
 import { formatPlatforms } from '@/labels'
-import { MediaPlayer, type MediaPlayerInstance, MediaProvider } from '@vidstack/react'
-import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
-import '@vidstack/react/player/styles/default/layouts/video.css'
 import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
-import { useMemo, useRef } from 'react'
+import { AnalysisWorkspace } from './AnalysisWorkspace'
 import { DeleteJobButton } from './DeleteJobButton'
-import { JobStatusPanel } from './JobStatusPanel'
-import { ResultsPanel } from './ResultsPanel'
 import { useStyles } from './styles'
-
-const toPlayerSrc = (url: string | undefined, contentType: string | undefined) =>
-    url && contentType ? { src: url, type: toVidstackType(contentType) } : undefined
 
 interface IProps {
     jobId: string
 }
 
 export function AnalysisView({ jobId }: IProps) {
-    const { styles, cx } = useStyles()
+    const { styles } = useStyles()
     const router = useRouter()
-
-    // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
-    const playerRef = useRef<MediaPlayerInstance>(null)
 
     const { job, isLoading, error } = useJob(jobId)
     // Only a verified upload has a video to replay (`media`), so a pending job or one still being checked has none. A
@@ -37,29 +25,7 @@ export function AnalysisView({ jobId }: IProps) {
     const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
     const { url, isMissing } = useJobVideo(jobId, hasVideo)
 
-    const hasPlayer = hasVideo && !isMissing
-    const contentType = job?.file.contentType
     const platforms = job ? formatPlatforms(job.settings.platforms) : ''
-    const playerSrc = useMemo(() => toPlayerSrc(url, contentType), [url, contentType])
-
-    const handleSeek = (seconds: number) => {
-        const player = playerRef.current
-
-        if (!player) {
-            return
-        }
-
-        player.currentTime = seconds
-        void player.play()
-
-        // When the layout is stacked (phones, tablets) the findings sit below the video, often scrolled past it.
-        const stage = player.el?.parentElement
-        const rect = stage?.getBoundingClientRect()
-
-        if (stage && rect && (rect.bottom < 0 || rect.top > window.innerHeight)) {
-            stage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-    }
 
     if (isLoading) {
         return (
@@ -105,36 +71,7 @@ export function AnalysisView({ jobId }: IProps) {
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
             </header>
-            <div className={cx(styles.workspace, !hasPlayer && 'justify-content-center align-items-start')}>
-                {hasPlayer && (
-                    <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
-                        {playerSrc ? (
-                            <MediaPlayer
-                                ref={playerRef}
-                                className={styles.player}
-                                src={playerSrc}
-                                viewType="video"
-                                playsInline
-                                aria-label={`Video ad ${job.file.name}`}
-                            >
-                                <MediaProvider />
-                                <DefaultVideoLayout
-                                    icons={defaultLayoutIcons}
-                                    smallLayoutWhen={false}
-                                    slots={NO_CAST_SLOTS}
-                                />
-                            </MediaPlayer>
-                        ) : (
-                            <Spin />
-                        )}
-                    </div>
-                )}
-                {job.status === JobStatus.Analyzed && job.analysis ? (
-                    <ResultsPanel analysis={job.analysis} onSeek={handleSeek} />
-                ) : (
-                    <JobStatusPanel job={job} />
-                )}
-            </div>
+            <AnalysisWorkspace job={job} videoUrl={url} hasPlayer={hasVideo && !isMissing} />
         </div>
     )
 }

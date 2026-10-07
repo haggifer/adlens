@@ -44,10 +44,10 @@ describe('AnalysisView', () => {
         jest.mocked(useJobVideo).mockReturnValue({ url: 'https://storage.example/video.mp4', isMissing: false })
     })
 
-    it('replays the video next to the results of an analysis', () => {
+    it('replays the video next to the results of an analysis', async () => {
         renderView(buildJob({ status: JobStatus.Analyzed, media: MEDIA, analysis: buildAnalysis() }))
 
-        expect(screen.getByRole('region', { name: 'Video ad summer-ad.mp4' })).toBeInTheDocument()
+        expect(await screen.findByRole('region', { name: 'Video ad summer-ad.mp4' })).toBeInTheDocument()
         expect(useJobVideo).toHaveBeenCalledWith('job-1', true)
     })
 

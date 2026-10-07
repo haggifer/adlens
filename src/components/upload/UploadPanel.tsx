@@ -1,16 +1,14 @@
 'use client'
 
-import { NO_CAST_SLOTS, toMediaRatioStyle, toVidstackType } from '@/components/utils/vidstack'
+import { LazyVideoPlayer } from '@/components/player/LazyVideoPlayer'
+import { toMediaRatioStyle } from '@/components/utils/vidstack'
 import { toMegabytes } from '@/file-size'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
-import { MediaPlayer, MediaProvider } from '@vidstack/react'
-import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
-import '@vidstack/react/player/styles/default/layouts/video.css'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'
-import { DragEvent, SyntheticEvent, useMemo, useState } from 'react'
+import { DragEvent, SyntheticEvent, useState } from 'react'
 import { useStyles } from './styles'
 import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
@@ -74,10 +72,6 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
             </div>
         </div>
     )
-
-    // Stable Vidstack source (memoised — Vidstack watches `src` by identity) with an explicit, recognised
-    // MIME type so a blob object URL actually loads instead of spinning.
-    const playerSrc = useMemo(() => (video ? { src: video.url, type: toVidstackType(video.type) } : ''), [video])
 
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
     const verifyFile = async (file: File): Promise<AcceptedVideo | null> => {
@@ -167,20 +161,13 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                 onDragLeave={handleDragLeave}
                 onDrop={handleDropReplace}
             >
-                <MediaPlayer
+                <LazyVideoPlayer
                     className={styles.player}
-                    src={playerSrc}
-                    viewType="video"
-                    load="eager"
-                    playsInline
-                    aria-label={video.sampleTitle ? `Sample ad: ${video.sampleTitle}` : 'Uploaded video ad'}
-                >
-                    <MediaProvider />
-                    {/* Force the large layout so every control lives in the bottom bar, leaving the
-                        top-right corner free for the Replace/Remove overlay. Cast/AirPlay are removed —
-                        they can't target a local blob URL anyway. */}
-                    <DefaultVideoLayout icons={defaultLayoutIcons} smallLayoutWhen={false} slots={NO_CAST_SLOTS} />
-                </MediaPlayer>
+                    url={video.url}
+                    contentType={video.type}
+                    isEager
+                    ariaLabel={video.sampleTitle ? `Sample ad: ${video.sampleTitle}` : 'Uploaded video ad'}
+                />
                 {video.sampleTitle && (
                     <div className={styles.sampleBadge}>
                         <Tag color="processing">Sample ad · {video.sampleTitle}</Tag>
