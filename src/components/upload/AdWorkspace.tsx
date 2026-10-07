@@ -1,13 +1,20 @@
 'use client'
 
 import type { Sample } from 'adlens-shared'
+import { Spin } from 'antd'
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
-import { AnalysisSettings } from './AnalysisSettings'
 import { SamplesModal } from './SamplesModal'
 import { useStyles } from './styles'
 import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
 import { UploadIntro } from './UploadIntro'
 import { UploadPanel } from './UploadPanel'
+
+// The settings panel shows only once a video is chosen, so its form, selects and human check load then, off the page's
+// first load.
+const AnalysisSettings = dynamic(() => import('./AnalysisSettings').then((module) => module.AnalysisSettings), {
+    loading: () => <Spin className="m-auto" />,
+})
 
 const releasePreview = (source: AnalysisSource | null) => {
     if (source?.kind === 'file') {
