@@ -60,7 +60,7 @@ export const MARKET_LABELS: Record<Market, string> = {
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
     [JobStatus.Pending]: 'Not started',
     [JobStatus.Verifying]: 'Checking video',
-    [JobStatus.Queued]: 'Queued',
+    [JobStatus.Queued]: 'Starting',
     [JobStatus.Analyzing]: 'Analyzing',
     [JobStatus.Analyzed]: 'Done',
     [JobStatus.Error]: 'Failed',
@@ -82,3 +82,40 @@ export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
 
 export const formatPlatforms = (platforms: Platform[]): string =>
     platforms.length ? platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ') : ALL_PLATFORMS_LABEL
+
+// Rule topics are ids of the form `category:subject` (`deceptive:fake_ui`); the report shows them as words.
+const TOPIC_CATEGORY_LABELS: Record<string, string> = {
+    brand: 'Brand',
+    claims: 'Claims',
+    creative_spec: 'Format',
+    deceptive: 'Deceptive',
+    disclosure: 'Disclosure',
+    editorial: 'Editorial',
+    effectiveness: 'Effectiveness',
+    general: 'General',
+    harm: 'Harm',
+    ip: 'Intellectual property',
+    prohibited: 'Prohibited',
+    restricted: 'Restricted',
+}
+
+const TOPIC_ACRONYMS = new Set(['ai', 'cbd', 'ip', 'qr', 'ui'])
+
+const toTopicWords = (id: string): string =>
+    id
+        .split('_')
+        .map((word) => (TOPIC_ACRONYMS.has(word) ? word.toUpperCase() : word))
+        .join(' ')
+
+const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
+
+// A topic that isn't an id (results stored before topics were ids) is shown as it is.
+export const formatTopic = (topic: string): string => {
+    const [category, subject] = topic.split(':')
+
+    if (!subject) {
+        return capitalize(toTopicWords(topic))
+    }
+
+    return `${TOPIC_CATEGORY_LABELS[category] ?? capitalize(toTopicWords(category))}: ${toTopicWords(subject)}`
+}

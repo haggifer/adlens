@@ -148,6 +148,31 @@ describe('ResultsPanel', () => {
         expect(screen.getAllByText('couldn’t measure')).toHaveLength(1)
     })
 
+    it('titles a finding and an advisory with their topic in words, not the rule id', () => {
+        render(
+            <ResultsPanel
+                analysis={buildAnalysis({
+                    findings: [buildFinding({ topic: 'deceptive:fake_ui' })],
+                    advisories: [
+                        {
+                            id: 'music',
+                            platform: [RulePlatform.Meta],
+                            topic: 'ip:music_licensing',
+                            severity: 'warning',
+                            check: 'Secure the music licenses.',
+                            quote: 'Quote',
+                            ref: 'https://example.com/music',
+                        },
+                    ],
+                })}
+            />,
+        )
+
+        expect(screen.getByText('Deceptive: fake UI')).toBeInTheDocument()
+        expect(screen.getByText('Intellectual property: music licensing')).toBeInTheDocument()
+        expect(screen.queryByText('deceptive:fake_ui')).not.toBeInTheDocument()
+    })
+
     it('links each finding to its source in a new tab', () => {
         render(<ResultsPanel analysis={buildAnalysis({ findings: [buildFinding()] })} />)
 

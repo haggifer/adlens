@@ -1,6 +1,6 @@
 'use client'
 
-import { RULE_PLATFORM_LABELS } from '@/labels'
+import { formatTopic, RULE_PLATFORM_LABELS } from '@/labels'
 import { PlayCircleOutlined } from '@ant-design/icons'
 import type { Advisory, Analysis, Finding, MetadataCheck, RulePlatform, Severity } from 'adlens-shared'
 import { Alert, Button, Collapse, Tag, Tooltip } from 'antd'
@@ -70,7 +70,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 <div className={styles.findingHead}>
                     <Tag color={SEVERITY_COLORS[severity]}>{severity}</Tag>
                     {renderConfidenceTag(finding.verdict)}
-                    <span className={styles.findingTopic}>{finding.topic}</span>
+                    <span className={styles.findingTopic}>{formatTopic(finding.topic)}</span>
                 </div>
                 <p className={styles.findingEvidence}>{finding.evidence}</p>
                 <div className={styles.findingFooter}>
@@ -103,7 +103,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 ))}
                 <Tag color={SEVERITY_COLORS[check.severity]}>{check.severity}</Tag>
                 {renderUnmeasuredTag(check.verdict)}
-                <span className={styles.findingTopic}>{check.check ?? check.topic}</span>
+                <span className={styles.findingTopic}>{check.check ?? formatTopic(check.topic)}</span>
             </div>
             <p className={styles.findingEvidence}>{describeCheck(check)}</p>
             <div className={styles.findingFooter}>{renderSource(check.ref, check.quote)}</div>
@@ -114,7 +114,7 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
         <div key={advisory.id} className={styles.findingCard}>
             <div className={styles.findingHead}>
                 <Tag color={SEVERITY_COLORS[advisory.severity]}>{advisory.severity}</Tag>
-                <span className={styles.findingTopic}>{advisory.topic}</span>
+                <span className={styles.findingTopic}>{formatTopic(advisory.topic)}</span>
             </div>
             <p className={styles.findingEvidence}>{advisory.check}</p>
             <div className={styles.findingFooter}>
