@@ -31,7 +31,7 @@ export const RULE_PLATFORM_LABELS: Record<RulePlatform, string> = {
     [RulePlatform.All]: 'All platforms',
 }
 
-export const PLACEMENT_LABELS: Record<Placement, string> = {
+const PLACEMENT_LABELS: Record<Placement, string> = {
     [Placement.MetaFeed]: 'Feed',
     [Placement.MetaReels]: 'Reels',
     [Placement.MetaStories]: 'Stories',

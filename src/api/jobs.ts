@@ -14,7 +14,7 @@ import {
 const JOBS_PAGE_SIZE = 20
 
 // What creating a job refuses before anything is charged: the quota and network limits.
-export const ADMISSION_REFUSALS: RequestErrorCode[] = [
+const ADMISSION_REFUSALS: RequestErrorCode[] = [
     RequestErrorCode.SignUpRequired,
     RequestErrorCode.EmailConfirmationRequired,
     RequestErrorCode.QuotaExceeded,
