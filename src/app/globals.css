@@ -11,6 +11,25 @@ html {
     scrollbar-gutter: stable;
 }
 
+/* On the root, not the app shell: the page background, a sibling of the shell, starts its glow under the header. */
+:root {
+    --header-h: 4rem;
+    --footer-h: 3.5rem;
+}
+
+@media (max-width: 991.98px) {
+    :root {
+        --header-h: 3.5rem;
+    }
+}
+
+/* Touch screens get 44px footer links. Only the side-by-side desktop layouts still size against this value. */
+@media (pointer: coarse) {
+    :root {
+        --footer-h: 4.25rem;
+    }
+}
+
 html,
 body {
     max-width: 100vw;

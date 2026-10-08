@@ -1,10 +1,7 @@
-import { pinnedAmbientBackground } from '@/components/background/ambient'
 import { createStyles } from 'antd-style'
 
-export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
+export const useStyles = createStyles(({ token, css }) => ({
     appShell: css`
-        --header-h: 4rem;
-        --footer-h: 3.5rem;
         position: relative;
         z-index: 1;
         /* A full-height column: main takes whatever the header and footer leave, so pages fill the screen by growing
@@ -13,15 +10,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         flex-direction: column;
         min-width: 0;
         min-height: 100dvh;
-
-        @media (max-width: 991.98px) {
-            --header-h: 3.5rem;
-        }
-
-        /* Touch screens get 44px footer links. Only the side-by-side desktop layouts still size against this value. */
-        @media (pointer: coarse) {
-            --footer-h: 4.25rem;
-        }
     `,
 
     /* --main-pad-x lets a page's full-bleed bar reach the edges of main through its padding. */
@@ -44,7 +32,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         position: sticky;
         top: 0;
         z-index: 10;
-        ${pinnedAmbientBackground(token, isDarkMode)}
+        /* Plain: the page's glow starts under it (ambientBackground). */
+        background: ${token.colorBgLayout};
         transition: background 0.3s ease;
     `,
 
