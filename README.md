@@ -44,6 +44,7 @@ Open [http://localhost:3000](http://localhost:3000). It expects the API at `NEXT
 - `npm run dev` — dev server (Turbopack)
 - `npm run build` / `npm run start` — production build and server
 - `npm run lint` — ESLint
+- `npm run knip` — unused files, exports and dependencies, which ESLint can't see across files (`knip.json`; CI runs it)
 - `npm test` — Jest
 - `npm run format` — Prettier
 

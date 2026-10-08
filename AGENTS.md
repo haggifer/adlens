@@ -16,6 +16,7 @@ routes, environment and the design decisions behind them.
 npm run dev          # dev server (Turbopack), expects the API at NEXT_PUBLIC_API_BASE_URL
 npm run build
 npm run lint
+npm run knip         # unused files, exports and dependencies (knip.json)
 npx tsc --noEmit
 npm test             # Jest + React Testing Library
 ```
