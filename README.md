@@ -171,8 +171,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   blocks the popup (some in-app browsers), the sign-in runs in the tab itself as a full-page redirect: the settings
   come back with the address, but the video is lost.
 - **Sign-up signs in straight away; confirming the email lifts the limits.** Until its email is confirmed, an account
-  is limited like an anonymous session (one analysis, no account page, no linked Google or GitHub login) but is never
-  deleted for inactivity. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
+  is limited like an anonymous session (no account page, no linked Google or GitHub login) but is never deleted for
+  inactivity. Before confirmation a user gets one analysis in total, shared with the anonymous session it signed up
+  from and kept for good; the API enforces it. From sign-up the header shows the account's weekly allowance
+  ("4/5 analyses left" after that one analysis) while Run asks to confirm the email. The header and phone menu offer Confirm email, which opens "Check your inbox" and can
   resend the link. A duplicate sign-up says the address is already in use. The confirmation link never signs anyone
   in: it confirms only for a session signed in as its own account, so `/confirm-email` asks a visitor to sign in
   first and then sends the same token again. A confirmation also tells the browser's other tabs, through Better Auth's
