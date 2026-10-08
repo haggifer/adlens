@@ -1,6 +1,10 @@
 import { ANTD_THEMES } from '@/design/theme'
-// antd's entry is a client module, so on the server `theme` from 'antd' is only a reference; this file isn't.
-import getDesignToken from 'antd/es/theme/getDesignToken'
+// The token math from antd's own modules, not its `theme` entry (a client module, only a reference on the server) nor
+// `getDesignToken`, which caches through @ant-design/cssinjs and so creates a React context: the dev server evaluates
+// this file for the page's metadata in the server-component layer, where createContext doesn't exist.
+import defaultAlgorithm from 'antd/es/theme/themes/default'
+import seedToken from 'antd/es/theme/themes/seed'
+import formatToken from 'antd/es/theme/util/alias'
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -31,8 +35,10 @@ const TAGLINE =
 
 const DOMAIN = 'useadlens.com'
 
-// Light-scheme tokens: the image is rendered once, for every viewer.
-const TOKEN = getDesignToken(ANTD_THEMES.light)
+const { token: LIGHT_TOKEN = {} } = ANTD_THEMES.light
+
+// Light-scheme tokens, as antd derives them: the image is rendered once, for every viewer.
+const TOKEN = formatToken({ ...defaultAlgorithm({ ...seedToken, ...LIGHT_TOKEN }), override: LIGHT_TOKEN })
 
 // Satori reads TrueType or OpenType, not the WOFF2 next/font serves, so the brand fonts come from Google Fonts' CSS
 // API, which hands TrueType to a client that doesn't ask for anything newer. Fetched once, when the image is built.
