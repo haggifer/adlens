@@ -2,7 +2,7 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { Header } from './Header'
 
@@ -26,9 +26,22 @@ describe('Header', () => {
     it('shows a member the navigation, how many analyses are left and the account menu', () => {
         renderHeader(memberAuth(), QUOTA)
 
+        expect(screen.getByRole('link', { name: 'Examples' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'History' })).toBeInTheDocument()
         expect(screen.getByText('2/3 analyses left')).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
+    })
+
+    it('orders the navigation Analyze, History, Examples', () => {
+        renderHeader(memberAuth(), QUOTA)
+
+        const nav = screen.getByRole('navigation', { name: 'Main' })
+
+        expect(
+            within(nav)
+                .getAllByRole('link')
+                .map((link) => link.textContent),
+        ).toEqual(['Analyze', 'History', 'Examples'])
     })
 
     it('marks the current page in the navigation', () => {
@@ -39,10 +52,12 @@ describe('Header', () => {
     })
 
     // A quota is given even here, so the count is hidden by the sign-in check, not by a missing quota.
-    it('shows a signed-out visitor only Sign In: no navigation and no count', () => {
+    it('shows a signed-out visitor Sign In and the public pages: no History and no count', () => {
         renderHeader(signedOutAuth(), QUOTA)
 
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Analyze' })).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute('href', '/demo')
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })

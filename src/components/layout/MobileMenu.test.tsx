@@ -215,6 +215,7 @@ describe('MobileMenu', () => {
         const { menu } = await openMenu(signedOutAuth())
 
         expect(menu.getByRole('link', { name: /Analyze/ })).toBeInTheDocument()
+        expect(menu.getByRole('link', { name: /Examples/ })).toHaveAttribute('href', '/demo')
         expect(menu.queryByRole('link', { name: /History/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()

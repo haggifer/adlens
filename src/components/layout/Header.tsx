@@ -13,9 +13,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useStyles } from './styles'
 
+// History lists a session's own analyses; the other pages are for anyone.
 const NAV_LINKS = [
-    { href: '/', label: 'Analyze' },
-    { href: '/history', label: 'History' },
+    { href: '/', label: 'Analyze', isSessionOnly: false },
+    { href: '/history', label: 'History', isSessionOnly: true },
+    { href: '/demo', label: 'Examples', isSessionOnly: false },
 ]
 
 export function Header() {
@@ -29,6 +31,7 @@ export function Header() {
     const isSignedIn = kind !== null
     // Only an account shows its count: an anonymous session's single analysis is what the settings panel explains.
     const hasAccount = isSignedIn && kind !== AccountKind.Anonymous
+    const navLinks = NAV_LINKS.filter((link) => isSignedIn || !link.isSessionOnly)
 
     return (
         <header className={styles.header}>
@@ -37,21 +40,19 @@ export function Header() {
                     <Link href="/" className={styles.logoLink} aria-label="AdLens home">
                         <Logo />
                     </Link>
-                    {isSignedIn && (
-                        <nav className={cx(styles.nav, styles.desktopOnly)} aria-label="Main">
-                            {NAV_LINKS.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={styles.navLink}
-                                    data-active={pathname === item.href}
-                                    aria-current={pathname === item.href ? 'page' : undefined}
-                                >
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </nav>
-                    )}
+                    <nav className={cx(styles.nav, styles.desktopOnly)} aria-label="Main">
+                        {navLinks.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={styles.navLink}
+                                data-active={pathname === item.href}
+                                aria-current={pathname === item.href ? 'page' : undefined}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
                 </div>
                 <div className={styles.headerRight}>
                     {/* Below the md breakpoint the account and theme controls move into the menu drawer; the Sign In

@@ -11,6 +11,7 @@ import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
 import {
+    FileSearchOutlined,
     HistoryOutlined,
     LogoutOutlined,
     MailOutlined,
@@ -40,6 +41,7 @@ const DRAWER_WIDTH = 300
 const MENU_LINKS: MenuLink[] = [
     { href: '/', label: 'Analyze', icon: <UploadOutlined />, access: 'public' },
     { href: '/history', label: 'History', icon: <HistoryOutlined />, access: 'session' },
+    { href: '/demo', label: 'Examples', icon: <FileSearchOutlined />, access: 'public' },
     { href: '/account', label: 'Account', icon: <SettingOutlined />, access: 'account' },
 ]
 
