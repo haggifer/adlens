@@ -14,3 +14,15 @@ export const ambientBackground = ({ colorPrimary, colorWhite, colorBgLayout }: A
     return `radial-gradient(85vw 55vh at 50% -8%, ${tint(24)}, transparent 62%),
         radial-gradient(60vw 40vh at 50% 108%, ${tint(12)}, transparent 60%), ${colorBgLayout}`
 }
+
+// For an opaque bar that content scrolls under (the header, the legal pages' Back bar): the page's own background
+// pinned to the viewport, so the bar can't be told apart from the page. iOS Safari ignores a fixed attachment and would
+// stretch the glow over the bar alone, so there it's plain.
+export const pinnedAmbientBackground = (colors: AmbientColors, isDarkMode: boolean) => `
+    background: ${ambientBackground(colors, isDarkMode)};
+    background-attachment: fixed;
+
+    @supports (-webkit-touch-callout: none) {
+        background: ${colors.colorBgLayout};
+    }
+`

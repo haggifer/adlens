@@ -1,6 +1,7 @@
+import { pinnedAmbientBackground } from '@/components/background/ambient'
 import { createStyles } from 'antd-style'
 
-export const useStyles = createStyles(({ token, css }) => ({
+export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     appShell: css`
         --header-h: 4rem;
         --footer-h: 3.5rem;
@@ -23,17 +24,19 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    /* --main-pad-x lets a page's full-bleed bar reach the edges of main through its padding. */
     appMain: css`
+        --main-pad-x: 1.5rem;
         display: flex;
         flex: 1;
         flex-direction: column;
         width: 100%;
         max-width: 1120px;
         margin: 0 auto;
-        padding: 0 1.5rem;
+        padding: 0 var(--main-pad-x);
 
         @media (max-width: 991.98px) {
-            padding: 0 1rem;
+            --main-pad-x: 1rem;
         }
     `,
 
@@ -41,9 +44,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         position: sticky;
         top: 0;
         z-index: 10;
-        background: color-mix(in srgb, ${token.colorBgLayout} 72%, transparent);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        ${pinnedAmbientBackground(token, isDarkMode)}
         transition: background 0.3s ease;
     `,
 
