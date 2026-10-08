@@ -115,8 +115,11 @@ const invalidateChangedAccount = (queryClient: QueryClient, previous: SessionAcc
         return
     }
 
+    // The admission answer is cached under the same user id, so without this Run stayed refused ("Confirm your email")
+    // after the confirmation while the header's quota had already updated.
     if (previous.isEmailConfirmed !== current.isEmailConfirmed) {
         void queryClient.invalidateQueries({ queryKey: ['quota'] })
+        void queryClient.invalidateQueries({ queryKey: ['admission'] })
     }
 }
 

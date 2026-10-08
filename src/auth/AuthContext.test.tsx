@@ -229,12 +229,13 @@ describe('AuthProvider', () => {
             expect(invalidate).toHaveBeenCalledWith({ queryKey: ['jobs'] })
         })
 
-        it('refreshes the limits once the email is confirmed, in this tab or another', () => {
+        it('refreshes the limits and whether Run is allowed once the email is confirmed, in this tab or another', () => {
             const { invalidate, changeSessionTo } = renderChangingSession(UNCONFIRMED_SESSION)
 
             changeSessionTo({ user: { ...UNCONFIRMED_SESSION.user, emailVerified: true } })
 
             expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['admission'] })
             expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['jobs'] })
         })
 
