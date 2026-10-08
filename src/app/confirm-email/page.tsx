@@ -10,7 +10,7 @@ interface IProps {
     searchParams: Promise<{ token?: string }>
 }
 
-// The confirmation email links here with `?token=`; the page confirms it, then sends the user home.
+// The confirmation email links here with `?token=`; the page confirms it and says so.
 export default async function ConfirmEmailPage({ searchParams }: IProps) {
     const { token } = await searchParams
 

@@ -5,13 +5,14 @@ import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { App, Button, Result, Spin } from 'antd'
+import { Button, Result, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useStyles } from './styles'
 
 enum LinkOutcome {
     Confirming = 'confirming',
+    Confirmed = 'confirmed',
     SignInRequired = 'signInRequired',
     OtherAccount = 'otherAccount',
     Failed = 'failed',
@@ -36,7 +37,6 @@ interface IProps {
 export function ConfirmEmail({ token }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
-    const { notification } = App.useApp()
     const { isInitializing, isSignedIn, isAnonymous, isEmailConfirmed, user } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
     const setIsOtherAddressLink = useAuthModalStore((s) => s.setIsOtherAddressLink)
@@ -107,6 +107,23 @@ export function ConfirmEmail({ token }: IProps) {
     }
 
     const renderResult = () => {
+        // The link opens a new tab, while the video and settings wait in the tab the user came from, which updates on
+        // its own; sending this one home would show an empty workspace, as if they were lost.
+        if (outcome === LinkOutcome.Confirmed) {
+            return (
+                <Result
+                    status="success"
+                    title="Your email is confirmed"
+                    subTitle="You can close this tab and carry on where you left off: AdLens in your other tab is up to date."
+                    extra={
+                        <Button type="primary" onClick={() => router.replace('/')}>
+                            Start a new analysis
+                        </Button>
+                    }
+                />
+            )
+        }
+
         // Once the user has signed in, the token is sent again and the spinner below shows instead.
         if (outcome === LinkOutcome.SignInRequired && !hasAccount) {
             return (
@@ -163,11 +180,10 @@ export function ConfirmEmail({ token }: IProps) {
             const error = await runAuthRequest(() => verifyEmail({ query: { token } }))
 
             if (!error) {
-                // AuthProvider refreshes the quota, whose limit rises with the confirmation, in every tab.
+                // AuthProvider refreshes the quota and the admission answer in every tab, so Run unlocks there.
                 refreshSession()
                 announceSessionChange()
-                notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
-                router.replace('/')
+                setOutcome(LinkOutcome.Confirmed)
                 return
             }
 
@@ -195,18 +211,7 @@ export function ConfirmEmail({ token }: IProps) {
         }
 
         void confirm()
-    }, [
-        token,
-        isInitializing,
-        outcome,
-        hasAccount,
-        isUnconfirmed,
-        sessionKey,
-        notification,
-        router,
-        setView,
-        setIsOtherAddressLink,
-    ])
+    }, [token, isInitializing, outcome, hasAccount, isUnconfirmed, sessionKey, setView, setIsOtherAddressLink])
 
     return (
         <section className={styles.page}>

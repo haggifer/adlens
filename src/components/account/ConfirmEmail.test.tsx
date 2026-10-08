@@ -5,7 +5,7 @@ import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { ConfirmEmail } from './ConfirmEmail'
 
@@ -45,13 +45,19 @@ describe('ConfirmEmail', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('confirms the email, refreshes the session in this tab and the others, and goes home', async () => {
-        renderConfirmEmail(TOKEN)
+    it('confirms the email, refreshes the session in this tab and the others, and stays to say so', async () => {
+        const { user } = renderConfirmEmail(TOKEN)
 
         expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
+        expect(screen.getByText(/close this tab/)).toBeInTheDocument()
         expect(verifyEmail).toHaveBeenCalledWith({ query: { token: TOKEN } })
         expect(refreshSession).toHaveBeenCalled()
         expect(announceSessionChange).toHaveBeenCalled()
+        // Going home would show an empty workspace, as if the video and settings in the other tab were lost.
+        expect(mockReplace).not.toHaveBeenCalled()
+
+        await user.click(screen.getByRole('button', { name: 'Start a new analysis' }))
+
         expect(mockReplace).toHaveBeenCalledWith('/')
     })
 
@@ -63,7 +69,7 @@ describe('ConfirmEmail', () => {
             </StrictMode>,
         )
 
-        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'))
+        expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
         expect(verifyEmail).toHaveBeenCalledTimes(1)
     })
 
@@ -155,7 +161,6 @@ describe('ConfirmEmail', () => {
             expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
             expect(verifyEmail).toHaveBeenCalledTimes(2)
             expect(verifyEmail).toHaveBeenLastCalledWith({ query: { token: TOKEN } })
-            expect(mockReplace).toHaveBeenCalledWith('/')
         })
 
         it('asks an anonymous session to sign in too, and doesn’t retry until it has', async () => {
