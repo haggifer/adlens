@@ -137,7 +137,7 @@ export function HumanCheck({ ref, action }: IProps) {
             {isInteractive && <p className={styles.hint}>Confirm you’re human to {action}.</p>}
             {hasFailed && (
                 <p className={styles.hint}>
-                    Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.
+                    Couldn’t load the security check. Reload the page, or turn off your ad blocker for this site.
                 </p>
             )}
         </div>

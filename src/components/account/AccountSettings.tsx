@@ -89,9 +89,9 @@ export function AccountSettings() {
                     </>
                 )}
                 <div className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Sessions</h2>
+                    <h2 className={styles.sectionTitle}>Other devices</h2>
                     <p className={styles.sectionText}>
-                        Signed in somewhere you no longer use? End every session except this one.
+                        Signed in somewhere you no longer use? Sign out everywhere except here.
                     </p>
                     <div>
                         <Button loading={isRevoking} onClick={handleRevokeOtherSessions}>

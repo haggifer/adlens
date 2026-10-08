@@ -111,7 +111,7 @@ describe('DeleteAccountForm', () => {
             await user.type(screen.getByLabelText('Password'), PASSWORD)
             await submitAndConfirm(user)
 
-            expect(await screen.findByText('Your session has expired. Sign in again.')).toBeInTheDocument()
+            expect(await screen.findByText('You were signed out. Sign in again.')).toBeInTheDocument()
             expect(auth.signOut).not.toHaveBeenCalled()
             expect(useAuthModalStore.getState().view).toBeNull()
         })

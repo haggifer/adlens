@@ -66,7 +66,7 @@ jest.mock('@marsidev/react-turnstile', () => {
 jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, setScheme: jest.fn() }) }))
 
 const INTERACTION_HINT = 'Confirm you’re human to start the analysis.'
-const FAILURE_HINT = 'Couldn’t load the human check. Reload the page, or allow challenges.cloudflare.com.'
+const FAILURE_HINT = 'Couldn’t load the security check. Reload the page, or turn off your ad blocker for this site.'
 
 const renderCheck = (action = 'start the analysis') => {
     const ref = createRef<HumanCheckHandle>()

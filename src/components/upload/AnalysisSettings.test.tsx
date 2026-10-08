@@ -208,7 +208,7 @@ describe('AnalysisSettings', () => {
 
             await run(user)
 
-            expect(await screen.findByText('Too many requests. Wait a moment and try again.')).toBeInTheDocument()
+            expect(await screen.findByText('Too many attempts. Wait a moment and try again.')).toBeInTheDocument()
             expect(createSampleJob).not.toHaveBeenCalled()
         })
     })

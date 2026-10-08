@@ -24,7 +24,7 @@ const linkAccounts = (...providerIds: string[]) =>
         error: null,
     } as never)
 
-const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Sessions', 'Delete account']
+const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Other devices', 'Delete account']
 
 const renderSettings = (auth: AuthContextValue = memberAuth()) => {
     mockUseAuth.mockReturnValue(auth)
@@ -96,7 +96,7 @@ describe('AccountSettings', () => {
 
         expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
         expect(screen.queryByText('Internal adapter failure')).not.toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Sessions' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Other devices' })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
         expect(document.querySelector('.ant-skeleton')).not.toBeInTheDocument()
     })
@@ -109,7 +109,7 @@ describe('AccountSettings', () => {
         expect(await screen.findByRole('alert')).toHaveTextContent(
             'Couldn’t reach AdLens. Check your connection and try again.',
         )
-        expect(screen.getByRole('heading', { name: 'Sessions' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Other devices' })).toBeInTheDocument()
         expect(consoleError).toHaveBeenCalledTimes(1)
         consoleError.mockRestore()
     })

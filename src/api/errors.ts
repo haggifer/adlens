@@ -28,14 +28,14 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [RequestErrorCode.ChallengeRequired]: 'Complete the security check, then run the analysis again.',
     [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then run the analysis.',
     [RequestErrorCode.NetworkQuotaExceeded]:
-        'Too many analyses from your network this week. Contact us if you need more.',
+        'Too many analyses from your internet connection this week. Contact us if you need more.',
     [RequestErrorCode.DisposableEmail]: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
     [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
     [RequestErrorCode.Unauthenticated]: 'Please sign in again.',
     [RequestErrorCode.NotFound]: "We couldn't find that analysis.",
-    [RequestErrorCode.RateLimited]: 'Too many requests. Wait a moment and try again.',
+    [RequestErrorCode.RateLimited]: 'Too many attempts. Wait a moment and try again.',
     [RequestErrorCode.Unavailable]: 'AdLens is briefly unavailable. Please try again.',
     [RequestErrorCode.Internal]: 'Something went wrong on our side. Please try again.',
 }

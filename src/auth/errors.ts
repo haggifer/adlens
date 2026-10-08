@@ -20,7 +20,7 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     PASSWORD_TOO_LONG: 'The password is too long.',
     INVALID_TOKEN: 'This link is invalid or has already been used.',
     TOKEN_EXPIRED: 'This link has expired. Request a new one.',
-    SESSION_EXPIRED: 'Your session has expired. Sign in again.',
+    SESSION_EXPIRED: 'You were signed out. Sign in again.',
     EMAIL_NOT_SENT: 'We couldn’t send the email. Try again in a few minutes.',
     DISPOSABLE_EMAIL: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
     // Sign-up or sign-in succeeded, but the anonymous history couldn't be moved to the account.

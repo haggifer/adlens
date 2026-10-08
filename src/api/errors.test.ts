@@ -57,7 +57,7 @@ describe('toApiRequestError', () => {
             'Confirm your email to run more analyses.',
         )
         expect(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded).message).toBe(
-            'Too many analyses from your network this week. Contact us if you need more.',
+            'Too many analyses from your internet connection this week. Contact us if you need more.',
         )
         expect(new ApiRequestError(RequestErrorCode.ChallengeRequired).message).toBe(
             'Complete the security check, then run the analysis again.',
