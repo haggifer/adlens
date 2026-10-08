@@ -29,24 +29,32 @@ const ANALYSIS = buildAnalysis({
 
 const heading = (name: string) => screen.getByRole('heading', { name })
 
-// The sections are flat siblings, so a result belongs to the last heading rendered before it.
-const expectBetween = (text: string, start: HTMLElement, end: HTMLElement) => {
+const isBefore = (first: HTMLElement, second: HTMLElement) =>
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+// The sections are flat siblings, so a result belongs to the last heading rendered before it. The last section has
+// no heading after it.
+const expectBetween = (text: string, start: HTMLElement, end?: HTMLElement) => {
     const element = screen.getByText(text)
 
-    expect(start.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(element.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(isBefore(start, element)).toBe(true)
+
+    if (end) {
+        expect(isBefore(element, end)).toBe(true)
+    }
 }
 
 describe('ResultsPanel', () => {
-    it('puts each finding under its section, and neither lists nor counts the specs that passed', () => {
+    it('opens with the transcript, puts each finding under its section, and neither lists nor counts passed specs', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
         const transcript = screen.getByRole('button', { name: /Transcript/ })
 
+        expect(isBefore(transcript, heading(APPROVAL_HEADING))).toBe(true)
         expectBetween('Misleading claims', heading(APPROVAL_HEADING), heading(BEST_PRACTICE_HEADING))
         expectBetween('Weak hook', heading(BEST_PRACTICE_HEADING), heading(SPECS_HEADING))
-        expectBetween('Bumper duration', heading(SPECS_HEADING), transcript)
-        expectBetween('Aspect ratio', heading(SPECS_HEADING), transcript)
+        expectBetween('Bumper duration', heading(SPECS_HEADING))
+        expectBetween('Aspect ratio', heading(SPECS_HEADING))
         expect(screen.queryByText('File size')).not.toBeInTheDocument()
         expect(screen.queryByText(/specs? pass/)).not.toBeInTheDocument()
     })

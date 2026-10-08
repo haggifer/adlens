@@ -135,6 +135,16 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                 </div>
             )}
             <div className={styles.resultsScroll}>
+                <Collapse
+                    size="small"
+                    items={[
+                        {
+                            key: 'transcript',
+                            label: 'Transcript',
+                            children: <p className={styles.transcriptText}>{transcript || 'No speech detected.'}</p>,
+                        },
+                    ]}
+                />
                 <h3 className={styles.sectionLabel}>Will it be approved?</h3>
                 {compliance.length ? (
                     compliance.map(renderFinding)
@@ -164,17 +174,6 @@ export function ResultsPanel({ analysis, onSeek }: IProps) {
                         {advisories.map(renderAdvisory)}
                     </>
                 )}
-                <Collapse
-                    className="mt-2"
-                    size="small"
-                    items={[
-                        {
-                            key: 'transcript',
-                            label: 'Transcript',
-                            children: <p className={styles.transcriptText}>{transcript || 'No speech detected.'}</p>,
-                        },
-                    ]}
-                />
             </div>
         </div>
     )
