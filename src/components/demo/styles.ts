@@ -10,6 +10,16 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 1rem;
     `,
 
+    // Only as wide as its tabs, and without antd's grey track: the page's own background shows through, so no band
+    // runs across the page.
+    tabs: css`
+        align-self: flex-start;
+
+        &.ant-segmented {
+            background: transparent;
+        }
+    `,
+
     summary: css`
         display: flex;
         flex-direction: column;

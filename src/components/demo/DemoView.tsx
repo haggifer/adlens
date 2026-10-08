@@ -51,7 +51,9 @@ export function DemoView() {
 
         return (
             <>
-                {tabs.length > 1 && <Segmented options={tabs} value={demo.slug} onChange={setSelectedSlug} />}
+                {tabs.length > 1 && (
+                    <Segmented className={styles.tabs} options={tabs} value={demo.slug} onChange={setSelectedSlug} />
+                )}
                 <section className={styles.summary}>
                     <h2 className={styles.summaryTitle}>{demo.title}</h2>
                     <p className={styles.summaryText}>{demo.subtitle}</p>
