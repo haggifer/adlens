@@ -54,7 +54,7 @@ describe('toApiRequestError', () => {
             'Sign in or create an account to continue',
         )
         expect(new ApiRequestError(RequestErrorCode.EmailConfirmationRequired).message).toBe(
-            'Confirm your email to run more analyses.',
+            'Confirm your email to continue',
         )
         expect(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded).message).toBe(
             'Too many analyses from your internet connection this week. Contact us if you need more.',
