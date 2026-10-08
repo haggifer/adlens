@@ -1,4 +1,5 @@
 import { authClient, signIn } from '@/auth/authClient'
+import { describeError } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor, within } from '@testing-library/react'
@@ -9,7 +10,7 @@ jest.mock('@/auth/authClient', () => ({
     signIn: { email: jest.fn(async () => ({ error: null })), social: jest.fn(async () => ({ error: null })) },
 }))
 
-const NOT_MOVED_COPY = 'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.'
+const NOT_MOVED_COPY = describeError({ code: 'ACCOUNT_LINK_FAILED' })
 
 const renderForm = () => renderWithProviders(<SignInForm />)
 

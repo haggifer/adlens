@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, createSampleJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { getQuota } from '@/api/me'
 import { authClient, signIn } from '@/auth/authClient'
@@ -69,11 +69,11 @@ const UPLOAD_TARGET: UploadTarget = {
     headers: { 'Content-Type': VideoMimeType.Mp4 },
 }
 
-const UNAVAILABLE_COPY = 'AdLens is briefly unavailable. Please try again.'
+const UNAVAILABLE_COPY = describeRequestError(RequestErrorCode.Unavailable)
 
-const CONFIRMATION_REQUIRED_COPY = 'Confirm your email to run more analyses.'
+const CONFIRMATION_REQUIRED_COPY = describeRequestError(RequestErrorCode.EmailConfirmationRequired)
 
-const SIGN_UP_REQUIRED_COPY = 'Sign in or create an account to continue'
+const SIGN_UP_REQUIRED_COPY = describeRequestError(RequestErrorCode.SignUpRequired)
 
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)

@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
@@ -52,7 +52,7 @@ const JOB = buildJob({ id: 'job-7' })
 
 const UPLOAD_TARGET: UploadTarget = { url: 'https://storage.googleapis.com/bucket/video', headers: {} }
 
-const UNAVAILABLE_COPY = 'AdLens is briefly unavailable. Please try again.'
+const UNAVAILABLE_COPY = describeRequestError(RequestErrorCode.Unavailable)
 
 const buildFile = (name: string) => new File(['video-bytes'], name, { type: VideoMimeType.Mp4 })
 

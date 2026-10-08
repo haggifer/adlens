@@ -1,5 +1,6 @@
 import { verifyEmail } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
@@ -26,7 +27,7 @@ const EMAIL_MISMATCH = { status: 403, code: 'EMAIL_MISMATCH', message: 'Raw serv
 
 const SIGN_IN_PROMPT = 'Sign in to confirm your email.'
 
-const MISMATCH_COPY = 'This link is for a different account. Sign out, then open it again.'
+const MISMATCH_COPY = describeError({ code: 'EMAIL_MISMATCH' })
 
 const renderConfirmEmail = (token: string | null, auth: AuthContextValue = unconfirmedAuth()) => {
     mockUseAuth.mockReturnValue(auth)

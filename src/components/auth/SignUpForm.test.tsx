@@ -1,4 +1,5 @@
 import { authClient, signUp } from '@/auth/authClient'
+import { describeError } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor, within } from '@testing-library/react'
@@ -17,9 +18,9 @@ const SIGN_UP_FIELDS = [
     ['Confirm password', 'long-enough-password'],
 ]
 
-const ALREADY_IN_USE_COPY = 'This email is already in use. Sign in instead.'
+const ALREADY_IN_USE_COPY = describeError({ code: 'USER_ALREADY_EXISTS' })
 
-const EMAIL_NOT_SENT_COPY = 'We couldn’t send the email. Try again in a few minutes.'
+const EMAIL_NOT_SENT_COPY = describeError({ code: 'EMAIL_NOT_SENT' })
 
 const NEW_ACCOUNT_SESSION = { user: { id: 'member-1', isAnonymous: false } }
 

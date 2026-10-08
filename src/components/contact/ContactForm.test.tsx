@@ -1,5 +1,5 @@
 import { createContactUploads, sendContactMessage } from '@/api/contact'
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeContactError } from '@/api/errors'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
@@ -40,7 +40,7 @@ const ATTACHMENTS_LABEL = 'Screenshots (optional)'
 
 const ATTACHMENTS_HINT = 'Up to 5 images: PNG, JPEG or WebP, up to 8 MB each, up to 25 MB in total.'
 
-const UPLOAD_FAILED_COPY = 'An image didn’t finish uploading. Please try again.'
+const UPLOAD_FAILED_COPY = describeContactError(new ApiRequestError(RequestErrorCode.UploadIncomplete))
 
 const buildImage = (name: string, type = 'image/png') => new File(['image bytes'], name, { type })
 
