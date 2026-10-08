@@ -66,10 +66,4 @@ export const useStyles = createStyles(({ token, css }) => ({
             display: none;
         }
     `,
-
-    gateText: css`
-        margin: 0;
-        color: ${token.colorTextSecondary};
-        font-size: 1rem;
-    `,
 }))

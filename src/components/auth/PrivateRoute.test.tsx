@@ -13,7 +13,8 @@ const PAGE_CONTENT = 'Page content'
 
 const renderRoute = (auth: AuthContextValue, isAccountOnly?: boolean) => {
     mockUseAuth.mockReturnValue(auth)
-    render(
+
+    return render(
         <PrivateRoute isAccountOnly={isAccountOnly}>
             <p>{PAGE_CONTENT}</p>
         </PrivateRoute>,
@@ -23,10 +24,10 @@ const renderRoute = (auth: AuthContextValue, isAccountOnly?: boolean) => {
 describe('PrivateRoute', () => {
     beforeEach(() => useAuthModalStore.setState({ view: null }))
 
-    it('shows neither the page nor a sign-in prompt while the session loads', () => {
-        renderRoute(initializingAuth())
+    it('shows only a spinner, neither the page nor a sign-in prompt, while the session loads', () => {
+        const { container } = renderRoute(initializingAuth())
 
-        expect(screen.getByText('Checking your session…')).toBeInTheDocument()
+        expect(container.querySelector('.ant-spin')).toBeInTheDocument()
         expect(screen.queryByText(PAGE_CONTENT)).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
     })

@@ -23,7 +23,6 @@ export function PrivateRoute({ children, isAccountOnly }: IProps) {
         return (
             <div className={styles.gate}>
                 <Spin size="large" />
-                <p className={styles.gateText}>Checking your session…</p>
             </div>
         )
     }
