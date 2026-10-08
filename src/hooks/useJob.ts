@@ -12,9 +12,14 @@ export interface UseJobResult {
     job: Job | undefined
     isLoading: boolean
     error: ApiRequestError | null
-    // The live connection to a running job failed and hasn't come back: the status shown may be out of date.
+    // The page can't reach the API about a running job (its live connection or its last read failed): the status
+    // shown may be out of date.
     isDisconnected: boolean
 }
+
+// The API expires an abandoned analysis only when its owner reads their jobs, and an abandoned job sends no updates,
+// so a running job is also read on this interval: whatever went wrong shows within it. A read is a few indexed lookups.
+const IN_PROGRESS_POLL_MS = 10 * 1000
 
 export const jobKey = (userId: string | undefined, jobId: string) => ['job', userId, jobId]
 
@@ -29,14 +34,16 @@ export function useJob(jobId: string): UseJobResult {
     const [hasLostConnection, setHasLostConnection] = useState(false)
 
     const userId = user?.id
-    const { data, isLoading, error } = useQuery<Job, ApiRequestError>({
+    const { data, isLoading, error, isRefetchError } = useQuery<Job, ApiRequestError>({
         queryKey: jobKey(userId, jobId),
         queryFn: () => getJob(jobId),
         enabled: Boolean(userId),
+        refetchInterval: (query) =>
+            query.state.data && isJobInProgress(query.state.data.status) ? IN_PROGRESS_POLL_MS : false,
     })
 
     const isLive = Boolean(userId && data && isJobInProgress(data.status))
-    const isDisconnected = isLive && hasLostConnection
+    const isDisconnected = isLive && (hasLostConnection || isRefetchError)
 
     useEffect(() => {
         if (!isLive) {

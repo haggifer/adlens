@@ -1,10 +1,11 @@
+import { ApiRequestError } from '@/api/errors'
 import { getJob } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { memberAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { act, screen } from '@testing-library/react'
-import { type Job, JobStatus } from 'adlens-shared'
+import { type Job, JobStatus, RequestErrorCode } from 'adlens-shared'
 import { useJob } from './useJob'
 
 type SocketHandler = (payload?: unknown) => void
@@ -97,5 +98,43 @@ describe('useJob', () => {
         act(() => socket.handlers.get('connect')?.())
 
         expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
+    })
+
+    it('asks for a running job every 10 seconds, so an abandoned one ends within 10 seconds of expiring', async () => {
+        jest.useFakeTimers({ advanceTimers: true })
+
+        try {
+            await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
+
+            expect(getJob).toHaveBeenCalledTimes(1)
+
+            await act(async () => jest.advanceTimersByTimeAsync(10_000))
+
+            expect(getJob).toHaveBeenCalledTimes(2)
+
+            jest.mocked(getJob).mockResolvedValue(buildJob({ id: JOB_ID, status: JobStatus.Error }))
+            await act(async () => jest.advanceTimersByTimeAsync(10_000))
+            await act(async () => jest.advanceTimersByTimeAsync(30_000))
+
+            expect(getJob).toHaveBeenCalledTimes(3)
+        } finally {
+            jest.useRealTimers()
+        }
+    })
+
+    it('counts a failed read of a running job as a lost connection, keeping the job', async () => {
+        jest.useFakeTimers({ advanceTimers: true })
+
+        try {
+            await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
+
+            jest.mocked(getJob).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+            await act(async () => jest.advanceTimersByTimeAsync(10_000))
+
+            expect(screen.getByText('disconnected')).toBeInTheDocument()
+            expect(screen.getByText(JobStatus.Queued)).toBeInTheDocument()
+        } finally {
+            jest.useRealTimers()
+        }
     })
 })

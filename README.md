@@ -107,7 +107,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   loaded once, then kept live by Socket.IO pushes written into the query cache; every (re)connect refetches, because
   updates sent while disconnected are lost. The socket is open only while the job is verifying, queued or analyzing:
   Cloud Run bills an API instance for as long as any socket to it is open. While that socket can't reach the API, the
-  progress panel says so, so a step that can't move isn't taken for a slow one.
+  progress panel says so, so a step that can't move isn't taken for a slow one. An abandoned job never changes again,
+  and the API expires it only when its owner reads their jobs, so the page also reads a running job every 10 seconds:
+  whatever went wrong shows within 10 seconds of the API knowing it.
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache. A failed analysis never shows a player: its video backs no results and is deleted about a day after the
   failure, so its page shows why it failed and offers to analyze another video. No other analysis without a video to

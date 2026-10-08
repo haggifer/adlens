@@ -35,7 +35,8 @@ export function AnalysisView({ jobId }: IProps) {
         )
     }
 
-    if (error || !job) {
+    // A failed re-read keeps the job on screen; useJob reports it as a lost connection.
+    if (!job) {
         const isNotFound = error?.code === RequestErrorCode.NotFound
 
         return (
