@@ -16,10 +16,12 @@ interface IProps {
     videoUrl?: string
     // False when the job has no video to show: then the results take the whole width.
     hasPlayer: boolean
+    // The live connection to a running job is lost (see useJob).
+    isDisconnected?: boolean
 }
 
 // The video beside its results (or the run's status): one analysis, wherever it's shown.
-export function AnalysisWorkspace({ job, videoUrl, hasPlayer }: IProps) {
+export function AnalysisWorkspace({ job, videoUrl, hasPlayer, isDisconnected }: IProps) {
     const { styles, cx } = useStyles()
 
     // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
@@ -64,7 +66,7 @@ export function AnalysisWorkspace({ job, videoUrl, hasPlayer }: IProps) {
             {job.status === JobStatus.Analyzed && job.analysis ? (
                 <ResultsPanel analysis={job.analysis} onSeek={handleSeek} />
             ) : (
-                <JobStatusPanel job={job} />
+                <JobStatusPanel job={job} isDisconnected={isDisconnected} />
             )}
         </div>
     )

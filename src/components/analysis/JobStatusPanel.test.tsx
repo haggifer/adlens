@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react'
 import { JobStatus } from 'adlens-shared'
 import { JobStatusPanel } from './JobStatusPanel'
 
+const DISCONNECTED_COPY = 'Can’t reach AdLens right now. This page updates once it’s back.'
+
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))
 
 describe('JobStatusPanel', () => {
@@ -18,5 +20,11 @@ describe('JobStatusPanel', () => {
         render(<JobStatusPanel job={buildJob({ status: JobStatus.Analyzing })} />)
 
         expect(screen.getByRole('img', { name: 'notification', hidden: true })).toBeInTheDocument()
+    })
+
+    it('says when it can’t reach AdLens, so a stalled step isn’t taken for a slow one', () => {
+        render(<JobStatusPanel job={buildJob({ status: JobStatus.Queued })} isDisconnected />)
+
+        expect(screen.getByText(DISCONNECTED_COPY)).toBeInTheDocument()
     })
 })

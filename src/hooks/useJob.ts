@@ -5,13 +5,15 @@ import { config } from '@/config'
 import { isJobInProgress } from '@/job-status'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Job } from 'adlens-shared'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 
 export interface UseJobResult {
     job: Job | undefined
     isLoading: boolean
     error: ApiRequestError | null
+    // The live connection to a running job failed and hasn't come back: the status shown may be out of date.
+    isDisconnected: boolean
 }
 
 export const jobKey = (userId: string | undefined, jobId: string) => ['job', userId, jobId]
@@ -24,6 +26,8 @@ export function useJob(jobId: string): UseJobResult {
     const { user } = useAuth()
     const queryClient = useQueryClient()
 
+    const [hasLostConnection, setHasLostConnection] = useState(false)
+
     const userId = user?.id
     const { data, isLoading, error } = useQuery<Job, ApiRequestError>({
         queryKey: jobKey(userId, jobId),
@@ -32,6 +36,7 @@ export function useJob(jobId: string): UseJobResult {
     })
 
     const isLive = Boolean(userId && data && isJobInProgress(data.status))
+    const isDisconnected = isLive && hasLostConnection
 
     useEffect(() => {
         if (!isLive) {
@@ -40,7 +45,11 @@ export function useJob(jobId: string): UseJobResult {
 
         const socket = io(config.apiBaseUrl, { withCredentials: true, transports: ['websocket'] })
 
+        // Socket.IO keeps reconnecting on its own; these only track whether it is through.
+        socket.on('connect_error', () => setHasLostConnection(true))
+        socket.on('disconnect', (reason) => setHasLostConnection(reason !== 'io client disconnect'))
         socket.on('connect', () => {
+            setHasLostConnection(false)
             void queryClient.invalidateQueries({ queryKey: jobKey(userId, jobId) })
         })
         socket.on('job:updated', (job: Job) => {
@@ -54,5 +63,5 @@ export function useJob(jobId: string): UseJobResult {
         }
     }, [isLive, jobId, userId, queryClient])
 
-    return { job: data, isLoading, error }
+    return { job: data, isLoading, error, isDisconnected }
 }

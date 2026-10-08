@@ -19,7 +19,7 @@ export function AnalysisView({ jobId }: IProps) {
     const { styles } = useStyles()
     const router = useRouter()
 
-    const { job, isLoading, error } = useJob(jobId)
+    const { job, isLoading, error, isDisconnected } = useJob(jobId)
     // Only a verified upload has a video to replay (`media`), so a pending job or one still being checked has none. A
     // failed job's video backs no results and is deleted soon after the failure, so its page never shows a player.
     const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
@@ -71,7 +71,12 @@ export function AnalysisView({ jobId }: IProps) {
                 </div>
                 <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
             </header>
-            <AnalysisWorkspace job={job} videoUrl={url} hasPlayer={hasVideo && !isMissing} />
+            <AnalysisWorkspace
+                job={job}
+                videoUrl={url}
+                hasPlayer={hasVideo && !isMissing}
+                isDisconnected={isDisconnected}
+            />
         </div>
     )
 }

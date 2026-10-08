@@ -37,9 +37,14 @@ jest.mock('socket.io-client', () => ({
 const JOB_ID = 'job-1'
 
 const Probe = () => {
-    const { job } = useJob(JOB_ID)
+    const { job, isDisconnected } = useJob(JOB_ID)
 
-    return <p>{job ? job.status : 'loading'}</p>
+    return (
+        <>
+            <p>{job ? job.status : 'loading'}</p>
+            {isDisconnected && <p>disconnected</p>}
+        </>
+    )
 }
 
 const renderJob = async (job: Job) => {
@@ -76,5 +81,21 @@ describe('useJob', () => {
         expect(await screen.findByText(JobStatus.Analyzed)).toBeInTheDocument()
         expect(socket.disconnect).toHaveBeenCalled()
         expect(mockSockets).toHaveLength(1)
+    })
+
+    it('tells when the live connection is lost, until it is back', async () => {
+        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
+
+        const [socket] = mockSockets
+
+        expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
+
+        act(() => socket.handlers.get('connect_error')?.(new Error('websocket error')))
+
+        expect(screen.getByText('disconnected')).toBeInTheDocument()
+
+        act(() => socket.handlers.get('connect')?.())
+
+        expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
     })
 })
