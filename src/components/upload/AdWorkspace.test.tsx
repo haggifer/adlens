@@ -1,5 +1,5 @@
 import { ApiRequestError } from '@/api/errors'
-import { createJob, startAnalysis } from '@/api/jobs'
+import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
@@ -110,7 +110,30 @@ describe('AdWorkspace', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
+        jest.mocked(getAdmissionRefusal).mockResolvedValue(null)
         window.history.replaceState(null, '', '/')
+    })
+
+    it('says AdLens is unavailable and takes no video while the API can’t answer, until it can', async () => {
+        jest.mocked(getAdmissionRefusal).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+        const { user } = renderWorkspace()
+
+        expect(await screen.findByText(UNAVAILABLE_COPY)).toBeInTheDocument()
+        expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
+
+        const answer = deferred<RequestErrorCode | null>()
+
+        jest.mocked(getAdmissionRefusal).mockReturnValueOnce(answer.promise)
+        await user.click(screen.getByRole('button', { name: 'Try again' }))
+
+        // Asking again doesn't bring the upload back before the API has answered.
+        expect(screen.getByText(UNAVAILABLE_COPY)).toBeInTheDocument()
+        expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
+
+        await act(async () => answer.resolve(null))
+
+        expect(await screen.findByText('Try a sample ad')).toBeInTheDocument()
+        expect(screen.queryByText(UNAVAILABLE_COPY)).not.toBeInTheDocument()
     })
 
     it('locks the video and its settings from Run until the run fails, then unlocks them', async () => {

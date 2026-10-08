@@ -8,6 +8,10 @@ export interface UseAdmissionResult {
     refusal: RequestErrorCode | null | undefined
     // When that answer arrived (0 before any), so a run refused earlier knows a newer answer replaced it.
     updatedAt: number
+    // The API couldn't answer (unreachable or failing), so no analysis can start. It holds while asking again.
+    isUnavailable: boolean
+    isRetrying: boolean
+    retry: () => void
 }
 
 const admissionKey = (userId: string | undefined) => ['admission', userId ?? 'visitor']
@@ -17,11 +21,20 @@ const admissionKey = (userId: string | undefined) => ['admission', userId ?? 'vi
 export function useAdmission(): UseAdmissionResult {
     const { user, isInitializing } = useAuth()
 
-    const { data, dataUpdatedAt } = useQuery({
+    const { data, dataUpdatedAt, errorUpdatedAt, isFetching, refetch } = useQuery({
         queryKey: admissionKey(user?.id),
         queryFn: getAdmissionRefusal,
         enabled: !isInitializing,
     })
 
-    return { refusal: data, updatedAt: dataUpdatedAt }
+    // Not `error`: a query that never had data drops its error as soon as it fetches again.
+    const isUnavailable = errorUpdatedAt > dataUpdatedAt
+
+    return {
+        refusal: data,
+        updatedAt: dataUpdatedAt,
+        isUnavailable,
+        isRetrying: isFetching,
+        retry: () => void refetch(),
+    }
 }

@@ -10,9 +10,12 @@ const ERROR_COPY = new ApiRequestError(RequestErrorCode.Internal).message
 
 interface IProps {
     onRetry: () => void
+    // The user-facing copy of a known failure; a render failure keeps the generic one.
+    title?: string
+    isRetrying?: boolean
 }
 
-export function ErrorState({ onRetry }: IProps) {
+export function ErrorState({ onRetry, title = ERROR_COPY, isRetrying = false }: IProps) {
     const { styles } = useStyles()
 
     return (
@@ -20,9 +23,9 @@ export function ErrorState({ onRetry }: IProps) {
             <div className={styles.card}>
                 <Result
                     status="error"
-                    title={ERROR_COPY}
+                    title={title}
                     extra={
-                        <Button type="primary" onClick={onRetry}>
+                        <Button type="primary" onClick={onRetry} loading={isRetrying}>
                             Try again
                         </Button>
                     }

@@ -1,6 +1,9 @@
 'use client'
 
-import type { Sample } from 'adlens-shared'
+import { describeRequestError } from '@/api/errors'
+import { ErrorState } from '@/components/status/ErrorState'
+import { useAdmission } from '@/hooks/useAdmission'
+import { RequestErrorCode, type Sample } from 'adlens-shared'
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
@@ -26,6 +29,9 @@ const SettingsPlaceholder = () => {
 const AnalysisSettings = dynamic(() => import('./AnalysisSettings').then((module) => module.AnalysisSettings), {
     loading: SettingsPlaceholder,
 })
+
+// Whatever stopped the API answering, the visitor can't start an analysis until it's back.
+const UNAVAILABLE_COPY = describeRequestError(RequestErrorCode.Unavailable)
 
 const releasePreview = (source: AnalysisSource | null) => {
     if (source?.kind === 'file') {
@@ -54,7 +60,12 @@ export function AdWorkspace() {
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
 
+    // Asked on load, not only once a video is chosen: an API that can't answer can't run an analysis, so the page says
+    // so before anyone uploads or picks settings. A run already under way keeps its page.
+    const admission = useAdmission()
+
     const video = toSelectedVideo(source)
+    const isUnavailable = admission.isUnavailable && !isRunning
 
     const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
         releasePreview(source)
@@ -84,30 +95,34 @@ export function AdWorkspace() {
                     every finding timestamped and cited
                 </p>
             </header>
-            <div className={styles.workspace}>
-                <div className={styles.left}>
-                    <UploadPanel
-                        video={video}
-                        onSelect={handleSelectFile}
-                        onClear={handleClearVideo}
-                        onBrowseSamples={() => setIsSamplesOpen(true)}
-                        isDisabled={isRunning}
-                    />
-                </div>
-                <div className={styles.right}>
-                    {source ? (
-                        // A key per source, so no run error carries over to the next video; the settings do, through
-                        // the address.
-                        <AnalysisSettings
-                            key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
-                            source={source}
-                            onRunningChange={setIsRunning}
+            {isUnavailable ? (
+                <ErrorState title={UNAVAILABLE_COPY} onRetry={admission.retry} isRetrying={admission.isRetrying} />
+            ) : (
+                <div className={styles.workspace}>
+                    <div className={styles.left}>
+                        <UploadPanel
+                            video={video}
+                            onSelect={handleSelectFile}
+                            onClear={handleClearVideo}
+                            onBrowseSamples={() => setIsSamplesOpen(true)}
+                            isDisabled={isRunning}
                         />
-                    ) : (
-                        <UploadIntro />
-                    )}
+                    </div>
+                    <div className={styles.right}>
+                        {source ? (
+                            // A key per source, so no run error carries over to the next video; the settings do, through
+                            // the address.
+                            <AnalysisSettings
+                                key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
+                                source={source}
+                                onRunningChange={setIsRunning}
+                            />
+                        ) : (
+                            <UploadIntro />
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
             <SamplesModal
                 isOpen={isSamplesOpen}
                 onClose={() => setIsSamplesOpen(false)}
