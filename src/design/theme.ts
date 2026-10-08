@@ -8,6 +8,8 @@ import type { ColorScheme } from './types'
 // keeps #0d9488: the algorithm already deepens it for buttons (4.8:1), and a darker seed would sink teal text on the
 // dark background to about 3:1.
 const PRIMARY_COLORS: Record<ColorScheme, string> = { light: '#0f766e', dark: '#0d9488' }
+// antd's default info blue.
+const INFO_ALERT_COLOR = '#1677ff'
 const BORDER_RADIUS = 10
 // Every modal is at least this wide on screens that fit it; antd shrinks them to the viewport on phones.
 export const MODAL_WIDTH = 600
@@ -26,6 +28,12 @@ const buildTheme = (primaryColor: string): ThemeConfig => ({
             primaryShadow: 'none',
             defaultShadow: 'none',
             dangerShadow: 'none',
+        },
+        // An info notice (sign in to keep going, a link for another address) reads as information in blue, apart from
+        // the teal of actions; `algorithm` derives its background and border from that blue for each scheme.
+        Alert: {
+            colorInfo: INFO_ALERT_COLOR,
+            algorithm: true,
         },
         // The theme switch is the app's only Switch: a compact 20px track (antd's default is 22px, handle 18px).
         Switch: {
