@@ -10,10 +10,21 @@ import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
 import { UploadIntro } from './UploadIntro'
 import { UploadPanel } from './UploadPanel'
 
+// The empty panel, so the column keeps its box while the form loads.
+const SettingsPlaceholder = () => {
+    const { styles, cx } = useStyles()
+
+    return (
+        <div className={cx(styles.panel, styles.settingsPanel, 'align-items-center justify-content-center')}>
+            <Spin />
+        </div>
+    )
+}
+
 // The settings panel shows only once a video is chosen, so its form, selects and human check load then, off the page's
 // first load.
 const AnalysisSettings = dynamic(() => import('./AnalysisSettings').then((module) => module.AnalysisSettings), {
-    loading: () => <Spin className="m-auto" />,
+    loading: SettingsPlaceholder,
 })
 
 const releasePreview = (source: AnalysisSource | null) => {

@@ -184,6 +184,12 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
                shows the frame background as a hairline around the video. */
             border: none;
             background: #000000;
+
+            /* Stacked, the frame takes the column's width rather than the player's: while the player loads, its
+               placeholder has no video to give it a width. */
+            @media (max-width: 991.98px) {
+                width: min(var(--col-w), 100%);
+            }
         }
 
         &[data-video='true']:hover [data-overlay] {
