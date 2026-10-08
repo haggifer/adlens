@@ -51,7 +51,7 @@ describe('toApiRequestError', () => {
 
     it('explains the network, challenge, sign-up and confirmation limits', () => {
         expect(new ApiRequestError(RequestErrorCode.SignUpRequired).message).toBe(
-            'Sign in or create an account to run an analysis.',
+            'Sign in or create an account to continue',
         )
         expect(new ApiRequestError(RequestErrorCode.EmailConfirmationRequired).message).toBe(
             'Confirm your email to run more analyses.',

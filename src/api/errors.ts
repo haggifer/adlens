@@ -23,7 +23,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.UploadFailed]: "The upload didn't finish. Please try again. This run wasn't counted.",
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
-    [RequestErrorCode.SignUpRequired]: 'Sign in or create an account to run an analysis.',
+    [RequestErrorCode.SignUpRequired]: 'Sign in or create an account to continue',
     [RequestErrorCode.EmailConfirmationRequired]: 'Confirm your email to run more analyses.',
     [RequestErrorCode.ChallengeRequired]: 'Complete the security check, then run the analysis again.',
     [RequestErrorCode.ChallengeFailed]: 'The security check didn’t pass. Try it again, then run the analysis.',

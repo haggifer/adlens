@@ -73,7 +73,7 @@ const UNAVAILABLE_COPY = 'AdLens is briefly unavailable. Please try again.'
 
 const CONFIRMATION_REQUIRED_COPY = 'Confirm your email to run more analyses.'
 
-const SIGN_UP_REQUIRED_COPY = 'Sign in or create an account to run an analysis.'
+const SIGN_UP_REQUIRED_COPY = 'Sign in or create an account to continue'
 
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)
