@@ -5,6 +5,7 @@ import { renderWithProviders } from '@/test/render'
 import { screen, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { Header } from './Header'
+import { formatQuotaDate } from './quota-label'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 let mockQuota: Quota | undefined
@@ -16,10 +17,13 @@ jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, se
 
 const QUOTA: Quota = { used: 1, limit: 3, nextFreeAt: null }
 
+const RESET_AT = '2026-10-16T09:30:00.000Z'
+
 const renderHeader = (auth: AuthContextValue, quota?: Quota) => {
     mockUseAuth.mockReturnValue(auth)
     mockQuota = quota
-    renderWithProviders(<Header />)
+
+    return renderWithProviders(<Header />)
 }
 
 describe('Header', () => {
@@ -101,5 +105,21 @@ describe('Header', () => {
         renderHeader(memberAuth())
 
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
+    })
+
+    it('says when the analyses reset in a tooltip on the count', async () => {
+        const { user } = renderHeader(memberAuth(), { used: 1, limit: 3, nextFreeAt: RESET_AT })
+
+        await user.hover(screen.getByText('2/3 analyses left'))
+
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(`Resets ${formatQuotaDate(RESET_AT)}`)
+    })
+
+    it('shows no reset tooltip while no analysis counts', async () => {
+        const { user } = renderHeader(memberAuth(), { used: 0, limit: 3, nextFreeAt: null })
+
+        await user.hover(screen.getByText('3/3 analyses left'))
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
     })
 })

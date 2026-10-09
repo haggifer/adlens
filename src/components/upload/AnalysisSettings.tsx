@@ -7,6 +7,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
+import { formatQuotaDate } from '@/components/layout/quota-label'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useAdmission } from '@/hooks/useAdmission'
@@ -83,14 +84,6 @@ const getQuotaRefusal = (isEmailConfirmed: boolean, isAnonymous: boolean): Reque
 
     return isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
 }
-
-const formatNextFree = (nextFreeAt: string) =>
-    new Date(nextFreeAt).toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-    })
 
 // A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
 // fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Any
@@ -325,7 +318,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             return (
                 <p className={styles.hint}>
                     You’ve used all {quota.limit} analyses for the last 7 days. The next one is available on{' '}
-                    {formatNextFree(quota.nextFreeAt)}.
+                    {formatQuotaDate(quota.nextFreeAt)}.
                 </p>
             )
         }

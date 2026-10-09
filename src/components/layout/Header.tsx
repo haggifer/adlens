@@ -4,14 +4,17 @@ import { AccountKind } from '@/auth/types'
 import { Logo } from '@/components/brand/Logo'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
-import { formatQuotaLeft } from '@/components/layout/quota-label'
+import { formatQuotaLeft, getQuotaResetDate } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
-import { Divider } from 'antd'
+import { Divider, Tooltip, type TooltipProps } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useStyles } from './styles'
+
+// Focus too, so a keyboard reaches the reset date the label's tooltip holds.
+const QUOTA_TOOLTIP_TRIGGER: TooltipProps['trigger'] = ['hover', 'focus']
 
 // History lists a session's own analyses; the other pages are for anyone.
 const NAV_LINKS = [
@@ -32,6 +35,7 @@ export function Header() {
     // Only an account shows its count: an anonymous session's single analysis is what the settings panel explains.
     const hasAccount = isSignedIn && kind !== AccountKind.Anonymous
     const navLinks = NAV_LINKS.filter((link) => isSignedIn || !link.isSessionOnly)
+    const quotaResetDate = quota ? getQuotaResetDate(quota) : null
 
     return (
         <header className={styles.header}>
@@ -59,7 +63,15 @@ export function Header() {
                         button stays in the bar because it is the one action a signed-out visitor needs. */}
                     {hasAccount && quota && (
                         <span className={cx(styles.headerGroup, styles.desktopOnly)}>
-                            <span className={styles.quotaLabel}>{formatQuotaLeft(quota)}</span>
+                            <Tooltip
+                                title={quotaResetDate && `Resets ${quotaResetDate}`}
+                                trigger={QUOTA_TOOLTIP_TRIGGER}
+                                placement="bottom"
+                            >
+                                <span className={styles.quotaLabel} tabIndex={quotaResetDate ? 0 : undefined}>
+                                    {formatQuotaLeft(quota)}
+                                </span>
+                            </Tooltip>
                             <Divider orientation="vertical" className={styles.headerDivider} />
                         </span>
                     )}

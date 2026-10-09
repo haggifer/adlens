@@ -7,6 +7,7 @@ import { renderWithProviders } from '@/test/render'
 import { screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { MobileMenu } from './MobileMenu'
+import { formatQuotaDate } from './quota-label'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
@@ -166,6 +167,16 @@ describe('MobileMenu', () => {
     })
 
     describe('for a member', () => {
+        it('says when the analyses reset after the count', async () => {
+            mockQuota = { used: 1, limit: 3, nextFreeAt: '2026-10-16T09:30:00.000Z' }
+
+            const { menu } = await openMenu(memberAuth())
+
+            expect(
+                menu.getByText(`2/3 analyses left (resets ${formatQuotaDate('2026-10-16T09:30:00.000Z')})`),
+            ).toBeInTheDocument()
+        })
+
         it('shows the name, email and account page, and Sign Out', async () => {
             const { menu } = await openMenu(memberAuth())
 
