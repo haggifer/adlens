@@ -186,6 +186,21 @@ describe('AuthProvider', () => {
             expect(result.current).toMatchObject({ isSignedIn: false, accountKind: null, snapshotKind: null })
         })
 
+        it('keeps the signed-out state, not the page-load snapshot, while a later fetch of no session is pending', () => {
+            mockUseSession.mockReturnValue({ data: null, isPending: false })
+            const { result, rerender } = renderAuth(createTestQueryClient(), AccountKind.Member)
+
+            mockUseSession.mockReturnValue({ data: null, isPending: true })
+            rerender()
+
+            expect(result.current).toMatchObject({
+                isInitializing: false,
+                isSignedIn: false,
+                accountKind: null,
+                snapshotKind: null,
+            })
+        })
+
         it('forgets the kind on sign-out', async () => {
             mockUseSession.mockReturnValue({ data: MEMBER_SESSION, isPending: false })
 

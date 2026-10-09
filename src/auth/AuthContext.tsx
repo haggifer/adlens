@@ -6,7 +6,7 @@ import { signOut as signOutRequest, useSession } from '@/auth/authClient'
 import { runAuthRequest } from '@/auth/errors'
 import { AccountKind } from '@/auth/types'
 import { type QueryClient, useQueryClient } from '@tanstack/react-query'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useRef } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 export interface AuthUser {
     id: string
@@ -51,7 +51,7 @@ interface SessionUser {
 
 interface AuthState {
     user: SessionUser | undefined
-    isPending: boolean
+    isInitializing: boolean
     accountKind: AccountKind | null
     isEmailConfirmed: boolean
     snapshotKind: AccountKind | null
@@ -89,13 +89,13 @@ const signOutAndClear = async (queryClient: QueryClient) => {
 }
 
 const createAuthValue = (
-    { user, isPending, accountKind, isEmailConfirmed, snapshotKind }: AuthState,
+    { user, isInitializing, accountKind, isEmailConfirmed, snapshotKind }: AuthState,
     queryClient: QueryClient,
 ): AuthContextValue => {
     const isAnonymous = accountKind === AccountKind.Anonymous
 
     return {
-        isInitializing: isPending,
+        isInitializing,
         isSignedIn: Boolean(user),
         isAnonymous,
         isEmailConfirmed,
@@ -134,17 +134,26 @@ export function AuthProvider({ children, initialKind }: IProps) {
 
     // The account the session last resolved to, null until it first has, to tell a change from the first load.
     const lastAccount = useRef<SessionAccount | null>(null)
+    // Better Auth reports every fetch with no session in hand as pending (each return to the tab, each refresh), so
+    // only the first one is the page still initializing; the others keep the signed-out state already shown.
+    const [hasLoaded, setHasLoaded] = useState(false)
 
     const { data: session, isPending, error } = useSession()
+
+    if (!isPending && !hasLoaded) {
+        setHasLoaded(true)
+    }
 
     const user = session?.user
     const userId = user?.id ?? null
     const accountKind = getAccountKind(user)
     const isEmailConfirmed = isConfirmedKind(accountKind)
-    const snapshotKind = isPending ? initialKind : null
+    const isInitializing = isPending && !hasLoaded
+    // The page-load cookie describes only the session before its first load, never a later one.
+    const snapshotKind = isInitializing ? initialKind : null
     const value = useMemo(
-        () => createAuthValue({ user, isPending, accountKind, isEmailConfirmed, snapshotKind }, queryClient),
-        [user, isPending, accountKind, isEmailConfirmed, snapshotKind, queryClient],
+        () => createAuthValue({ user, isInitializing, accountKind, isEmailConfirmed, snapshotKind }, queryClient),
+        [user, isInitializing, accountKind, isEmailConfirmed, snapshotKind, queryClient],
     )
 
     // A failed session request says nothing about the account, so it keeps the snapshot.
