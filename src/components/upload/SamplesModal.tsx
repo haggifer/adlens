@@ -78,7 +78,8 @@ export function SamplesModal({ isOpen, onClose, onSelect }: IProps) {
     const { samples, isLoading, error } = useSamples(isOpen)
 
     const renderBody = () => {
-        if (error) {
+        // A failed refetch keeps the samples already listed.
+        if (error && !samples.length) {
             return <Alert type="error" showIcon title={error.message} />
         }
 

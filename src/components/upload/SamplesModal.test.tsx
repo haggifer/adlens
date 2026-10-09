@@ -1,8 +1,8 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { listSamples } from '@/api/samples'
 import { buildSample } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Placement, Platform, RequestErrorCode } from 'adlens-shared'
 import { SampleRow, SamplesModal } from './SamplesModal'
@@ -115,6 +115,18 @@ describe('SamplesModal', () => {
         jest.mocked(listSamples).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
         renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
 
-        expect(await screen.findByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
+    })
+
+    it('keeps the samples listed when refreshing them fails', async () => {
+        jest.mocked(listSamples).mockResolvedValueOnce([SAMPLE])
+        const { queryClient } = renderWithProviders(<SamplesModal isOpen onClose={jest.fn()} onSelect={jest.fn()} />)
+
+        await screen.findByRole('button', { name: ROW_NAME })
+        jest.mocked(listSamples).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
+        await act(async () => queryClient.refetchQueries({ queryKey: ['samples'] }))
+
+        expect(screen.getByRole('button', { name: ROW_NAME })).toBeInTheDocument()
+        expect(screen.queryByText(describeRequestError(RequestErrorCode.Unavailable))).not.toBeInTheDocument()
     })
 })

@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import type { UseDemosResult } from '@/hooks/useDemos'
 import { buildAnalysis, buildFinding, buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
@@ -46,7 +46,15 @@ const DEMOS = [
     buildDemo('puzzle-game', 'Needs review', 'Fake interface'),
 ]
 
-const loaded = (demos: Demo[]): UseDemosResult => ({ demos, isLoading: false, error: null })
+const mockRetry = jest.fn()
+
+const loaded = (demos: Demo[]): UseDemosResult => ({
+    demos,
+    isLoading: false,
+    error: null,
+    isRetrying: false,
+    retry: mockRetry,
+})
 
 describe('DemoView', () => {
     beforeEach(() => jest.clearAllMocks())
@@ -88,11 +96,23 @@ describe('DemoView', () => {
         expect(screen.getByText('No example reports yet.')).toBeInTheDocument()
     })
 
-    it('shows the copy for a failed load', () => {
-        mockDemos = { demos: [], isLoading: false, error: new ApiRequestError(RequestErrorCode.Unavailable) }
+    it('shows the copy for a failed load, and tries again on request', async () => {
+        mockDemos = { ...loaded([]), error: new ApiRequestError(RequestErrorCode.Unavailable) }
+        const { user } = renderWithProviders(<DemoView />)
+
+        expect(screen.getByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Try again' }))
+
+        expect(mockRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the reports on screen when refreshing them fails', () => {
+        mockDemos = { ...loaded(DEMOS), error: new ApiRequestError(RequestErrorCode.Unavailable) }
         renderWithProviders(<DemoView />)
 
-        expect(screen.getByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Title of clothing-care-demo' })).toBeInTheDocument()
+        expect(screen.queryByText(describeRequestError(RequestErrorCode.Unavailable))).not.toBeInTheDocument()
     })
 
     it('leads to the upload page to analyze an ad of one’s own', async () => {

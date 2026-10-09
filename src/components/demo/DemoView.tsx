@@ -3,10 +3,11 @@
 import { AnalysisWorkspace } from '@/components/analysis/AnalysisWorkspace'
 import { formatSeconds } from '@/components/analysis/results'
 import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
+import { ErrorState } from '@/components/status/ErrorState'
 import { useDemos } from '@/hooks/useDemos'
 import { formatPlatforms, MARKET_LABELS } from '@/labels'
 import type { Demo, Market } from 'adlens-shared'
-import { Alert, Button, Empty, Segmented, Spin } from 'antd'
+import { Button, Empty, Segmented, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useStyles } from './styles'
@@ -31,7 +32,7 @@ export function DemoView() {
 
     const [selectedSlug, setSelectedSlug] = useState<string | null>(null)
 
-    const { demos, isLoading, error } = useDemos()
+    const { demos, isLoading, error, isRetrying, retry } = useDemos()
 
     const demo = demos.find(({ slug }) => slug === selectedSlug) ?? demos[0]
     const tabs = demos.map(({ slug, label }) => ({ value: slug, label }))
@@ -41,8 +42,9 @@ export function DemoView() {
             return <Spin size="large" className="m-auto" />
         }
 
-        if (error) {
-            return <Alert type="error" showIcon title={error.message} />
+        // A failed refetch keeps the reports already on screen.
+        if (error && !demos.length) {
+            return <ErrorState title={error.message} onRetry={retry} isRetrying={isRetrying} />
         }
 
         if (!demo) {
