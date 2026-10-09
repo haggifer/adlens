@@ -211,3 +211,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (`POST /v1/contact/uploads`), uploads them straight to storage and sends the message with the draft id in place of a
   token. The API spends a draft on any send, even a refused one, so a retry starts over with a new check, draft and
   uploads.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE.md): free to read, run and learn from, not for commercial use. The analysis
+lab ([adlens-lab](https://github.com/haggifer/adlens-lab)) and the contract package
+([adlens-shared](https://github.com/haggifer/adlens-shared)) are MIT.
