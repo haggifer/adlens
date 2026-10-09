@@ -216,6 +216,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-weight: 600;
     `,
 
+    // Evidence can quote an unbroken string (a URL, a run of characters on screen), which would otherwise widen the card.
     findingCard: css`
         display: flex;
         flex-direction: column;
@@ -224,6 +225,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         border: 1px solid ${token.colorBorderSecondary};
         border-radius: ${token.borderRadius}px;
         background: ${token.colorFillQuaternary};
+        overflow-wrap: anywhere;
     `,
 
     findingHead: css`
@@ -292,6 +294,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     transcriptText: css`
         margin: 0;
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
         color: ${token.colorTextSecondary};
         font-size: 0.85rem;
         line-height: 1.5;
