@@ -1,12 +1,52 @@
+import { readFileSnapshot } from '@/storage/file-snapshot'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
+import { MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { UploadPanel } from './UploadPanel'
 
 // Vidstack's custom elements don't run in jsdom, and the empty state renders no player.
 jest.mock('@vidstack/react', () => ({ MediaPlayer: () => null, MediaProvider: () => null }))
 jest.mock('@vidstack/react/player/layouts/default', () => ({ DefaultVideoLayout: () => null, defaultLayoutIcons: {} }))
+jest.mock('@/storage/file-snapshot', () => ({ readFileSnapshot: jest.fn() }))
+
+const mockReadFileSnapshot = jest.mocked(readFileSnapshot)
+
+const METADATA = { duration: 20, videoWidth: 1080, videoHeight: 1920 }
+
+// jsdom loads no media: the metadata check's throwaway <video> reports METADATA as soon as it gets a source.
+const fakeVideoElement = () => {
+    const video = { ...METADATA, preload: '', onloadedmetadata: null as (() => void) | null, onerror: null }
+
+    Object.defineProperty(video, 'src', { set: () => queueMicrotask(() => video.onloadedmetadata?.()) })
+
+    return video
+}
+
+const renderPanel = () => {
+    const onSelect = jest.fn()
+    const view = renderWithProviders(
+        <UploadPanel video={null} onSelect={onSelect} onClear={jest.fn()} onBrowseSamples={jest.fn()} />,
+    )
+
+    return { ...view, onSelect, input: document.querySelector<HTMLInputElement>('input[type="file"]')! }
+}
 
 describe('UploadPanel', () => {
+    const createElement = document.createElement.bind(document)
+
+    beforeEach(() => {
+        mockReadFileSnapshot.mockReset()
+        URL.createObjectURL = jest.fn(() => 'blob:video')
+        URL.revokeObjectURL = jest.fn()
+        jest.spyOn(document, 'createElement').mockImplementation((tag: string, options?: ElementCreationOptions) =>
+            tag === 'video' ? (fakeVideoElement() as unknown as HTMLVideoElement) : createElement(tag, options),
+        )
+    })
+
+    afterEach(() => {
+        jest.restoreAllMocks()
+    })
+
     it('offers no way to pick a video while disabled', () => {
         renderWithProviders(
             <UploadPanel
@@ -20,5 +60,45 @@ describe('UploadPanel', () => {
 
         expect(screen.getByText('Try a sample ad').closest('button')).toBeDisabled()
         expect(document.querySelector('input[type="file"]')).toBeDisabled()
+    })
+
+    // On Android a just-downloaded video can change after the pick, and Chrome then refuses to read or upload it.
+    it('selects a copy of the picked video, so later changes to the file can’t break the upload', async () => {
+        const picked = new File(['picked'], 'ad.mp4', { type: 'video/mp4' })
+        const snapshot = new File(['picked'], 'ad.mp4', { type: 'video/mp4' })
+        mockReadFileSnapshot.mockResolvedValue(snapshot)
+        const { user, onSelect, input } = renderPanel()
+
+        await user.upload(input, picked)
+
+        expect(mockReadFileSnapshot).toHaveBeenCalledWith(picked)
+        expect(onSelect).toHaveBeenCalledWith(snapshot, {
+            durationS: 20,
+            width: 1080,
+            height: 1920,
+            contentType: 'video/mp4',
+        })
+    })
+
+    it('asks to choose the video again when it can no longer be read', async () => {
+        mockReadFileSnapshot.mockRejectedValue(new DOMException('The file could not be read', 'NotReadableError'))
+        const { user, onSelect, input } = renderPanel()
+
+        await user.upload(input, new File(['picked'], 'ad.mp4', { type: 'video/mp4' }))
+
+        expect(await screen.findByText('We couldn’t read this video. Please choose it again.')).toBeInTheDocument()
+        expect(onSelect).not.toHaveBeenCalled()
+    })
+
+    it('turns down a video that is too large without copying it into memory', async () => {
+        const tooLarge = new File(['x'], 'ad.mp4', { type: 'video/mp4' })
+        Object.defineProperty(tooLarge, 'size', { value: MAX_UPLOAD_BYTES + 1 })
+        const { user, onSelect, input } = renderPanel()
+
+        await user.upload(input, tooLarge)
+
+        expect(await screen.findByText(/Video must be under/)).toBeInTheDocument()
+        expect(mockReadFileSnapshot).not.toHaveBeenCalled()
+        expect(onSelect).not.toHaveBeenCalled()
     })
 })

@@ -4,13 +4,14 @@ import { LazyVideoPlayer } from '@/components/player/LazyVideoPlayer'
 import { toMediaRatioStyle } from '@/components/utils/vidstack'
 import { toMegabytes } from '@/file-size'
 import { VIDEO_FORMATS_LABEL } from '@/labels'
+import { readFileSnapshot } from '@/storage/file-snapshot'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'
 import { DragEvent, SyntheticEvent, useState } from 'react'
 import { useStyles } from './styles'
-import type { AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
+import type { AcceptedFile, AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
 
 const { Dragger } = Upload
@@ -73,9 +74,10 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         </div>
     )
 
-    // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload.
-    const verifyFile = async (file: File): Promise<AcceptedVideo | null> => {
-        const contentType = toVideoMimeType(file.type)
+    // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload. The
+    // type and size come first, so a file that can't be used is never copied into memory.
+    const verifyFile = async (picked: File): Promise<AcceptedFile | null> => {
+        const contentType = toVideoMimeType(picked.type)
 
         if (!contentType) {
             notification.error({
@@ -85,8 +87,20 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
             return null
         }
 
-        if (file.size > MAX_UPLOAD_BYTES) {
+        if (picked.size > MAX_UPLOAD_BYTES) {
             notification.error({ title: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
+            return null
+        }
+
+        let file: File
+
+        try {
+            file = await readFileSnapshot(picked)
+        } catch {
+            notification.error({
+                title: 'We couldn’t read this video. Please choose it again.',
+                placement: 'bottomRight',
+            })
             return null
         }
 
@@ -110,14 +124,14 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
             return null
         }
 
-        return { ...metadata, contentType }
+        return { file, video: { ...metadata, contentType } }
     }
 
-    const selectIfAccepted = async (file: File) => {
-        const accepted = await verifyFile(file)
+    const selectIfAccepted = async (picked: File) => {
+        const accepted = await verifyFile(picked)
 
         if (accepted) {
-            onSelect(file, accepted)
+            onSelect(accepted.file, accepted.video)
         }
     }
 

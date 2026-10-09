@@ -22,3 +22,9 @@ export interface VideoMetadata {
 export interface AcceptedVideo extends VideoMetadata {
     contentType: VideoMimeType
 }
+
+// A picked video that passed the client-side checks, as the copy of its bytes the page works with from then on.
+export interface AcceptedFile {
+    file: File
+    video: AcceptedVideo
+}

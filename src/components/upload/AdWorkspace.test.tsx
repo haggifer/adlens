@@ -32,6 +32,8 @@ jest.mock('@/api/jobs', () => ({
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn(async () => []) }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn(async () => undefined) }))
+// jsdom's File can't be read into memory; the copy itself is file-snapshot's and UploadPanel's to test.
+jest.mock('@/storage/file-snapshot', () => ({ readFileSnapshot: jest.fn(async (file: File) => file) }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken settles with.
 jest.mock('@/components/human-check/HumanCheck', () => {
     const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react')

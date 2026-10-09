@@ -112,6 +112,11 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   progress panel says so, so a step that can't move isn't taken for a slow one. An abandoned job never changes again,
   and the API expires it only when its owner reads their jobs, so the page also reads a running job every 10 seconds:
   whatever went wrong shows within 10 seconds of the API knowing it.
+- **A picked video is copied into memory once, right after the pick** (`src/storage/file-snapshot.ts`), and the
+  metadata check, the preview and the upload all use the copy. Chrome checks a picked file's modification time on every
+  later read and upload and fails them once it has moved (`net::ERR_UPLOAD_FILE_CHANGED`), which on Android happens to
+  a video another app is still finishing, such as a fresh Telegram download. The type and size are checked first, so a
+  file that can't be used is never copied; the copy costs the video's size in memory while it stays selected.
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache. A failed analysis never shows a player: its video backs no results and is deleted about a day after the
   failure, so its page shows why it failed and offers to analyze another video. No other analysis without a video to
