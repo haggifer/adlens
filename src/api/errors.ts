@@ -10,6 +10,9 @@ import {
 } from 'adlens-shared'
 import { AxiosError } from 'axios'
 
+// Shown under a title that already names the cause (describeJobErrorTitle).
+const NOT_COUNTED_COPY = 'It wasn’t counted against your analyses. Please try again.'
+
 const ERROR_COPY: Record<ApiErrorCode, string> = {
     // The API never counts a run that ends without a result.
     [JobErrorCode.VideoUnreadable]:
@@ -17,10 +20,11 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long. This run wasn't counted.`,
     [JobErrorCode.VideoTooLarge]: `Videos can be up to ${toMegabytes(MAX_UPLOAD_BYTES)} MB. This run wasn't counted.`,
     [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}. This run wasn't counted.`,
-    [JobErrorCode.AnalysisFailed]: "The analysis failed. Please try again. This run wasn't counted.",
-    [JobErrorCode.AnalysisTimedOut]: "The analysis took too long and was stopped. This run wasn't counted.",
-    [JobErrorCode.VideoCheckFailed]: "We couldn't check this video. Please try again. This run wasn't counted.",
-    [JobErrorCode.UploadFailed]: "The upload didn't finish. Please try again. This run wasn't counted.",
+    // A failure after the upload and the format checks passed is nothing the user can act on, so it gets one message.
+    [JobErrorCode.AnalysisFailed]: NOT_COUNTED_COPY,
+    [JobErrorCode.AnalysisTimedOut]: NOT_COUNTED_COPY,
+    [JobErrorCode.VideoCheckFailed]: NOT_COUNTED_COPY,
+    [JobErrorCode.UploadFailed]: NOT_COUNTED_COPY,
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
     [RequestErrorCode.QuotaExceeded]: 'You’ve used all your analyses for the last 7 days.',
     [RequestErrorCode.SignUpRequired]: 'Sign in or create an account to continue',
@@ -76,6 +80,20 @@ export const toApiRequestError = (err: unknown): ApiRequestError => {
 
 export const describeJobError = (code: JobErrorCode | undefined): string =>
     ERROR_COPY[code ?? JobErrorCode.AnalysisFailed]
+
+export const describeJobErrorTitle = (code: JobErrorCode | undefined): string => {
+    switch (code) {
+        case JobErrorCode.VideoUnreadable:
+        case JobErrorCode.VideoTooLong:
+        case JobErrorCode.VideoTooLarge:
+        case JobErrorCode.UnsupportedFormat:
+            return 'This video can’t be analyzed'
+        case JobErrorCode.UploadFailed:
+            return 'The upload didn’t finish'
+        default:
+            return 'Something went wrong with this analysis'
+    }
+}
 
 export const describeRequestError = (code: RequestErrorCode): string => ERROR_COPY[code]
 

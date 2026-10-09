@@ -1,6 +1,6 @@
 'use client'
 
-import { describeJobError } from '@/api/errors'
+import { describeJobError, describeJobErrorTitle } from '@/api/errors'
 import { type Job, JobStatus } from 'adlens-shared'
 import { Alert, Button, Result, Steps } from 'antd'
 import { useRouter } from 'next/navigation'
@@ -42,7 +42,7 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
             <div className={styles.panel}>
                 <Result
                     status="error"
-                    title="The analysis failed"
+                    title={describeJobErrorTitle(job.errorCode)}
                     subTitle={describeJobError(job.errorCode)}
                     extra={
                         <Button type="primary" onClick={() => router.push('/')}>

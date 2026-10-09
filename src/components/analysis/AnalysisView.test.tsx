@@ -1,3 +1,4 @@
+import { describeJobError, describeJobErrorTitle } from '@/api/errors'
 import { useJobVideo } from '@/hooks/useJobVideo'
 import { buildAnalysis, buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
@@ -96,22 +97,20 @@ describe('AnalysisView', () => {
         it('says why it failed and whether the run was counted', () => {
             renderView(FAILED_JOB)
 
-            expect(screen.getByText('The analysis failed')).toBeInTheDocument()
-            expect(
-                screen.getByText("The analysis took too long and was stopped. This run wasn't counted."),
-            ).toBeInTheDocument()
+            expect(screen.getByText(describeJobErrorTitle(JobErrorCode.AnalysisTimedOut))).toBeInTheDocument()
+            expect(screen.getByText(describeJobError(JobErrorCode.AnalysisTimedOut))).toBeInTheDocument()
         })
 
-        it.each([
-            [JobErrorCode.VideoCheckFailed, "We couldn't check this video. Please try again. This run wasn't counted."],
-            [JobErrorCode.UploadFailed, "The upload didn't finish. Please try again. This run wasn't counted."],
-        ])('explains a run that ended in %s before the analysis started', (errorCode, copy) => {
-            renderView(buildJob({ status: JobStatus.Error, errorCode }))
+        it.each([JobErrorCode.VideoCheckFailed, JobErrorCode.UploadFailed, JobErrorCode.VideoTooLong])(
+            'explains a run that ended in %s',
+            (errorCode) => {
+                renderView(buildJob({ status: JobStatus.Error, errorCode }))
 
-            expect(screen.getByText('The analysis failed')).toBeInTheDocument()
-            expect(screen.getByText(copy)).toBeInTheDocument()
-            expect(screen.queryByRole('region', PLAYER)).not.toBeInTheDocument()
-        })
+                expect(screen.getByText(describeJobErrorTitle(errorCode))).toBeInTheDocument()
+                expect(screen.getByText(describeJobError(errorCode))).toBeInTheDocument()
+                expect(screen.queryByRole('region', PLAYER)).not.toBeInTheDocument()
+            },
+        )
 
         it('offers to analyze another video', async () => {
             const { user } = renderView(FAILED_JOB)

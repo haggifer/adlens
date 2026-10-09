@@ -1,4 +1,10 @@
-import { ApiRequestError, describeContactError, describeJobError, toApiRequestError } from '@/api/errors'
+import {
+    ApiRequestError,
+    describeContactError,
+    describeJobError,
+    describeJobErrorTitle,
+    toApiRequestError,
+} from '@/api/errors'
 import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
 import { AxiosError, AxiosHeaders } from 'axios'
 
@@ -79,13 +85,13 @@ describe('describeJobError', () => {
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
     })
 
-    it('explains a run that failed before the analysis started', () => {
-        expect(describeJobError(JobErrorCode.VideoCheckFailed)).toBe(
-            "We couldn't check this video. Please try again. This run wasn't counted.",
-        )
-        expect(describeJobError(JobErrorCode.UploadFailed)).toBe(
-            "The upload didn't finish. Please try again. This run wasn't counted.",
-        )
+    it.each([
+        JobErrorCode.AnalysisFailed,
+        JobErrorCode.AnalysisTimedOut,
+        JobErrorCode.VideoCheckFailed,
+        JobErrorCode.UploadFailed,
+    ])('says a run that ended in %s wasn’t counted and can be tried again', (code) => {
+        expect(describeJobError(code)).toBe('It wasn’t counted against your analyses. Please try again.')
     })
 
     it.each([
@@ -93,12 +99,30 @@ describe('describeJobError', () => {
         JobErrorCode.VideoTooLong,
         JobErrorCode.VideoTooLarge,
         JobErrorCode.UnsupportedFormat,
-        JobErrorCode.AnalysisFailed,
-        JobErrorCode.AnalysisTimedOut,
-        JobErrorCode.VideoCheckFailed,
-        JobErrorCode.UploadFailed,
-    ])('says a run that ended in %s wasn’t counted', (code) => {
+    ])('says what to change about a video rejected with %s, and that the run wasn’t counted', (code) => {
         expect(describeJobError(code)).toMatch(/ This run wasn't counted\.$/)
+    })
+})
+
+describe('describeJobErrorTitle', () => {
+    it.each([JobErrorCode.AnalysisFailed, JobErrorCode.AnalysisTimedOut, JobErrorCode.VideoCheckFailed, undefined])(
+        'gives a backend failure (%s) one general title',
+        (code) => {
+            expect(describeJobErrorTitle(code)).toBe('Something went wrong with this analysis')
+        },
+    )
+
+    it.each([
+        JobErrorCode.VideoUnreadable,
+        JobErrorCode.VideoTooLong,
+        JobErrorCode.VideoTooLarge,
+        JobErrorCode.UnsupportedFormat,
+    ])('says a video rejected with %s can’t be analyzed', (code) => {
+        expect(describeJobErrorTitle(code)).toBe('This video can’t be analyzed')
+    })
+
+    it('says an upload that never finished didn’t finish', () => {
+        expect(describeJobErrorTitle(JobErrorCode.UploadFailed)).toBe('The upload didn’t finish')
     })
 })
 
