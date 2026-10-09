@@ -180,7 +180,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   in: it confirms only for a session signed in as its own account, so `/confirm-email` asks a visitor to sign in
   first and then sends the same token again. A confirmation also tells the browser's other tabs, through Better Auth's
   own cross-tab channel, to fetch the session again, and whenever the session's user or its confirmation changes, the
-  quota (and, for a new user, the history) is fetched again.
+  quota (and, for a new user, the history) is fetched again. An open "Check your inbox" then closes and says the email
+  is confirmed.
 - **The header remembers the kind of account, not the account, in a cookie the server reads.** Each loaded session
   stores only its kind (anonymous, unconfirmed, member or admin, the last from the API's `isAdmin` user field) in the
   `adlens_account_kind` cookie (host-only, `samesite=lax`, `secure` over HTTPS, one year), and clears it on sign-out or

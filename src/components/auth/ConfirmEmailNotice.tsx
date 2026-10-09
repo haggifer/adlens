@@ -8,6 +8,7 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MailOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, App, Button, Result } from 'antd'
+import { useEffect, useRef } from 'react'
 
 const ALREADY_CONFIRMED_CODE = 'EMAIL_ALREADY_VERIFIED'
 
@@ -21,10 +22,13 @@ const resendConfirmation = async (email: string): Promise<void> => {
 
 // "Check your inbox" for a signed-in account whose email isn't confirmed yet.
 export function ConfirmEmailNotice() {
-    const { user } = useAuth()
+    const { user, isEmailConfirmed } = useAuth()
     const isOtherAddressLink = useAuthModalStore((s) => s.isOtherAddressLink)
     const setView = useAuthModalStore((s) => s.setView)
     const { notification } = App.useApp()
+
+    // Only a confirmation that arrives while this is open closes it, not an account already confirmed when it opened.
+    const wasEmailConfirmed = useRef(isEmailConfirmed)
 
     const resend = useMutation<void, AuthError, string>({
         mutationFn: resendConfirmation,
@@ -43,6 +47,16 @@ export function ConfirmEmailNotice() {
 
     // Right after sign-up the session may still be loading the new account.
     const email = user?.email ?? null
+
+    // Confirmed through the link in another tab, which tells this one: Run has unlocked behind this dialog.
+    useEffect(() => {
+        if (isEmailConfirmed && !wasEmailConfirmed.current) {
+            setView(null)
+            notification.success({ title: 'Your email is confirmed', placement: 'bottomRight' })
+        }
+
+        wasEmailConfirmed.current = isEmailConfirmed
+    }, [isEmailConfirmed, setView, notification])
 
     return (
         <div className="d-flex flex-column gap-3">

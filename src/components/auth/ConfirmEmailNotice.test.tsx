@@ -75,6 +75,26 @@ describe('ConfirmEmailNotice', () => {
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
     })
 
+    it('closes and says the email is confirmed once it’s confirmed in another tab', async () => {
+        const { rerender } = openConfirmation(unconfirmedAuth())
+
+        expect(await screen.findByText('Check your inbox')).toBeInTheDocument()
+
+        mockUseAuth.mockReturnValue(memberAuth())
+        rerender(<AuthModal />)
+
+        expect(await screen.findByText('Your email is confirmed')).toBeInTheDocument()
+        expect(useAuthModalStore.getState().view).toBeNull()
+    })
+
+    it('stays open for an account already confirmed when it opened', async () => {
+        openConfirmation(memberAuth())
+
+        expect(await screen.findByText('Check your inbox')).toBeInTheDocument()
+        expect(screen.queryByText('Your email is confirmed')).not.toBeInTheDocument()
+        expect(useAuthModalStore.getState().view).toBe('confirm')
+    })
+
     it('says so when the user opened a link for another address', async () => {
         openConfirmation(memberAuth(), true)
 
