@@ -5,6 +5,7 @@ import { createJob, createSampleJob, isAdmissionRefusal, startAnalysis } from '@
 import { authClient, signIn } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
+import { refreshSession } from '@/auth/session'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
@@ -216,6 +217,12 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
             if (sessionCheck === 'none') {
                 await startAnonymousSession()
+            }
+
+            // The cookie holds a session this tab's state missed (its first fetch failed, or another tab signed in):
+            // without catching up, the analysis page would ask to sign in.
+            if (sessionCheck === 'active') {
+                refreshSession()
             }
         }
 

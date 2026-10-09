@@ -2,6 +2,7 @@ import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, createSampleJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { getQuota } from '@/api/me'
 import { authClient, signIn } from '@/auth/authClient'
+import { refreshSession } from '@/auth/session'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
@@ -30,6 +31,7 @@ jest.mock('@/auth/authClient', () => ({
     authClient: { getSession: jest.fn() },
     signIn: { anonymous: jest.fn() },
 }))
+jest.mock('@/auth/session', () => ({ refreshSession: jest.fn() }))
 jest.mock('@/api/jobs', () => ({
     ...jest.requireActual<typeof import('@/api/jobs')>('@/api/jobs'),
     createJob: jest.fn(),
@@ -141,7 +143,7 @@ describe('AnalysisSettings', () => {
             expect(queryClient.getQueryState(['quota', 'anon-new'])?.isInvalidated).toBe(true)
         })
 
-        it('uses the session it finds instead of signing in anonymously over it', async () => {
+        it('uses the session it finds instead of signing in anonymously over it, and catches the page up', async () => {
             jest.mocked(authClient.getSession).mockResolvedValueOnce({
                 data: { user: { id: 'member-1' } },
                 error: null,
@@ -152,6 +154,7 @@ describe('AnalysisSettings', () => {
 
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
             expect(signIn.anonymous).not.toHaveBeenCalled()
+            expect(refreshSession).toHaveBeenCalledTimes(1)
         })
 
         it('doesn’t sign in anonymously when the session check fails, and lets the visitor retry', async () => {
