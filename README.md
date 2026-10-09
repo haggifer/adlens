@@ -157,9 +157,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   which History can delete, and the API deletes the anonymous user a week after its last use.
 - **Run is disabled before a refusal, not after.** `useAdmission` asks the API's `GET /v1/admission` whether a new
   analysis would be admitted (for a visitor without a session too, judged as the anonymous user a first run creates)
-  and keeps the answer in the query cache per user, refreshed after every run, refusal, sign-in and sign-out. A refusal
-  disables Run and says why above it. A refusal from creating the job is the fallback: it disables Run the same way
-  until a newer answer replaces it. The home page asks on load, and when the API can't answer at all (unreachable or
+  and keeps the answer in the query cache per user, refreshed after every run, refusal, sign-in and sign-out, and when
+  a watched analysis fails (a failed run isn't counted; the API refunds it just after the failure, so it's asked again
+  2 seconds later). An answer overrides what the cached quota implies. A refusal disables Run and says why above it. A
+  refusal from creating the job is the fallback: it disables Run the same way until a newer answer replaces it. The home page asks on load, and when the API can't answer at all (unreachable or
   failing, after the usual retries) it shows "AdLens is briefly unavailable" with Try again in place of the upload and
   settings: no analysis could start, so none is offered.
 - **Google and GitHub sign in in a popup**, so the page keeps the visitor's selected video (a file held only in memory)

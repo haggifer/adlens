@@ -3,7 +3,7 @@ import { getJob } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { memberAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
-import { renderWithProviders } from '@/test/render'
+import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import { act, screen } from '@testing-library/react'
 import { type Job, JobStatus, RequestErrorCode } from 'adlens-shared'
 import { useJob } from './useJob'
@@ -48,10 +48,10 @@ const Probe = () => {
     )
 }
 
-const renderJob = async (job: Job) => {
+const renderJob = async (job: Job, queryClient = createTestQueryClient()) => {
     mockUseAuth.mockReturnValue(memberAuth())
     jest.mocked(getJob).mockResolvedValue(job)
-    renderWithProviders(<Probe />)
+    renderWithProviders(<Probe />, queryClient)
     await screen.findByText(job.status)
 }
 
@@ -136,5 +136,38 @@ describe('useJob', () => {
         } finally {
             jest.useRealTimers()
         }
+    })
+
+    it('refreshes the quota and admission when a watched job fails, and again once the refund has landed', async () => {
+        jest.useFakeTimers({ advanceTimers: true })
+
+        try {
+            const queryClient = createTestQueryClient()
+            const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+
+            await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Analyzing }), queryClient)
+            act(() => mockSockets[0].handlers.get('job:updated')?.(buildJob({ id: JOB_ID, status: JobStatus.Error })))
+            await screen.findByText(JobStatus.Error)
+
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['admission'] })
+
+            invalidate.mockClear()
+            await act(async () => jest.advanceTimersByTimeAsync(2_000))
+
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['admission'] })
+        } finally {
+            jest.useRealTimers()
+        }
+    })
+
+    it('refreshes nothing for a job that had already failed when the page opened', async () => {
+        const queryClient = createTestQueryClient()
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+
+        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Error }), queryClient)
+
+        expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['quota'] })
     })
 })

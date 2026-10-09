@@ -278,7 +278,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const runRefusal = runError && isAdmissionRefusal(runError.code) && updatedAt < refusedAt ? runError.code : null
     const quotaRefusal = hasQuotaLeft ? null : getQuotaRefusal(isEmailConfirmed, isAnonymous)
     // While a run moves on, its own charge would read as a refusal.
-    const blockingRefusal = isRunning ? null : (runRefusal ?? refusal ?? quotaRefusal)
+    // An admission answer, even an admitting null, is newer than what the cached quota implies.
+    const admissionRefusal = refusal !== undefined ? refusal : quotaRefusal
+    const blockingRefusal = isRunning ? null : (runRefusal ?? admissionRefusal)
 
     const handlePlatformsChange = (next: Platform[]) => {
         setValue(

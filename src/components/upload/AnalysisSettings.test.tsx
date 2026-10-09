@@ -361,6 +361,7 @@ describe('AnalysisSettings', () => {
 
     it('asks an anonymous visitor to sign up once their analysis is used, instead of naming a date', async () => {
         mockQuota = { used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+        jest.mocked(getAdmissionRefusal).mockResolvedValue(RequestErrorCode.SignUpRequired)
         const { user } = renderSettings(anonymousAuth())
 
         expect(screen.getByText(SIGN_UP_REQUIRED_COPY)).toBeInTheDocument()
@@ -403,6 +404,16 @@ describe('AnalysisSettings', () => {
             await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(2))
             expect(runButton()).toBeDisabled()
             expect(isAboveRun(notice)).toBe(true)
+        })
+
+        it('lets Run go when the API admits the analysis, though the cached quota looks used up', async () => {
+            mockQuota = { used: 3, limit: 3, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+            renderSettings(memberAuth())
+
+            expect(runButton()).toBeDisabled()
+
+            await waitFor(() => expect(runButton()).toBeEnabled())
+            expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
         })
 
         it('lets Run go again once a newer answer admits the analysis', async () => {
@@ -452,6 +463,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(getQuota)
             .mockResolvedValueOnce({ used: 0, limit: 1, nextFreeAt: null })
             .mockResolvedValue({ used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' })
+        jest.mocked(getAdmissionRefusal).mockResolvedValueOnce(null).mockResolvedValue(RequestErrorCode.SignUpRequired)
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.SignUpRequired))
         const { user } = renderSettings(anonymousAuth())
 
@@ -472,6 +484,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(getQuota)
             .mockResolvedValueOnce({ used: 2, limit: 3, nextFreeAt: null })
             .mockResolvedValue({ used: 3, limit: 3, nextFreeAt: '2026-10-08T09:30:00.000Z' })
+        jest.mocked(getAdmissionRefusal).mockResolvedValueOnce(null).mockResolvedValue(RequestErrorCode.QuotaExceeded)
         jest.mocked(createSampleJob).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.QuotaExceeded))
         const { user } = renderSettings(memberAuth())
 
@@ -480,7 +493,7 @@ describe('AnalysisSettings', () => {
         await run(user)
 
         expect(await screen.findByText(/The next one is available on/)).toBeInTheDocument()
-        expect(screen.queryByText('You’ve used all your analyses for the last 7 days.')).not.toBeInTheDocument()
+        expect(screen.queryByText(describeRequestError(RequestErrorCode.QuotaExceeded))).not.toBeInTheDocument()
     })
 
     describe('for an uploaded file', () => {
