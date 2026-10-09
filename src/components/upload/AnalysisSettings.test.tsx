@@ -373,6 +373,15 @@ describe('AnalysisSettings', () => {
         expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
+    it('says every placement is checked until a platform is chosen', () => {
+        renderSettings(memberAuth(), {
+            kind: 'sample',
+            sample: { ...SAMPLE, settings: { platforms: [], placements: [], markets: [] } },
+        })
+
+        expect(screen.getByText('Every placement is checked; pick a platform to narrow')).toBeInTheDocument()
+    })
+
     describe('checking in advance whether the analysis would be admitted', () => {
         it('disables Run and says why, above it, before a visitor without a session tries', async () => {
             jest.mocked(getAdmissionRefusal).mockResolvedValue(RequestErrorCode.SignUpRequired)

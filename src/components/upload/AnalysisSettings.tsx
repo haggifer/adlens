@@ -391,12 +391,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                                 onChange={handlePlacementsChange}
                                 onBlur={field.onBlur}
                                 mode="multiple"
-                                // Nothing chosen is checked as everything (the API resolves empty settings in full).
-                                placeholder={
-                                    platforms.length
-                                        ? 'Leave empty to check every placement'
-                                        : 'Every placement is checked; pick a platform to narrow'
-                                }
+                                // Seen only with no platform chosen, since a chosen platform keeps at least one
+                                // placement. Nothing chosen is checked as everything (the API resolves it in full).
+                                placeholder="Every placement is checked; pick a platform to narrow"
                                 options={getPlacementOptions(platforms)}
                                 disabled={!platforms.length || isRunning}
                                 allowClear
