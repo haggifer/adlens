@@ -52,8 +52,9 @@ npm test             # Jest + React Testing Library
 - Named exports only (`export function Header`, `export function useJob`). Default exports only where Next.js
   requires them: `page.tsx`, `layout.tsx`, `error.tsx` and `not-found.tsx` under `src/app/`, `src/app/robots.ts`,
   `src/app/sitemap.ts` and `src/app/opengraph-image.tsx`, and the root config files.
-- A new public (indexable) page gets `alternates.canonical` in its metadata and an entry in `src/app/sitemap.ts`; every
-  other page sets `robots: { index: false }`.
+- A new public (indexable) page builds its metadata with `buildPublicPageMetadata` (`src/app/site-metadata.ts`: its
+  canonical address and its own link-preview title, description and `og:url`) and gets an entry in
+  `src/app/sitemap.ts`; every other page sets `robots: { index: false }`.
 - Client providers are composed in `src/app/Providers.tsx`; add new global providers there.
 - UI state lives in Zustand stores under `src/contexts/stores/`; server state in TanStack Query hooks under
   `src/hooks/`.

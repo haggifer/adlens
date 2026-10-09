@@ -8,7 +8,7 @@ import { cookies, headers } from 'next/headers'
 import type { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './Providers'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_OPEN_GRAPH, SITE_TITLE } from './site-metadata'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_OPEN_GRAPH, SITE_TITLE, SITE_TWITTER } from './site-metadata'
 
 export const metadata: Metadata = {
     metadataBase: new URL(config.siteUrl),
@@ -20,12 +20,7 @@ export const metadata: Metadata = {
     applicationName: SITE_NAME,
     keywords: ['video ads', 'ad policy check', 'ad approval', 'creative best practices', 'AI video analysis'],
     openGraph: SITE_OPEN_GRAPH,
-    // The large card shows opengraph-image.tsx, which X reads in place of a twitter:image of its own.
-    twitter: {
-        card: 'summary_large_image',
-        title: SITE_TITLE,
-        description: SITE_DESCRIPTION,
-    },
+    twitter: SITE_TWITTER,
     robots: { index: true, follow: true },
 }
 

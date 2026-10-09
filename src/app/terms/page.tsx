@@ -1,11 +1,10 @@
+import { buildPublicPageMetadata } from '@/app/site-metadata'
 import { LegalPage } from '@/components/legal/LegalPage'
 import Terms from '@/content/legal/terms.mdx'
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 
-export const metadata: Metadata = {
-    title: 'Terms of Use',
-    alternates: { canonical: '/terms' },
-}
+export const generateMetadata = (_props: unknown, parent: ResolvingMetadata): Promise<Metadata> =>
+    buildPublicPageMetadata({ title: 'Terms of Use', path: '/terms' }, parent)
 
 export default function TermsPage() {
     return (
