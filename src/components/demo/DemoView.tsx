@@ -37,7 +37,8 @@ export function DemoView() {
     const demo = demos.find(({ slug }) => slug === selectedSlug) ?? demos[0]
     const tabs = demos.map(({ slug, label }) => ({ value: slug, label }))
 
-    const renderDemo = () => {
+    // The page's second row: the report, or what stands in its place.
+    const renderBody = () => {
         if (isLoading) {
             return <Spin size="large" className="m-auto" />
         }
@@ -48,37 +49,39 @@ export function DemoView() {
         }
 
         if (!demo) {
-            return <Empty description="No example reports yet." />
+            return <Empty className="m-auto" description="No example reports yet." />
         }
 
-        return (
-            <>
-                {tabs.length > 1 && (
-                    <Segmented className={styles.tabs} options={tabs} value={demo.slug} onChange={setSelectedSlug} />
-                )}
-                <section className={styles.summary}>
-                    <h2 className={styles.summaryTitle}>{demo.title}</h2>
-                    <p className={styles.summaryText}>{demo.subtitle}</p>
-                    <p className={analysisStyles.pageMeta}>{describeDemoRun(demo)}</p>
-                </section>
-                {/* A key per demo, so the player starts over with each one. */}
-                <AnalysisWorkspace key={demo.id} job={demo.job} videoUrl={demo.videoUrl} hasPlayer />
-            </>
-        )
+        // A key per demo, so the player starts over with each one.
+        return <AnalysisWorkspace key={demo.id} job={demo.job} videoUrl={demo.videoUrl} hasPlayer />
     }
 
     return (
         <div className={analysisStyles.page}>
-            <header className={styles.header}>
-                <div className="d-flex flex-column gap-1">
-                    <h1 className={analysisStyles.pageTitle}>Example reports</h1>
-                    <p className={analysisStyles.pageMeta}>Real ads, analyzed by AdLens. Pick one to see its report.</p>
-                </div>
-                <Button type="primary" onClick={() => router.push('/')}>
-                    Analyze your ad
-                </Button>
-            </header>
-            {renderDemo()}
+            <div className={analysisStyles.intro}>
+                <header className={styles.header}>
+                    <div className="d-flex flex-column gap-1">
+                        <h1 className={analysisStyles.pageTitle}>Example reports</h1>
+                        <p className={analysisStyles.pageMeta}>
+                            Real ads, analyzed by AdLens. Pick one to see its report.
+                        </p>
+                    </div>
+                    <Button type="primary" onClick={() => router.push('/')}>
+                        Analyze your ad
+                    </Button>
+                </header>
+                {demo && tabs.length > 1 && (
+                    <Segmented className={styles.tabs} options={tabs} value={demo.slug} onChange={setSelectedSlug} />
+                )}
+                {demo && (
+                    <section className={styles.summary}>
+                        <h2 className={styles.summaryTitle}>{demo.title}</h2>
+                        <p className={styles.summaryText}>{demo.subtitle}</p>
+                        <p className={analysisStyles.pageMeta}>{describeDemoRun(demo)}</p>
+                    </section>
+                )}
+            </div>
+            {renderBody()}
         </div>
     )
 }

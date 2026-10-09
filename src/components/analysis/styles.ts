@@ -15,16 +15,49 @@ const ICON_FADE = keyframes`
     }
 `
 
+// 400px: below it the video and its results stop fitting side by side; the page scrolls rather than squeeze them.
+const WORKSPACE_MIN_HEIGHT = '25rem'
+
+const PAGE_MIN_HEIGHT = 'calc(100dvh - var(--header-h) - var(--footer-h))'
+
 export const useStyles = createStyles(({ token, css }) => ({
+    /* The home page's pattern: side by side, the page fills the screen without scrolling until the workspace would
+       drop below WORKSPACE_MIN_HEIGHT; then the page grows and scrolls instead. A grid row (not a flex item) keeps the
+       workspace's height definite under a min-height, so the player can still size off 100%. */
     page: css`
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: auto minmax(${WORKSPACE_MIN_HEIGHT}, 1fr);
         gap: 1.5rem;
-        height: calc(100dvh - var(--header-h) - var(--footer-h));
+        min-height: ${PAGE_MIN_HEIGHT};
         padding: 2rem 0 0.5rem;
 
         @media (max-width: 991.98px) {
-            height: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: auto;
+            flex: 1;
+            padding: 1.5rem 0 2rem;
+        }
+    `,
+
+    // Everything above the workspace, as the page's first row.
+    intro: css`
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    `,
+
+    // A page that is loading or couldn't load: its one element centred where the report would be.
+    statusPage: css`
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: ${PAGE_MIN_HEIGHT};
+        padding: 2rem 0 0.5rem;
+
+        @media (max-width: 991.98px) {
+            min-height: auto;
             flex: 1;
             padding: 1.5rem 0 2rem;
         }
@@ -62,6 +95,14 @@ export const useStyles = createStyles(({ token, css }) => ({
 
         @media (max-width: 991.98px) {
             flex-direction: column;
+        }
+    `,
+
+    /* Beside a video, the workspace adds nothing to its row's size: a grid row sized by its content would otherwise grow
+       to the results' full length (and the stage with it) instead of scrolling them inside the panel. */
+    workspaceWithStage: css`
+        @media (min-width: 992px) {
+            contain: size;
         }
     `,
 

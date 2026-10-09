@@ -29,8 +29,8 @@ export function AnalysisView({ jobId }: IProps) {
 
     if (isLoading) {
         return (
-            <div className={styles.page}>
-                <Spin size="large" className="m-auto" />
+            <div className={styles.statusPage}>
+                <Spin size="large" />
             </div>
         )
     }
@@ -40,7 +40,7 @@ export function AnalysisView({ jobId }: IProps) {
         const isNotFound = error?.code === RequestErrorCode.NotFound
 
         return (
-            <div className={styles.page}>
+            <div className={styles.statusPage}>
                 <Result
                     status={isNotFound ? '404' : 'error'}
                     title={isNotFound ? 'Analysis not found' : 'Couldn’t load this analysis'}
@@ -57,21 +57,23 @@ export function AnalysisView({ jobId }: IProps) {
 
     return (
         <div className={styles.page}>
-            <div>
-                <BackButton fallbackHref="/history" />
-            </div>
-            <header className={styles.pageHeader}>
-                <div className="d-flex flex-column gap-1">
-                    <div className="d-flex align-items-center gap-2">
-                        <h1 className={styles.pageTitle}>{job.file.name}</h1>
-                        {job.sampleId && <Tag color="processing">Sample ad</Tag>}
-                    </div>
-                    <p className={styles.pageMeta}>
-                        {platforms} · {new Date(job.createdAt).toLocaleString()}
-                    </p>
+            <div className={styles.intro}>
+                <div>
+                    <BackButton fallbackHref="/history" />
                 </div>
-                <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
-            </header>
+                <header className={styles.pageHeader}>
+                    <div className="d-flex flex-column gap-1">
+                        <div className="d-flex align-items-center gap-2">
+                            <h1 className={styles.pageTitle}>{job.file.name}</h1>
+                            {job.sampleId && <Tag color="processing">Sample ad</Tag>}
+                        </div>
+                        <p className={styles.pageMeta}>
+                            {platforms} · {new Date(job.createdAt).toLocaleString()}
+                        </p>
+                    </div>
+                    <DeleteJobButton job={job} onDeleted={() => router.replace('/history')} />
+                </header>
+            </div>
             <AnalysisWorkspace
                 job={job}
                 videoUrl={url}

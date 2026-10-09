@@ -47,7 +47,12 @@ export function AnalysisWorkspace({ job, videoUrl, hasPlayer, isDisconnected }: 
     }
 
     return (
-        <div className={cx(styles.workspace, !hasPlayer && 'justify-content-center align-items-start')}>
+        <div
+            className={cx(
+                styles.workspace,
+                hasPlayer ? styles.workspaceWithStage : 'justify-content-center align-items-start',
+            )}
+        >
             {hasPlayer && (
                 <div className={styles.stage} style={toMediaRatioStyle(job.media?.width, job.media?.height)}>
                     {videoUrl ? (
