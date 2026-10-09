@@ -1,8 +1,10 @@
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { listAccounts, revokeOtherSessions } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { initializingAuth, MEMBER_USER, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
+import { RequestErrorCode } from 'adlens-shared'
 import { AccountSettings } from './AccountSettings'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
@@ -99,6 +101,20 @@ describe('AccountSettings', () => {
         expect(screen.getByRole('heading', { name: 'Other devices' })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
         expect(document.querySelector('.ant-skeleton')).not.toBeInTheDocument()
+    })
+
+    it('treats a lost session as any API call does, so the app asks to sign in again', async () => {
+        jest.mocked(listAccounts).mockResolvedValue({ data: null, error: { status: 401 } } as never)
+        const { queryClient } = renderSettings()
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            describeRequestError(RequestErrorCode.Unauthenticated),
+        )
+
+        const { error } = queryClient.getQueryState(['linkedAccounts', MEMBER_USER.id]) ?? {}
+
+        expect(error).toBeInstanceOf(ApiRequestError)
+        expect(error).toMatchObject({ code: RequestErrorCode.Unauthenticated })
     })
 
     it('says AdLens is unreachable when the sign-in methods request never reaches it', async () => {

@@ -1,8 +1,9 @@
 'use client'
 
+import { ApiRequestError } from '@/api/errors'
 import { revokeOtherSessions } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { useLinkedAccounts } from '@/hooks/useLinkedAccounts'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { Alert, App, Button, Skeleton } from 'antd'
@@ -23,6 +24,9 @@ const formatMethods = (providers: string[]) =>
 const SECTION_SKELETONS = [1, 5, 2, 3].map((rows) => ({ rows }))
 
 const USER_LINE_SKELETON = { rows: 1, width: '60%' }
+
+const describeProvidersError = (error: AuthError | ApiRequestError) =>
+    error instanceof ApiRequestError ? error.message : describeError(error)
 
 export function AccountSettings() {
     const { styles } = useStyles()
@@ -78,7 +82,7 @@ export function AccountSettings() {
                         {user.name} · {user.email}
                     </p>
                 </div>
-                {providersError && <Alert type="error" showIcon title={describeError(providersError)} />}
+                {providersError && <Alert type="error" showIcon title={describeProvidersError(providersError)} />}
                 {providers && (
                     <>
                         <div className={styles.section}>
