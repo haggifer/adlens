@@ -14,7 +14,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   for layout
 - **Better Auth** React client: email and password with email verification and password reset, plus Google and GitHub
   sign-in (`signIn.social` in a popup that reports back from `/auth/done`; when the popup is blocked, in the tab
-  itself, where a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`), and
+  itself, where a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`, and only in a
+  tab that left for that sign-in), and
   anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
   analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
 - **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts or a contact

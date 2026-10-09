@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth/authClient'
 import { type AuthError, describeError, runAuthQuery, runAuthRequest } from '@/auth/errors'
-import { getSocialSignInDoneUrl } from '@/auth/social-sign-in'
+import { getSocialSignInDoneUrl, markRedirectSignIn, takeRedirectSignIn } from '@/auth/social-sign-in'
 import type { SocialProvider } from '@/auth/types'
 import { useSocialSignInResult } from '@/hooks/useSocialSignInResult'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
@@ -94,9 +94,12 @@ export function SocialButtons() {
     }
 
     const handleRedirectSignIn = async (provider: SocialProvider) => {
+        markRedirectSignIn()
         const error = await startRedirectSignIn(provider)
 
+        // The tab never left, so no page comes back to read the mark.
         if (error) {
+            takeRedirectSignIn()
             notifyFailure(error)
         }
     }

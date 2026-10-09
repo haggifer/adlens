@@ -1,6 +1,6 @@
 import { signIn } from '@/auth/authClient'
 import { refreshSession } from '@/auth/session'
-import { postSocialSignInOutcome } from '@/auth/social-sign-in'
+import { postSocialSignInOutcome, takeRedirectSignIn } from '@/auth/social-sign-in'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
@@ -59,6 +59,8 @@ describe('SocialButtons', () => {
             callbackURL: window.location.href,
             errorCallbackURL: window.location.href,
         })
+        // So the page it comes back to explains an ?error=.
+        expect(takeRedirectSignIn()).toBe(true)
     })
 
     it('lets the visitor start over with either provider while the popup is open', async () => {
@@ -131,5 +133,6 @@ describe('SocialButtons', () => {
 
         expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
         expect(googleButton()).toBeEnabled()
+        expect(takeRedirectSignIn()).toBe(false)
     })
 })
