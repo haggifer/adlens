@@ -27,7 +27,7 @@ import {
     RequestErrorCode,
 } from 'adlens-shared'
 import { Alert, Button, Progress, Select } from 'antd'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import {
@@ -129,6 +129,7 @@ interface IProps {
 export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const queryClient = useQueryClient()
     const { user, isAnonymous, isEmailConfirmed, isInitializing } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
@@ -356,8 +357,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             </div>
         )
 
-    // The address holds the applied settings, so a reload or the next video keeps them.
-    useEffect(() => writeSettingsToUrl(values), [values])
+    // The address holds the applied settings, so a reload or the next video keeps them. A navigation that drops them
+    // while the form keeps them (Analyze in the header links to a bare /) writes them back.
+    useEffect(() => writeSettingsToUrl(values), [values, searchParams])
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>

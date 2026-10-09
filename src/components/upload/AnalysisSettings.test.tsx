@@ -25,7 +25,10 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockUseQuota = jest.fn<UseQuotaResult, []>()
 let mockQuota: Quota | undefined
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({ push: mockPush }),
+    useSearchParams: () => new URLSearchParams(window.location.search),
+}))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({
     authClient: { getSession: jest.fn() },
@@ -517,6 +520,18 @@ describe('AnalysisSettings', () => {
         await act(async () => finishRun(JOB))
 
         expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('writes the settings back when a navigation drops them from the address while the form keeps them', async () => {
+        const { rerender } = renderSettings(memberAuth())
+
+        await waitFor(() => expect(window.location.search).toContain('platform='))
+
+        // What following the header's Analyze link (a bare /) does while on the home page.
+        window.history.replaceState(null, '', '/')
+        rerender(<AnalysisSettings source={SAMPLE_SOURCE} />)
+
+        await waitFor(() => expect(window.location.search).toContain('platform='))
     })
 
     describe('for an uploaded file', () => {

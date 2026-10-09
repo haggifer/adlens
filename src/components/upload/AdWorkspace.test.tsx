@@ -15,7 +15,10 @@ const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockGetToken = jest.fn<Promise<string>, []>()
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({ push: mockPush }),
+    useSearchParams: () => new URLSearchParams(window.location.search),
+}))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({ authClient: { getSession: jest.fn() }, signIn: { anonymous: jest.fn() } }))
 jest.mock('@/api/jobs', () => ({
