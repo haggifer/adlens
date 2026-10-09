@@ -10,6 +10,7 @@ class FakeXhr {
     headers: Record<string, string> = {}
     body: unknown = null
     status = 0
+    responseText = ''
     upload: { onprogress: ((event: Partial<ProgressEvent>) => void) | null } = { onprogress: null }
     onload: (() => void) | null = null
     onerror: (() => void) | null = null
@@ -31,8 +32,9 @@ class FakeXhr {
         this.body = body
     }
 
-    respond(status: number) {
+    respond(status: number, responseText = '') {
         this.status = status
+        this.responseText = responseText
         this.onload?.()
     }
 
@@ -50,13 +52,16 @@ const TARGET = {
 
 describe('uploadToSignedUrl', () => {
     const originalXhr = window.XMLHttpRequest
+    let consoleError: jest.SpyInstance
 
     beforeEach(() => {
         window.XMLHttpRequest = FakeXhr as unknown as typeof XMLHttpRequest
+        consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
     })
 
     afterEach(() => {
         window.XMLHttpRequest = originalXhr
+        consoleError.mockRestore()
     })
 
     it('PUTs the file with exactly the signed headers and reports progress', async () => {
@@ -109,5 +114,23 @@ describe('uploadToSignedUrl', () => {
         FakeXhr.last.failNetwork()
 
         await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
+    })
+
+    it('logs the status and Cloud Storage’s error code when storage refuses the upload', async () => {
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+
+        FakeXhr.last.respond(403, '<?xml version="1.0"?><Error><Code>SignatureDoesNotMatch</Code></Error>')
+
+        await expect(upload).rejects.toBeInstanceOf(ApiRequestError)
+        expect(consoleError).toHaveBeenCalledWith('Upload refused by storage:', 403, 'SignatureDoesNotMatch')
+    })
+
+    it('logs that the upload never got an answer when the connection drops', async () => {
+        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+
+        FakeXhr.last.failNetwork()
+
+        await expect(upload).rejects.toBeInstanceOf(ApiRequestError)
+        expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Upload failed before storage answered'))
     })
 })
