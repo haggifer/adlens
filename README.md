@@ -122,9 +122,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **The settings form validates with the shared schema** that the API enforces, so the two can't disagree about what
   a valid request is.
 - **Only `/`, `/demo`, `/terms` and `/privacy` are for search engines.** They're in the sitemap and name themselves
-  canonical; every other page is noindex. The home page also carries JSON-LD (WebSite, Organization, WebApplication) and
-  the only `og:url`, since an address set in the root layout would be inherited by every page. `src/app/site-metadata.ts`
-  holds the shared title, description and Open Graph tags. The share image (`opengraph-image.tsx`) is drawn at build time
+  canonical; every other page is noindex. The home page also carries JSON-LD (WebSite, Organization, WebApplication).
+  Each names its own `og:url`, since an address set in the root layout would be inherited by every page; the others get
+  it from `buildPublicPageMetadata`, along with their own link-preview title and description.
+  `src/app/site-metadata.ts` holds the shared title, description and Open Graph tags. The share image (`opengraph-image.tsx`) is drawn at build time
   with the brand fonts fetched from Google Fonts, so a build needs to reach them, as `next/font` already does.
 - **The applied settings live in the address** (`/?platform=YouTube&placement=youtube_bumper&market=US`, one repeated
   key per value), written with `history.replaceState` so Back still leaves the page. A reload, a replaced video and a
@@ -163,7 +164,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   2 seconds later). An answer overrides what the cached quota implies. A refusal disables Run and says why above it. A
   refusal from creating the job is the fallback: it disables Run the same way until a newer answer replaces it. The home page asks on load, and when the API can't answer at all (unreachable or
   failing, after the usual retries) it shows "AdLens is briefly unavailable" with Try again in place of the upload and
-  settings: no analysis could start, so none is offered.
+  settings: no analysis could start, so none is offered. While a failed first ask is retried, it shows a spinner there
+  rather than an upload that might vanish.
 - **Google and GitHub sign in in a popup**, so the page keeps the visitor's selected video (a file held only in memory)
   and analysis settings. The click opens a blank named window at once (blockers allow it only inside the click), then
   points it at the provider's URL, which Better Auth returns without redirecting (`disableRedirect`). The popup comes

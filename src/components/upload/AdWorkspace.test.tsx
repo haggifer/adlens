@@ -5,6 +5,7 @@ import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
+import { QueryClient } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { Market, Placement, Platform, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
@@ -137,6 +138,27 @@ describe('AdWorkspace', () => {
 
         expect(await screen.findByText('Try a sample ad')).toBeInTheDocument()
         expect(screen.queryByText(UNAVAILABLE_COPY)).not.toBeInTheDocument()
+    })
+
+    it('shows neither the upload nor the unavailable notice while a failed first answer is asked for again', async () => {
+        const retried = deferred<RequestErrorCode | null>()
+
+        jest.mocked(getAdmissionRefusal)
+            .mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.Unavailable))
+            .mockReturnValueOnce(retried.promise)
+        mockUseAuth.mockReturnValue(memberAuth())
+        renderWithProviders(
+            <AdWorkspace />,
+            new QueryClient({ defaultOptions: { queries: { retry: 1, retryDelay: 0 } } }),
+        )
+
+        await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(2))
+        expect(document.querySelector('input[type="file"]')).not.toBeInTheDocument()
+        expect(screen.queryByText(UNAVAILABLE_COPY)).not.toBeInTheDocument()
+
+        await act(async () => retried.resolve(null))
+
+        expect(await screen.findByText('Try a sample ad')).toBeInTheDocument()
     })
 
     it('locks the video and its settings from Run until the run fails, then unlocks them', async () => {

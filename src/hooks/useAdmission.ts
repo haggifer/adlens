@@ -10,6 +10,8 @@ export interface UseAdmissionResult {
     updatedAt: number
     // The API couldn't answer (unreachable or failing), so no analysis can start. It holds while asking again.
     isUnavailable: boolean
+    // The first ask failed and is being retried: whether the API can answer isn't known yet.
+    isRecovering: boolean
     isRetrying: boolean
     retry: () => void
 }
@@ -21,7 +23,7 @@ const admissionKey = (userId: string | undefined) => ['admission', userId ?? 'vi
 export function useAdmission(): UseAdmissionResult {
     const { user, isInitializing } = useAuth()
 
-    const { data, dataUpdatedAt, errorUpdatedAt, isFetching, refetch } = useQuery({
+    const { data, dataUpdatedAt, errorUpdatedAt, failureCount, isFetching, refetch } = useQuery({
         queryKey: admissionKey(user?.id),
         queryFn: getAdmissionRefusal,
         enabled: !isInitializing,
@@ -29,11 +31,13 @@ export function useAdmission(): UseAdmissionResult {
 
     // Not `error`: a query that never had data drops its error as soon as it fetches again.
     const isUnavailable = errorUpdatedAt > dataUpdatedAt
+    const isRecovering = dataUpdatedAt === 0 && failureCount > 0 && !isUnavailable
 
     return {
         refusal: data,
         updatedAt: dataUpdatedAt,
         isUnavailable,
+        isRecovering,
         isRetrying: isFetching,
         retry: () => void refetch(),
     }

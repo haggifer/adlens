@@ -66,6 +66,8 @@ export function AdWorkspace() {
 
     const video = toSelectedVideo(source)
     const isUnavailable = admission.isUnavailable && !isRunning
+    // Neither the upload, which would vanish again if the retries fail too, nor the notice, which they may lift.
+    const isRecovering = admission.isRecovering && !isRunning
 
     const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
         releasePreview(source)
@@ -83,6 +85,43 @@ export function AdWorkspace() {
         setSource(null)
     }
 
+    const renderWorkspace = () => {
+        if (isUnavailable) {
+            return <ErrorState title={UNAVAILABLE_COPY} onRetry={admission.retry} isRetrying={admission.isRetrying} />
+        }
+
+        if (isRecovering) {
+            return <Spin size="large" className="m-auto" />
+        }
+
+        return (
+            <div className={styles.workspace}>
+                <div className={styles.left}>
+                    <UploadPanel
+                        video={video}
+                        onSelect={handleSelectFile}
+                        onClear={handleClearVideo}
+                        onBrowseSamples={() => setIsSamplesOpen(true)}
+                        isDisabled={isRunning}
+                    />
+                </div>
+                <div className={styles.right}>
+                    {source ? (
+                        // A key per source, so no run error carries over to the next video; the settings do, through
+                        // the address.
+                        <AnalysisSettings
+                            key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
+                            source={source}
+                            onRunningChange={setIsRunning}
+                        />
+                    ) : (
+                        <UploadIntro />
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className={styles.page}>
             <header className={styles.hero}>
@@ -95,34 +134,7 @@ export function AdWorkspace() {
                     every finding timestamped and cited
                 </p>
             </header>
-            {isUnavailable ? (
-                <ErrorState title={UNAVAILABLE_COPY} onRetry={admission.retry} isRetrying={admission.isRetrying} />
-            ) : (
-                <div className={styles.workspace}>
-                    <div className={styles.left}>
-                        <UploadPanel
-                            video={video}
-                            onSelect={handleSelectFile}
-                            onClear={handleClearVideo}
-                            onBrowseSamples={() => setIsSamplesOpen(true)}
-                            isDisabled={isRunning}
-                        />
-                    </div>
-                    <div className={styles.right}>
-                        {source ? (
-                            // A key per source, so no run error carries over to the next video; the settings do, through
-                            // the address.
-                            <AnalysisSettings
-                                key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
-                                source={source}
-                                onRunningChange={setIsRunning}
-                            />
-                        ) : (
-                            <UploadIntro />
-                        )}
-                    </div>
-                </div>
-            )}
+            {renderWorkspace()}
             <SamplesModal
                 isOpen={isSamplesOpen}
                 onClose={() => setIsSamplesOpen(false)}
