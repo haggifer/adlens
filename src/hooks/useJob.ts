@@ -24,6 +24,14 @@ const IN_PROGRESS_POLL_MS = 10 * 1000
 // The API refunds a failed run just after it marks the job failed, so a quota read right away may still count it.
 const REFUND_SETTLE_MS = 2 * 1000
 
+// Ended on purpose, by this page leaving the job or by the API (past its sockets per user), and not retried: the
+// interval reads keep the page current, so neither is a lost connection.
+const INTENDED_DISCONNECTS = new Set(['io client disconnect', 'io server disconnect'])
+
+// A read answered after a pushed update may describe the job as it was before it.
+const pickNewer = (cached: Job | undefined, fetched: Job): Job =>
+    cached && Date.parse(cached.updatedAt) > Date.parse(fetched.updatedAt) ? cached : fetched
+
 const invalidateLimits = (queryClient: QueryClient) => {
     void queryClient.invalidateQueries({ queryKey: ['quota'] })
     void queryClient.invalidateQueries({ queryKey: ['admission'] })
@@ -47,7 +55,11 @@ export function useJob(jobId: string): UseJobResult {
     const userId = user?.id
     const { data, isLoading, error, isRefetchError } = useQuery<Job, ApiRequestError>({
         queryKey: jobKey(userId, jobId),
-        queryFn: () => getJob(jobId),
+        queryFn: async () => {
+            const job = await getJob(jobId)
+
+            return pickNewer(queryClient.getQueryData<Job>(jobKey(userId, jobId)), job)
+        },
         enabled: Boolean(userId),
         refetchInterval: (query) =>
             query.state.data && isJobInProgress(query.state.data.status) ? IN_PROGRESS_POLL_MS : false,
@@ -74,7 +86,7 @@ export function useJob(jobId: string): UseJobResult {
 
         // Socket.IO keeps reconnecting on its own; these only track whether it is through.
         socket.on('connect_error', () => setHasLostConnection(true))
-        socket.on('disconnect', (reason) => setHasLostConnection(reason !== 'io client disconnect'))
+        socket.on('disconnect', (reason) => setHasLostConnection(!INTENDED_DISCONNECTS.has(reason)))
         socket.on('connect', () => {
             setHasLostConnection(false)
             void queryClient.invalidateQueries({ queryKey: jobKey(userId, jobId) })

@@ -170,4 +170,45 @@ describe('useJob', () => {
 
         expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['quota'] })
     })
+
+    it('doesn’t call a socket the API ended a lost connection, since the interval reads keep the page current', async () => {
+        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
+
+        const [socket] = mockSockets
+
+        act(() => socket.handlers.get('disconnect')?.('io server disconnect'))
+
+        expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
+
+        act(() => socket.handlers.get('disconnect')?.('transport close'))
+
+        expect(screen.getByText('disconnected')).toBeInTheDocument()
+    })
+
+    it('keeps a pushed update when an older read answers after it', async () => {
+        jest.useFakeTimers({ advanceTimers: true })
+
+        try {
+            await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued, updatedAt: '2026-10-09T10:00:00.000Z' }))
+
+            let answerRead!: (job: Job) => void
+
+            jest.mocked(getJob).mockReturnValueOnce(new Promise<Job>((resolve) => (answerRead = resolve)))
+            await act(async () => jest.advanceTimersByTimeAsync(10_000))
+            act(() =>
+                mockSockets[0].handlers.get('job:updated')?.(
+                    buildJob({ id: JOB_ID, status: JobStatus.Analyzing, updatedAt: '2026-10-09T10:00:20.000Z' }),
+                ),
+            )
+            await act(async () =>
+                answerRead(buildJob({ id: JOB_ID, status: JobStatus.Queued, updatedAt: '2026-10-09T10:00:10.000Z' })),
+            )
+            // The query cache tells the page on a timer, which the fake clock holds back.
+            await act(async () => jest.advanceTimersByTimeAsync(100))
+
+            expect(screen.getByText(JobStatus.Analyzing)).toBeInTheDocument()
+        } finally {
+            jest.useRealTimers()
+        }
+    })
 })
