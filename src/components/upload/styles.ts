@@ -8,6 +8,9 @@ const FRAME_SHADOW_SHAPE = '0 6px 29px -2px'
 // 400px: below it the settings panel and the drop zone stop fitting; the page scrolls rather than squeeze them.
 const WORKSPACE_MIN_HEIGHT = '25rem'
 
+// 500px: on a tall screen the square drop zone would otherwise grow past its column's width into a pillar.
+const WORKSPACE_MAX_HEIGHT = '31.25rem'
+
 const buildFrameShadow = (textColor: string, isDark: boolean) =>
     `${FRAME_SHADOW_SHAPE} ${isDark ? '#404040' : `color-mix(in srgb, ${textColor} 14%, transparent)`}`
 
@@ -91,9 +94,11 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
     `,
 
+    /* Capped, the workspace keeps to the top of its grid row, and the space left over goes below it. */
     workspace: css`
         display: flex;
         min-height: 0;
+        max-height: ${WORKSPACE_MAX_HEIGHT};
         align-items: stretch;
         gap: 2.5rem;
         --col-w: min(35rem, 100%);
@@ -103,6 +108,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 
         @media (max-width: 991.98px) {
             flex-direction: column;
+            max-height: none;
             align-items: center;
             gap: 1.5rem;
             container-type: normal;
