@@ -243,13 +243,12 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const run = useMutation({
         mutationFn: runAnalysis,
         onMutate: () => onRunningChange?.(true),
-        onSuccess: (jobId) => {
+        onSuccess: () => {
             // The run may have just signed the visitor in anonymously, so the pre-run `user` id can be stale;
             // invalidating by prefix catches the new user's queries too, not just the one active before the run.
             void queryClient.invalidateQueries({ queryKey: ['quota'] })
             void queryClient.invalidateQueries({ queryKey: ['admission'] })
             void queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            router.push(`/analyses/${jobId}`)
         },
         onError: (error) => {
             const { code } = toApiRequestError(error)
@@ -295,7 +294,10 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         setValue('platforms', toPlatformsForPlacements(getValues('platforms') ?? [], next))
     }
 
-    const onSubmit = (settings: AnalysisSettingsValues) => run.mutate(settings)
+    // A per-call callback, which TanStack skips once this form has unmounted: a visitor who left the page mid-run
+    // isn't pulled back to the analysis, though the run (already charged) still finishes.
+    const onSubmit = (settings: AnalysisSettingsValues) =>
+        run.mutate(settings, { onSuccess: (jobId) => router.push(`/analyses/${jobId}`) })
 
     const renderErrorAction = (code: ApiErrorCode) => {
         if (code === RequestErrorCode.NetworkQuotaExceeded) {

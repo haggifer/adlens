@@ -11,7 +11,7 @@ import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob, buildSample } from '@/test/fixtures'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { type Job, type Quota, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
 import { AnalysisSettings } from './AnalysisSettings'
@@ -503,6 +503,20 @@ describe('AnalysisSettings', () => {
 
         expect(await screen.findByText(/The next one is available on/)).toBeInTheDocument()
         expect(screen.queryByText(describeRequestError(RequestErrorCode.QuotaExceeded))).not.toBeInTheDocument()
+    })
+
+    it('doesn’t open the analysis for a visitor who left the page before the run finished', async () => {
+        let finishRun!: (job: Job) => void
+
+        jest.mocked(startAnalysis).mockReturnValueOnce(new Promise<Job>((resolve) => (finishRun = resolve)))
+        const { user, unmount } = renderSettings(memberAuth())
+
+        await run(user)
+        await waitFor(() => expect(startAnalysis).toHaveBeenCalled())
+        unmount()
+        await act(async () => finishRun(JOB))
+
+        expect(mockPush).not.toHaveBeenCalled()
     })
 
     describe('for an uploaded file', () => {
