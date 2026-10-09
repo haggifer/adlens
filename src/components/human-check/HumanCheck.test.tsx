@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { act, render, screen } from '@testing-library/react'
 import { RequestErrorCode } from 'adlens-shared'
 import { createRef } from 'react'
@@ -12,6 +12,7 @@ let mockOptions: Record<string, unknown> = {}
 interface MockTurnstileProps {
     ref: unknown
     options: Record<string, unknown>
+    onWidgetLoad: () => void
     onSuccess: (token: string) => void
     onError: () => void
     onExpire: () => void
@@ -28,6 +29,7 @@ jest.mock('@marsidev/react-turnstile', () => {
         Turnstile: ({
             ref,
             options,
+            onWidgetLoad,
             onSuccess,
             onError,
             onExpire,
@@ -40,6 +42,9 @@ jest.mock('@marsidev/react-turnstile', () => {
 
             return (
                 <>
+                    <button type="button" onClick={onWidgetLoad}>
+                        Load the widget
+                    </button>
                     <button type="button" onClick={() => onSuccess(mockToken)}>
                         Pass the check
                     </button>
@@ -140,7 +145,7 @@ describe('HumanCheck', () => {
         expect(screen.getByText('Confirm you’re human to send your message.')).toBeInTheDocument()
     })
 
-    it('fails the run and says how to recover when the widget reports an error', async () => {
+    it('fails the run and blames loading when the widget errors before it ever loaded', async () => {
         const ref = renderCheck()
         const token = startCheck(ref)
 
@@ -148,6 +153,31 @@ describe('HumanCheck', () => {
 
         await expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
         expect(screen.getByText(FAILURE_HINT)).toBeInTheDocument()
+    })
+
+    it.each(['Fail the check', 'Expire the challenge', 'Time out the challenge'])(
+        'says the check didn’t pass, not that it couldn’t load, when a loaded widget ends with “%s”',
+        async (outcome) => {
+            const ref = renderCheck()
+
+            act(() => screen.getByRole('button', { name: 'Load the widget' }).click())
+            const token = startCheck(ref)
+            act(() => screen.getByRole('button', { name: outcome }).click())
+
+            await expect(token).rejects.toEqual(new ApiRequestError(RequestErrorCode.ChallengeFailed))
+            expect(screen.getByText(describeRequestError(RequestErrorCode.ChallengeFailed))).toBeInTheDocument()
+            expect(screen.queryByText(FAILURE_HINT)).not.toBeInTheDocument()
+        },
+    )
+
+    it('starts a check asked for before the widget loaded once it has', () => {
+        const ref = renderCheck()
+
+        startCheck(ref)
+        mockExecute.mockClear()
+        act(() => screen.getByRole('button', { name: 'Load the widget' }).click())
+
+        expect(mockExecute).toHaveBeenCalledTimes(1)
     })
 
     it('fails the run when the check never finishes on its own, e.g. a blocked Cloudflare script', async () => {

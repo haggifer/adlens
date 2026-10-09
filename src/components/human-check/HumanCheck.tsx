@@ -1,6 +1,6 @@
 'use client'
 
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { config } from '@/config'
 import { useTheme } from '@/design/ThemeContext'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
@@ -46,6 +46,8 @@ export function HumanCheck({ ref, action }: IProps) {
     const pending = useRef<PendingCheck | null>(null)
     const [isInteractive, setIsInteractive] = useState(false)
     const [hasFailed, setHasFailed] = useState(false)
+    // A check that fails before Cloudflare's script ever loaded is most likely blocked, which a retry won't fix.
+    const [hasLoaded, setHasLoaded] = useState(false)
 
     const settle = (outcome: { token: string } | { error: Error }) => {
         const check = pending.current
@@ -88,6 +90,15 @@ export function HumanCheck({ ref, action }: IProps) {
         setIsInteractive(false)
     }
 
+    // Run clicked before Cloudflare's script finished loading: start the check now that it can run.
+    const handleWidgetLoad = () => {
+        setHasLoaded(true)
+
+        if (pending.current) {
+            widget.current?.execute()
+        }
+    }
+
     useImperativeHandle(ref, () => ({
         getToken: () =>
             new Promise<string>((resolve, reject) => {
@@ -125,8 +136,7 @@ export function HumanCheck({ ref, action }: IProps) {
                     execution: 'execute',
                     appearance: 'interaction-only',
                 }}
-                // Run clicked before Cloudflare's script finished loading: start the check now that it can run.
-                onWidgetLoad={() => pending.current && widget.current?.execute()}
+                onWidgetLoad={handleWidgetLoad}
                 onSuccess={(token) => settle({ token })}
                 onError={handleFail}
                 onExpire={handleFail}
@@ -137,7 +147,9 @@ export function HumanCheck({ ref, action }: IProps) {
             {isInteractive && <p className={styles.hint}>Confirm you’re human to {action}.</p>}
             {hasFailed && (
                 <p className={styles.hint}>
-                    Couldn’t load the security check. Reload the page, or turn off your ad blocker for this site.
+                    {hasLoaded
+                        ? describeRequestError(RequestErrorCode.ChallengeFailed)
+                        : 'Couldn’t load the security check. Reload the page, or turn off your ad blocker for this site.'}
                 </p>
             )}
         </div>
