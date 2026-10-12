@@ -124,6 +124,14 @@ export const useStyles = createStyles(({ token, css }) => ({
         flex-direction: column;
     `,
 
+    drawerUser: css`
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0 0 0.75rem;
+        overflow-wrap: anywhere;
+    `,
+
     drawerUserName: css`
         color: ${token.colorText};
         font-size: 1rem;
