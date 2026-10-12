@@ -15,6 +15,18 @@ html {
 :root {
     --header-h: 4rem;
     --footer-h: 3.5rem;
+    /* The page glow under the header (ambientBackground): its radii. */
+    --ambient-glow-rx: 85vw;
+    --ambient-glow-ry: 55vh;
+}
+
+/* On a phone the glow is a wide, low band: 20% of its visible width (it fades out at 62% of the radius) fits the
+   screen, so the radius is 100vw / 0.2 / 2 / 0.62, and it is half as tall. */
+@media (max-width: 767.98px) {
+    :root {
+        --ambient-glow-rx: 403vw;
+        --ambient-glow-ry: 27.5vh;
+    }
 }
 
 @media (max-width: 991.98px) {
