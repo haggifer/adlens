@@ -5,6 +5,7 @@ import { MODAL_WIDTH } from '@/design/theme'
 import { Modal } from 'antd'
 import { ConfirmEmailNotice } from './ConfirmEmailNotice'
 import { ForgotForm } from './ForgotForm'
+import { ResetPasswordForm } from './ResetPasswordForm'
 import { SignInForm } from './SignInForm'
 import { SignUpForm } from './SignUpForm'
 import { useStyles } from './styles'
@@ -14,6 +15,7 @@ const TITLES: Record<AuthView, string> = {
     signup: 'Create your account',
     forgot: 'Reset your password',
     confirm: 'Confirm your email',
+    reset: 'Choose a new password',
 }
 
 const SUBTITLES: Record<AuthView, string> = {
@@ -21,6 +23,7 @@ const SUBTITLES: Record<AuthView, string> = {
     signup: '',
     forgot: 'Enter your email and we’ll send you a reset link.',
     confirm: '',
+    reset: '',
 }
 
 export function AuthModal() {
@@ -39,6 +42,10 @@ export function AuthModal() {
 
         if (view === 'confirm') {
             return <ConfirmEmailNotice />
+        }
+
+        if (view === 'reset') {
+            return <ResetPasswordForm />
         }
 
         return <SignInForm />

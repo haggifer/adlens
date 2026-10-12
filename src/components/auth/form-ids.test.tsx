@@ -1,9 +1,9 @@
 import { ChangePasswordForm } from '@/components/account/ChangePasswordForm'
 import { DeleteAccountForm } from '@/components/account/DeleteAccountForm'
-import { ResetPasswordForm } from '@/components/account/ResetPasswordForm'
 import { memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { ForgotForm } from './ForgotForm'
+import { ResetPasswordForm } from './ResetPasswordForm'
 import { SignInForm } from './SignInForm'
 import { SignUpForm } from './SignUpForm'
 
@@ -29,7 +29,7 @@ describe('auth and account form ids', () => {
                 <SignUpForm />
                 <ForgotForm />
                 <ChangePasswordForm />
-                <ResetPasswordForm token="a-token" />
+                <ResetPasswordForm />
                 <DeleteAccountForm hasPassword />
             </>,
         )

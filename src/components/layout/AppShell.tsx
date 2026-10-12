@@ -6,6 +6,7 @@ import { ContactModal } from '@/components/contact/ContactModal'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { useNavigationStore } from '@/contexts/stores/navigationStore'
+import { usePasswordResetLink } from '@/hooks/usePasswordResetLink'
 import { useSignInErrorNotice } from '@/hooks/useSignInErrorNotice'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect } from 'react'
@@ -21,6 +22,7 @@ export function AppShell({ children }: IProps) {
     const trackPath = useNavigationStore((s) => s.trackPath)
 
     useSignInErrorNotice()
+    usePasswordResetLink()
 
     useEffect(() => {
         trackPath(pathname)

@@ -1,18 +1,14 @@
-import { ResetPasswordForm } from '@/components/account/ResetPasswordForm'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-    title: 'Reset password',
-    robots: { index: false, follow: false },
-}
+import { toPasswordResetPath } from '@/auth/password-reset-link'
+import { redirect } from 'next/navigation'
 
 interface IProps {
     searchParams: Promise<{ token?: string }>
 }
 
-// The password-reset email links here with `?token=`; an invalid or expired token is reported when the form is sent.
+// Reset emails sent before the form moved into the auth modal link here with `?token=`; they expire an hour after
+// sending, so this page can go once a release has been live that long.
 export default async function ResetPasswordPage({ searchParams }: IProps) {
     const { token } = await searchParams
 
-    return <ResetPasswordForm token={token ?? null} />
+    redirect(token ? toPasswordResetPath(token) : '/')
 }
