@@ -101,4 +101,35 @@ describe('UploadPanel', () => {
         expect(mockReadFileSnapshot).not.toHaveBeenCalled()
         expect(onSelect).not.toHaveBeenCalled()
     })
+
+    describe('in the empty drop zone', () => {
+        const renderEmpty = () => {
+            const onBrowseSamples = jest.fn()
+            const openFileDialog = jest.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+            const view = renderWithProviders(
+                <UploadPanel video={null} onSelect={jest.fn()} onClear={jest.fn()} onBrowseSamples={onBrowseSamples} />,
+            )
+
+            return { ...view, onBrowseSamples, openFileDialog }
+        }
+
+        it('opens the file dialog from its text and divider too', async () => {
+            const { user, openFileDialog } = renderEmpty()
+
+            await user.click(screen.getByText('No ad at hand?'))
+            await user.click(screen.getByText('or'))
+
+            expect(openFileDialog).toHaveBeenCalledTimes(2)
+        })
+
+        it('keeps the two buttons from opening it', async () => {
+            const { user, openFileDialog, onBrowseSamples } = renderEmpty()
+
+            await user.click(screen.getByRole('button', { name: /^Requirements:/ }))
+            await user.click(screen.getByText('Try a sample ad').closest('button')!)
+
+            expect(onBrowseSamples).toHaveBeenCalledTimes(1)
+            expect(openFileDialog).not.toHaveBeenCalled()
+        })
+    })
 })

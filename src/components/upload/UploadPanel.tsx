@@ -20,7 +20,8 @@ const MAX_UPLOAD_MB = toMegabytes(MAX_UPLOAD_BYTES)
 
 const REQUIREMENTS_TRIGGER: TooltipProps['trigger'] = ['hover', 'click']
 
-// For the controls inside the Dragger: their clicks and keys must not reach it and open the file dialog.
+// For the two buttons inside the Dragger: their clicks and keys must not reach it and open the file dialog. Anything
+// else in the drop zone, its text and divider included, opens it.
 const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()
 
 // A drop target must cancel dragover, or the browser never fires drop on it.
@@ -133,6 +134,11 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         if (accepted) {
             onSelect(accepted.file, accepted.video)
         }
+    }
+
+    const handleBrowseSamples = (event: SyntheticEvent) => {
+        stopAtControl(event)
+        onBrowseSamples()
     }
 
     const handleBeforeUpload = async (incoming: File) => {
@@ -253,7 +259,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         Requirements
                     </Button>
                 </Tooltip>
-                <div className={styles.samplesPrompt} onClick={stopAtControl} onKeyDown={stopAtControl}>
+                <div className={styles.samplesPrompt}>
                     <Divider
                         plain
                         className={styles.samplesDivider}
@@ -262,7 +268,13 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         or
                     </Divider>
                     <span>No ad at hand?</span>
-                    <Button size="small" icon={<PlaySquareOutlined />} onClick={onBrowseSamples} disabled={isDisabled}>
+                    <Button
+                        size="small"
+                        icon={<PlaySquareOutlined />}
+                        onClick={handleBrowseSamples}
+                        onKeyDown={stopAtControl}
+                        disabled={isDisabled}
+                    >
                         Try a sample ad
                     </Button>
                 </div>

@@ -438,7 +438,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         margin: 0.75rem auto 0;
         color: ${token.colorTextSecondary};
         font-size: 0.85rem;
-        cursor: default;
     `,
 
     samplesDivider: css`
