@@ -144,6 +144,16 @@ describe('MobileMenu', () => {
     })
 
     describe('for an account whose email isn’t confirmed', () => {
+        it('puts Confirm email right under the address it confirms, above the analyses left', async () => {
+            const { menu } = await openMenu(unconfirmedAuth())
+            const email = menu.getByText(MEMBER_EMAIL)
+            const confirm = menu.getByRole('button', { name: 'Confirm email' })
+            const quota = menu.getByText('2/3 analyses left')
+
+            expect(email.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+            expect(confirm.compareDocumentPosition(quota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+        })
+
         it('shows the name, email, count, Confirm email and Sign Out, but no account page', async () => {
             const { menu } = await openMenu(unconfirmedAuth())
 

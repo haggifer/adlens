@@ -136,15 +136,7 @@ export function MobileMenu() {
                                 <span className={styles.drawerUserEmail}>{user.email}</span>
                             </>
                         )}
-                        {quota && (
-                            <>
-                                <Divider className={styles.drawerUserDivider} />
-                                <span className={styles.drawerUserQuota}>
-                                    {formatQuotaLeft(quota)}
-                                    {quotaResetDate && ` (resets at ${quotaResetDate})`}
-                                </span>
-                            </>
-                        )}
+                        {/* Under the address it confirms. */}
                         {!isEmailConfirmed && (
                             <Button
                                 type="primary"
@@ -154,6 +146,15 @@ export function MobileMenu() {
                             >
                                 Confirm email
                             </Button>
+                        )}
+                        {quota && (
+                            <>
+                                <Divider className={styles.drawerUserDivider} />
+                                <span className={styles.drawerUserQuota}>
+                                    {formatQuotaLeft(quota)}
+                                    {quotaResetDate && ` (resets at ${quotaResetDate})`}
+                                </span>
+                            </>
                         )}
                     </div>
                 )}
