@@ -20,12 +20,12 @@ html {
     --ambient-glow-ry: 30vh;
 }
 
-/* On a phone the glow is a wide, low band: 20% of its visible width (it fades out at 62% of the radius) fits the
-   screen, so the radius is 100vw / 0.2 / 2 / 0.62, and it is half as tall. */
+/* On a phone the glow is a wide, low band: about half of its visible width (it fades out at 62% of the radius) fits
+   the screen. */
 @media (max-width: 767.98px) {
     :root {
-        --ambient-glow-rx: 403vw;
-        --ambient-glow-ry: 27.5vh;
+        --ambient-glow-rx: 173vw;
+        --ambient-glow-ry: 22vh;
     }
 }
 
