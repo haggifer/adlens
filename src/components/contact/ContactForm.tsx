@@ -15,7 +15,7 @@ import {
     type ContactMessagePayload,
     RequestErrorCode,
 } from 'adlens-shared'
-import { Alert, Button, Input, Result, Upload, type UploadFile } from 'antd'
+import { Alert, Button, Image, Input, Result, Upload, type UploadFile } from 'antd'
 import { useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
@@ -54,6 +54,8 @@ export function ContactForm({ onDone }: IProps) {
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
     const [attachments, setAttachments] = useState<UploadFile[]>([])
+    // The screenshot shown full size, as an object URL of the picked file.
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const humanCheck = useRef<HumanCheckHandle>(null)
     const {
         control,
@@ -89,6 +91,21 @@ export function ContactForm({ onDone }: IProps) {
 
         await Promise.all(uploads.map((target, index) => uploadToSignedUrl({ target, file: files[index] })))
         await sendContactMessage({ ...values, draftId })
+    }
+
+    // Shown in the page: without it, antd links the thumbnail to its data: URL in a new tab, which Chrome refuses to
+    // open (and on Android has crashed).
+    const handlePreview = (attachment: UploadFile) => {
+        if (attachment.originFileObj) {
+            setPreviewUrl(URL.createObjectURL(attachment.originFileObj))
+        }
+    }
+
+    const handlePreviewOpenChange = (isOpen: boolean) => {
+        if (!isOpen && previewUrl) {
+            URL.revokeObjectURL(previewUrl)
+            setPreviewUrl(null)
+        }
     }
 
     const onSubmit = async (values: ContactMessagePayload) => {
@@ -168,12 +185,21 @@ export function ContactForm({ onDone }: IProps) {
                     fileList={attachments}
                     beforeUpload={keepForSending}
                     onChange={({ fileList }) => setAttachments(fileList)}
+                    onPreview={handlePreview}
                     disabled={isSubmitting}
                 >
                     <Button icon={<PaperClipOutlined />} disabled={isSubmitting}>
                         Attach screenshots
                     </Button>
                 </Upload>
+                {previewUrl && (
+                    <Image
+                        className="d-none"
+                        src={previewUrl}
+                        alt="Attached screenshot"
+                        preview={{ open: true, src: previewUrl, onOpenChange: handlePreviewOpenChange }}
+                    />
+                )}
             </Field>
             {/* A honeypot: hidden from people and assistive tech, so only bots fill it in. */}
             <div className="visually-hidden" aria-hidden="true">

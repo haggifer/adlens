@@ -3,7 +3,7 @@ import { ApiRequestError, describeContactError } from '@/api/errors'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CONTACT_MESSAGE_MAX_LENGTH, RequestErrorCode, type UploadTarget } from 'adlens-shared'
 import { ContactForm } from './ContactForm'
@@ -297,5 +297,21 @@ describe('ContactForm', () => {
 
         expect(await screen.findByText('Something went wrong on our side. Please try again.')).toBeInTheDocument()
         expect(screen.queryByText(/socket hang up/)).not.toBeInTheDocument()
+    })
+
+    // antd's default opens the thumbnail's data: URL in a new tab, which Chrome refuses (and on Android crashed).
+    it('shows an attached screenshot inside the page, not in a new tab', async () => {
+        URL.createObjectURL = jest.fn(() => 'blob:first-shot')
+        URL.revokeObjectURL = jest.fn()
+        renderForm()
+        await attach([SHOTS[0]])
+
+        fireEvent.click(screen.getByText('first.png'))
+
+        expect(URL.createObjectURL).toHaveBeenCalledWith(SHOTS[0])
+        // antd's viewer draws its own copy of the image; the other one is the hidden source.
+        await waitFor(() =>
+            expect(document.querySelector('.ant-image-preview img')).toHaveAttribute('src', 'blob:first-shot'),
+        )
     })
 })
