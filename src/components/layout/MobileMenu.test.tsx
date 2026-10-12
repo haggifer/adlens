@@ -64,20 +64,17 @@ describe('MobileMenu', () => {
             expect(useAuthModalStore.getState().view).toBeNull()
         })
 
-        it('shows a remembered unconfirmed account’s Confirm email and Sign Out, but ignores them', async () => {
+        it('shows a remembered unconfirmed account’s Sign Out, ignored, and Confirm email only with its address', async () => {
             const auth = initializingAuth(AccountKind.Unconfirmed)
             const { user, menu } = await openMenu(auth)
-            const confirm = menu.getByRole('button', { name: 'Confirm email' })
             const signOut = menu.getByRole('button', { name: /Sign Out/ })
 
-            expectInert(confirm)
             expectInert(signOut)
 
-            await user.click(confirm)
             await user.click(signOut)
 
-            expect(useAuthModalStore.getState().view).toBeNull()
             expect(auth.signOut).not.toHaveBeenCalled()
+            expect(menu.queryByRole('button', { name: 'Confirm email' })).not.toBeInTheDocument()
         })
 
         it.each([AccountKind.Member, AccountKind.Admin])(
