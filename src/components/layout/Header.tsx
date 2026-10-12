@@ -59,8 +59,8 @@ export function Header() {
                     </nav>
                 </div>
                 <div className={styles.headerRight}>
-                    {/* Below the md breakpoint the account and theme controls move into the menu drawer; the Sign In
-                        button stays in the bar because it is the one action a signed-out visitor needs. */}
+                    {/* Below the lg breakpoint (992px) the account and theme controls move into the menu drawer; the
+                        Sign In button stays in the bar because it is the one action a signed-out visitor needs. */}
                     {hasAccount && quota && (
                         <span className={cx(styles.headerGroup, styles.desktopOnly)}>
                             <Tooltip

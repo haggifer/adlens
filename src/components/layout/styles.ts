@@ -88,7 +88,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         align-items: center;
         gap: 0.75rem;
 
-        @media (max-width: 767.98px) {
+        @media (max-width: 991.98px) {
             gap: 1rem;
         }
     `,
@@ -100,7 +100,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     desktopOnly: css`
-        @media (max-width: 767.98px) {
+        @media (max-width: 991.98px) {
             display: none;
         }
     `,
@@ -108,7 +108,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     mobileOnly: css`
         display: none;
 
-        @media (max-width: 767.98px) {
+        @media (max-width: 991.98px) {
             display: inline-flex;
         }
     `,
