@@ -369,6 +369,8 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                                 onChange={handlePlatformsChange}
                                 onBlur={field.onBlur}
                                 mode="multiple"
+                                // No search box: the lists are short, and on a phone tapping one opens the keyboard.
+                                showSearch={false}
                                 placeholder="Leave empty to check every platform"
                                 options={PLATFORM_OPTIONS}
                                 disabled={isRunning}
@@ -388,6 +390,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                                 onChange={handlePlacementsChange}
                                 onBlur={field.onBlur}
                                 mode="multiple"
+                                showSearch={false}
                                 // Seen only with no platform chosen, since a chosen platform keeps at least one
                                 // placement. Nothing chosen is checked as everything (the API resolves it in full).
                                 placeholder="Every placement is checked; pick a platform to narrow"
@@ -407,6 +410,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                             <Select
                                 {...field}
                                 mode="multiple"
+                                showSearch={false}
                                 placeholder="Leave empty to check every market"
                                 options={MARKET_OPTIONS}
                                 disabled={isRunning}
