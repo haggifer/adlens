@@ -4,7 +4,7 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { MobileMenu } from './MobileMenu'
 import { formatQuotaDate } from './quota-label'
@@ -230,5 +230,34 @@ describe('MobileMenu', () => {
         expect(menu.queryByRole('link', { name: /History/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()
+    })
+
+    describe('swiping', () => {
+        // The swipe listens on the element the drawer's panel is wrapped in.
+        const swipe = (from: [number, number], to: [number, number]) => {
+            const target = screen.getByRole('dialog', { name: 'Menu' }).parentElement!
+
+            fireEvent.touchStart(target, { touches: [{ clientX: from[0], clientY: from[1] }] })
+            fireEvent.touchMove(target, { touches: [{ clientX: to[0], clientY: to[1] }] })
+            fireEvent.touchEnd(target, { touches: [] })
+        }
+
+        it('closes the menu on a swipe right', async () => {
+            await openMenu(memberAuth())
+
+            swipe([40, 200], [240, 210])
+
+            await waitFor(() =>
+                expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false'),
+            )
+        })
+
+        it('keeps the menu open on a mostly vertical swipe, which scrolls it', async () => {
+            await openMenu(memberAuth())
+
+            swipe([40, 400], [70, 100])
+
+            expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'true')
+        })
     })
 })

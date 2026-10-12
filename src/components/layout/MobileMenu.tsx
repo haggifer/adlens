@@ -10,6 +10,7 @@ import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import {
     FileSearchOutlined,
     HistoryOutlined,
@@ -65,6 +66,9 @@ export function MobileMenu() {
 
     const [isOpen, setIsOpen] = useState(false)
 
+    const handleClose = () => setIsOpen(false)
+    const { swipeHandlers, resetSwipe } = useSwipeToClose(handleClose)
+
     const { quota } = useQuota()
 
     const isSignedIn = kind !== null
@@ -74,8 +78,6 @@ export function MobileMenu() {
     const hasAccount = isSignedIn && !isAnonymous
     const visibleLinks = MENU_LINKS.filter((link) => isLinkAllowed(link.access, isSignedIn, isEmailConfirmed))
     const quotaResetDate = quota ? getQuotaResetDate(quota) : null
-
-    const handleClose = () => setIsOpen(false)
 
     const handleContact = () => {
         handleClose()
@@ -97,6 +99,13 @@ export function MobileMenu() {
         setView('confirm')
     }
 
+    // pan-y leaves vertical moves to the browser, so the menu scrolls, and gives horizontal ones to the swipe.
+    const renderSwipeablePanel = (panel: ReactNode) => (
+        <div {...swipeHandlers} className="h-100" style={{ touchAction: 'pan-y' }}>
+            {panel}
+        </div>
+    )
+
     return (
         <>
             <Button
@@ -113,6 +122,8 @@ export function MobileMenu() {
                 size={DRAWER_WIDTH}
                 title="Menu"
                 classNames={{ body: styles.drawerBody }}
+                drawerRender={renderSwipeablePanel}
+                afterOpenChange={(isNowOpen) => !isNowOpen && resetSwipe()}
             >
                 {/* The snapshot keeps no name or email, so until the session loads a member's block has nothing
                     to show. */}
