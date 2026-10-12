@@ -18,7 +18,7 @@ const TITLES: Record<AuthView, string> = {
 
 const SUBTITLES: Record<AuthView, string> = {
     signin: '',
-    signup: 'Check your video ads before they go live.',
+    signup: '',
     forgot: 'Enter your email and we’ll send you a reset link.',
     confirm: '',
 }
