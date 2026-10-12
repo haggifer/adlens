@@ -155,7 +155,7 @@ export function MobileMenu() {
                         )}
                         {quota && (
                             <>
-                                <Divider className={styles.drawerUserDivider} />
+                                <Divider style={{ marginBlock: '0.75rem' }} />
                                 <span className={styles.drawerUserQuota}>
                                     {formatQuotaLeft(quota)}
                                     {quotaResetDate && ` (resets at ${quotaResetDate})`}
@@ -164,6 +164,7 @@ export function MobileMenu() {
                         )}
                     </div>
                 )}
+                <Divider style={{ marginBlock: '0.75rem' }} />
                 {isAnonymous && (
                     <div className={styles.drawerUser}>
                         <Button type="primary" block {...getSessionControlProps(isInert, handleSignIn)}>
@@ -190,10 +191,12 @@ export function MobileMenu() {
                         Contact us
                     </button>
                 </nav>
+                <Divider className="my-0" />
                 <div className={styles.drawerThemeRow}>
                     <span>Dark mode</span>
                     <ThemeSwitch />
                 </div>
+                <Divider className="my-0" />
                 {hasAccount && (
                     <button
                         type="button"

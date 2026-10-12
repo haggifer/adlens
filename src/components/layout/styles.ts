@@ -122,7 +122,6 @@ export const useStyles = createStyles(({ token, css }) => ({
     drawerBody: css`
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
     `,
 
     drawerUser: css`
@@ -130,7 +129,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         flex-direction: column;
         gap: 0.15rem;
         padding: 0 0 0.75rem;
-        border-bottom: 1px solid ${token.colorBorderSecondary};
         overflow-wrap: anywhere;
     `,
 
@@ -203,8 +201,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         justify-content: space-between;
         min-height: 2.75rem;
         padding: 0 0.75rem;
-        border-top: 1px solid ${token.colorBorderSecondary};
-        border-bottom: 1px solid ${token.colorBorderSecondary};
         color: ${token.colorText};
         font-size: 1rem;
     `,
