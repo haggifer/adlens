@@ -23,6 +23,10 @@ type VidstackVideoType = (typeof VIDSTACK_VIDEO_TYPES)[number]
 // Cast and AirPlay can't target a local blob URL, and a signed URL expires: neither is offered.
 const NO_CAST_SLOTS: DefaultVideoLayoutSlots = { googleCastButton: null, airPlayButton: null }
 
+// Vidstack stacks its controls up to z-index 50 (menus far higher). Isolated, those values rank only inside the player,
+// so it scrolls under the sticky header and under overlays placed on it.
+const PLAYER_STYLE = { isolation: 'isolate' } as const
+
 const toVidstackType = (mime: string): VidstackVideoType =>
     (VIDSTACK_VIDEO_TYPES as readonly string[]).includes(mime) ? (mime as VidstackVideoType) : 'video/mp4'
 
@@ -45,6 +49,7 @@ export function VideoPlayer({ url, contentType, ariaLabel, className, isEager, p
         <MediaPlayer
             ref={playerRef}
             className={className}
+            style={PLAYER_STYLE}
             src={src}
             viewType="video"
             load={isEager ? 'eager' : undefined}
