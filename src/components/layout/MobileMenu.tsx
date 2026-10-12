@@ -131,7 +131,8 @@ export function MobileMenu() {
                     <div className={styles.drawerUser}>
                         {user && (
                             <>
-                                <span className={styles.drawerUserName}>{user.name}</span>
+                                {/* Sign-up asks for none; only Google and GitHub sign-ins bring a name. */}
+                                {user.name && <span className={styles.drawerUserName}>{user.name}</span>}
                                 <span className={styles.drawerUserEmail}>{user.email}</span>
                             </>
                         )}

@@ -14,16 +14,10 @@ import { z } from 'zod'
 import { SocialButtons } from './SocialButtons'
 import { useStyles } from './styles'
 
-const signUpSchema = z
-    .object({
-        name: z.string().trim().min(1, 'Enter your name').max(100),
-        email: z.email('Enter a valid email'),
-    })
-    .and(newPasswordFieldsSchema)
+const signUpSchema = z.object({ email: z.email('Enter a valid email') }).and(newPasswordFieldsSchema)
 
 type SignUpValues = z.infer<typeof signUpSchema>
 
-const NAME_INPUT_ID = 'signup-name'
 const EMAIL_INPUT_ID = 'signup-email'
 const PASSWORD_INPUT_ID = 'signup-password'
 const CONFIRM_PASSWORD_INPUT_ID = 'signup-confirm'
@@ -40,13 +34,14 @@ export function SignUpForm() {
         formState: { errors, isSubmitting },
     } = useForm<SignUpValues>({
         resolver: zodResolver(signUpSchema),
-        defaultValues: { name: '', email: '', password: '', confirm: '' },
+        defaultValues: { email: '', password: '', confirm: '' },
     })
 
-    const onSubmit = async ({ name, email, password }: SignUpValues) => {
+    const onSubmit = async ({ email, password }: SignUpValues) => {
         setFormError(null)
 
-        const error = await runAuthRequest(() => signUp.email({ name, email, password }))
+        // AdLens asks for no name; Better Auth requires the field. Google and GitHub sign-ins still bring one.
+        const error = await runAuthRequest(() => signUp.email({ name: '', email, password }))
 
         if (error) {
             const isSignedIn = await isSignedInDespite(error)
@@ -81,22 +76,6 @@ export function SignUpForm() {
                     }
                 />
             )}
-            <Field label="Name" htmlFor={NAME_INPUT_ID} error={errors.name?.message}>
-                <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => (
-                        <Input
-                            {...field}
-                            id={NAME_INPUT_ID}
-                            size="large"
-                            placeholder="Your name"
-                            autoComplete="name"
-                            status={errors.name ? 'error' : undefined}
-                        />
-                    )}
-                />
-            </Field>
             <Field label="Email" htmlFor={EMAIL_INPUT_ID} error={errors.email?.message}>
                 <Controller
                     name="email"

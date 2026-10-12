@@ -78,9 +78,8 @@ export function AccountSettings() {
             <div className={styles.column}>
                 <div className="d-flex flex-column gap-1">
                     <h1 className={styles.pageTitle}>Account</h1>
-                    <p className={styles.sectionText}>
-                        {user.name} · {user.email}
-                    </p>
+                    {/* Sign-up asks for no name; only Google and GitHub sign-ins bring one. */}
+                    <p className={styles.sectionText}>{[user.name, user.email].filter(Boolean).join(' · ')}</p>
                 </div>
                 {providersError && <Alert type="error" showIcon title={describeProvidersError(providersError)} />}
                 {providers && (

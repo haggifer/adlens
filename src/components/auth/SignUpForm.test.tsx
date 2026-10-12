@@ -12,7 +12,6 @@ jest.mock('@/auth/authClient', () => ({
 }))
 
 const SIGN_UP_FIELDS = [
-    ['Name', 'Ann'],
     ['Email', 'ann@example.com'],
     ['Password', 'long-enough-password'],
     ['Confirm password', 'long-enough-password'],
@@ -50,13 +49,13 @@ describe('SignUpForm', () => {
         useAuthModalStore.setState({ view: 'signup', isOtherAddressLink: false })
     })
 
-    it('links every field to its label', () => {
+    it('asks only for an email and a password', () => {
         renderForm()
 
-        expect(screen.getByLabelText('Name')).toBeInTheDocument()
         expect(screen.getByLabelText('Email')).toBeInTheDocument()
         expect(screen.getByLabelText('Password')).toBeInTheDocument()
         expect(screen.getByLabelText('Confirm password')).toBeInTheDocument()
+        expect(screen.queryByLabelText('Name')).not.toBeInTheDocument()
     })
 
     it('signs the new account up and opens the confirmation dialog', async () => {
@@ -65,7 +64,7 @@ describe('SignUpForm', () => {
         await submitSignUp(user)
 
         expect(signUp.email).toHaveBeenCalledWith({
-            name: 'Ann',
+            name: '',
             email: 'ann@example.com',
             password: 'long-enough-password',
         })

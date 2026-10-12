@@ -177,6 +177,14 @@ describe('MobileMenu', () => {
             ).toBeInTheDocument()
         })
 
+        it('shows just the email for an account without a name, as sign-up asks for none', async () => {
+            const auth = memberAuth()
+            const { menu } = await openMenu({ ...auth, user: { ...auth.user!, name: '' } })
+
+            expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
+            expect(menu.queryByText('Ann')).not.toBeInTheDocument()
+        })
+
         it('shows the name, email and account page, and Sign Out', async () => {
             const { menu } = await openMenu(memberAuth())
 
