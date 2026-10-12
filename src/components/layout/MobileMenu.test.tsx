@@ -173,7 +173,7 @@ describe('MobileMenu', () => {
             const { menu } = await openMenu(memberAuth())
 
             expect(
-                menu.getByText(`2/3 analyses left (resets ${formatQuotaDate('2026-10-16T09:30:00.000Z')})`),
+                menu.getByText(`2/3 analyses left (resets at ${formatQuotaDate('2026-10-16T09:30:00.000Z')})`),
             ).toBeInTheDocument()
         })
 

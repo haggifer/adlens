@@ -34,7 +34,7 @@ describe('getQuotaResetDate', () => {
 })
 
 describe('formatQuotaDate', () => {
-    it('writes the date in English whatever the browser’s language', () => {
-        expect(formatQuotaDate('2026-10-16T09:30:00.000Z')).toMatch(/^Oct 1[56], \d{1,2}:\d{2}\s?[AP]M$/)
+    it('writes the date in English, with a 24-hour time, whatever the browser’s language', () => {
+        expect(formatQuotaDate('2026-10-16T09:30:00.000Z')).toMatch(/^Oct 1[56] \d{2}:\d{2}$/)
     })
 })

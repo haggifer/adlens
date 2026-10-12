@@ -64,7 +64,7 @@ export function Header() {
                     {hasAccount && quota && (
                         <span className={cx(styles.headerGroup, styles.desktopOnly)}>
                             <Tooltip
-                                title={quotaResetDate && `Resets ${quotaResetDate}`}
+                                title={quotaResetDate && `Resets at ${quotaResetDate}`}
                                 trigger={QUOTA_TOOLTIP_TRIGGER}
                                 placement="bottom"
                             >

@@ -112,7 +112,7 @@ describe('Header', () => {
 
         await user.hover(screen.getByText('2/3 analyses left'))
 
-        expect(await screen.findByRole('tooltip')).toHaveTextContent(`Resets ${formatQuotaDate(RESET_AT)}`)
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(`Resets at ${formatQuotaDate(RESET_AT)}`)
     })
 
     it('shows no reset tooltip while no analysis counts', async () => {

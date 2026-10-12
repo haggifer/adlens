@@ -20,7 +20,7 @@ import {
     SettingOutlined,
     UploadOutlined,
 } from '@ant-design/icons'
-import { Button, Drawer } from 'antd'
+import { Button, Divider, Drawer } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
@@ -136,10 +136,13 @@ export function MobileMenu() {
                             </>
                         )}
                         {quota && (
-                            <span className={styles.drawerUserQuota}>
-                                {formatQuotaLeft(quota)}
-                                {quotaResetDate && ` (resets ${quotaResetDate})`}
-                            </span>
+                            <>
+                                <Divider className={styles.drawerUserDivider} />
+                                <span className={styles.drawerUserQuota}>
+                                    {formatQuotaLeft(quota)}
+                                    {quotaResetDate && ` (resets at ${quotaResetDate})`}
+                                </span>
+                            </>
                         )}
                         {!isEmailConfirmed && (
                             <Button

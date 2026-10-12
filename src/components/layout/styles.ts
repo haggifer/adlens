@@ -136,18 +136,24 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     drawerUserName: css`
         color: ${token.colorText};
+        font-size: 1rem;
         font-weight: 600;
     `,
 
     drawerUserEmail: css`
         color: ${token.colorTextSecondary};
-        font-size: 0.875rem;
+        font-size: 1rem;
     `,
 
     drawerUserQuota: css`
-        margin-top: 0.35rem;
         color: ${token.colorTextSecondary};
-        font-size: 0.875rem;
+        font-size: 1rem;
+    `,
+
+    drawerUserDivider: css`
+        &.ant-divider {
+            margin: 0.5rem 0;
+        }
     `,
 
     drawerNav: css`
