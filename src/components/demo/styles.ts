@@ -2,14 +2,6 @@ import { HEADING_FONT_STACK } from '@/fonts'
 import { createStyles } from 'antd-style'
 
 export const useStyles = createStyles(({ token, css }) => ({
-    header: css`
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 1rem;
-    `,
-
     // Only as wide as its tabs, and without antd's grey track: the page's own background shows through, so no band
     // runs across the page.
     tabs: css`

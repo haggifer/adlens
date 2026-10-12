@@ -6,10 +6,8 @@ import { screen } from '@testing-library/react'
 import { type Demo, Market, Platform, RequestErrorCode, VideoMimeType } from 'adlens-shared'
 import { DemoView } from './DemoView'
 
-const mockPush = jest.fn()
 let mockDemos: UseDemosResult
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/hooks/useDemos', () => ({ useDemos: () => mockDemos }))
 jest.mock('@vidstack/react', () => ({
     MediaPlayer: ({ 'aria-label': label }: { 'aria-label': string }) => <div role="region" aria-label={label} />,
@@ -113,14 +111,5 @@ describe('DemoView', () => {
 
         expect(screen.getByRole('heading', { name: 'Title of clothing-care-demo' })).toBeInTheDocument()
         expect(screen.queryByText(describeRequestError(RequestErrorCode.Unavailable))).not.toBeInTheDocument()
-    })
-
-    it('leads to the upload page to analyze an ad of one’s own', async () => {
-        mockDemos = loaded(DEMOS)
-        const { user } = renderWithProviders(<DemoView />)
-
-        await user.click(screen.getByRole('button', { name: 'Analyze your ad' }))
-
-        expect(mockPush).toHaveBeenCalledWith('/')
     })
 })

@@ -7,8 +7,7 @@ import { ErrorState } from '@/components/status/ErrorState'
 import { useDemos } from '@/hooks/useDemos'
 import { formatPlatforms, MARKET_LABELS } from '@/labels'
 import type { Demo, Market } from 'adlens-shared'
-import { Button, Empty, Segmented, Spin } from 'antd'
-import { useRouter } from 'next/navigation'
+import { Empty, Segmented, Spin } from 'antd'
 import { useState } from 'react'
 import { useStyles } from './styles'
 
@@ -28,7 +27,6 @@ const describeDemoRun = ({ job }: Demo): string => {
 export function DemoView() {
     const { styles } = useStyles()
     const { styles: analysisStyles } = useAnalysisStyles()
-    const router = useRouter()
 
     const [selectedSlug, setSelectedSlug] = useState<string | null>(null)
 
@@ -59,16 +57,9 @@ export function DemoView() {
     return (
         <div className={analysisStyles.page}>
             <div className={analysisStyles.intro}>
-                <header className={styles.header}>
-                    <div className="d-flex flex-column gap-1">
-                        <h1 className={analysisStyles.pageTitle}>Example reports</h1>
-                        <p className={analysisStyles.pageMeta}>
-                            Real ads, analyzed by AdLens. Pick one to see its report.
-                        </p>
-                    </div>
-                    <Button type="primary" onClick={() => router.push('/')}>
-                        Analyze your ad
-                    </Button>
+                <header className="d-flex flex-column gap-1">
+                    <h1 className={analysisStyles.pageTitle}>Example reports</h1>
+                    <p className={analysisStyles.pageMeta}>Real ads, analyzed by AdLens. Pick one to see its report.</p>
                 </header>
                 {demo && tabs.length > 1 && (
                     <Segmented className={styles.tabs} options={tabs} value={demo.slug} onChange={setSelectedSlug} />
