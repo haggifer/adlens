@@ -129,7 +129,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         flex-direction: column;
         gap: 0.15rem;
-        padding: 0 0.75rem 0.75rem;
+        padding: 0 0 0.75rem;
         border-bottom: 1px solid ${token.colorBorderSecondary};
         overflow-wrap: anywhere;
     `,

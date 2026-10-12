@@ -39,6 +39,11 @@ interface MenuLink {
 
 const DRAWER_WIDTH = 300
 
+// antd's 24px at the sides is too wide on a phone; inline, so it wins over antd's own selectors.
+const DRAWER_SECTION_STYLE = { padding: '1rem' }
+
+const DRAWER_STYLES = { header: DRAWER_SECTION_STYLE, body: DRAWER_SECTION_STYLE }
+
 const MENU_LINKS: MenuLink[] = [
     { href: '/', label: 'Analyze', icon: <UploadOutlined />, access: 'public' },
     { href: '/history', label: 'History', icon: <HistoryOutlined />, access: 'session' },
@@ -122,6 +127,7 @@ export function MobileMenu() {
                 size={DRAWER_WIDTH}
                 title="Menu"
                 classNames={{ body: styles.drawerBody }}
+                styles={DRAWER_STYLES}
                 drawerRender={renderSwipeablePanel}
                 afterOpenChange={(isNowOpen) => !isNowOpen && resetSwipe()}
             >
