@@ -16,8 +16,8 @@ html {
     --header-h: 4rem;
     --footer-h: 3.5rem;
     /* The page glow under the header (ambientBackground): its radii. */
-    --ambient-glow-rx: 85vw;
-    --ambient-glow-ry: 55vh;
+    --ambient-glow-rx: 80vw;
+    --ambient-glow-ry: 30vh;
 }
 
 /* On a phone the glow is a wide, low band: 20% of its visible width (it fades out at 62% of the radius) fits the
