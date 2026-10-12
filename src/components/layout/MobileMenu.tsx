@@ -134,37 +134,37 @@ export function MobileMenu() {
                 {/* The snapshot keeps no name or email, so until the session loads a member's block has nothing
                     to show. */}
                 {hasAccount && (user || !isEmailConfirmed) && (
-                    <div className={styles.drawerUser}>
+                    <div className="mx-1">
                         {user && (
                             <>
                                 {/* Sign-up asks for none; only Google and GitHub sign-ins bring a name. */}
                                 {user.name && <span className={styles.drawerUserName}>{user.name}</span>}
                                 <span className={styles.drawerUserEmail}>{user.email}</span>
+                                {/* Under the address it confirms. */}
+                                {!isEmailConfirmed && (
+                                    <Button
+                                        type="primary"
+                                        block
+                                        className={user ? 'mt-2' : undefined}
+                                        {...getSessionControlProps(isInert, handleConfirmEmail)}
+                                    >
+                                        Confirm email
+                                    </Button>
+                                )}
+                                <Divider style={{ marginBlock: '0.75rem' }} />
                             </>
-                        )}
-                        {/* Under the address it confirms. */}
-                        {!isEmailConfirmed && (
-                            <Button
-                                type="primary"
-                                block
-                                className={user ? 'mt-2' : undefined}
-                                {...getSessionControlProps(isInert, handleConfirmEmail)}
-                            >
-                                Confirm email
-                            </Button>
                         )}
                         {quota && (
                             <>
-                                <Divider style={{ marginBlock: '0.75rem' }} />
                                 <span className={styles.drawerUserQuota}>
                                     {formatQuotaLeft(quota)}
                                     {quotaResetDate && ` (resets at ${quotaResetDate})`}
                                 </span>
+                                <Divider style={{ marginBlock: '0.75rem' }} />
                             </>
                         )}
                     </div>
                 )}
-                <Divider style={{ marginBlock: '0.75rem' }} />
                 {isAnonymous && (
                     <div className={styles.drawerUser}>
                         <Button type="primary" block {...getSessionControlProps(isInert, handleSignIn)}>
