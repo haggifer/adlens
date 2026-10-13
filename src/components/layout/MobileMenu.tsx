@@ -132,14 +132,11 @@ export function MobileMenu() {
                 drawerRender={renderSwipeablePanel}
                 afterOpenChange={(isNowOpen) => !isNowOpen && resetSwipe()}
             >
-                {/* The snapshot keeps no name or email, so until the session loads a member's block has nothing
-                    to show. */}
                 {hasAccount && (user || !isEmailConfirmed) && (
                     <div className="mx-1">
                         {user && (
                             <>
                                 <span className={styles.drawerUserEmail}>{user.email}</span>
-                                {/* Under the address it confirms. */}
                                 {!isEmailConfirmed && (
                                     <Button
                                         type="primary"
@@ -150,7 +147,7 @@ export function MobileMenu() {
                                         Confirm email
                                     </Button>
                                 )}
-                                <Divider style={{ marginBlock: '0.75rem' }} />
+                                <Divider style={{ marginBlock: '1.25rem' }} />
                             </>
                         )}
                         {quota && (
@@ -159,7 +156,7 @@ export function MobileMenu() {
                                     {formatQuotaLeft(quota)}
                                     {quotaResetDate && ` (resets at ${quotaResetDate})`}
                                 </span>
-                                <Divider style={{ marginBlock: '0.75rem' }} />
+                                <Divider style={{ marginBlock: '1.25rem' }} />
                             </>
                         )}
                     </div>
@@ -190,12 +187,12 @@ export function MobileMenu() {
                         Contact us
                     </button>
                 </nav>
-                <Divider className="my-0" />
+                <Divider className="my-1" />
                 <div className={styles.drawerThemeRow}>
                     <span>Dark mode</span>
                     <ThemeSwitch />
                 </div>
-                <Divider className="my-0" />
+                <Divider className="my-1" />
                 {hasAccount && (
                     <button
                         type="button"
