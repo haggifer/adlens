@@ -137,8 +137,6 @@ export function MobileMenu() {
                     <div className="mx-1">
                         {user && (
                             <>
-                                {/* Sign-up asks for none; only Google and GitHub sign-ins bring a name. */}
-                                {user.name && <span className={styles.drawerUserName}>{user.name}</span>}
                                 <span className={styles.drawerUserEmail}>{user.email}</span>
                                 {/* Under the address it confirms. */}
                                 {!isEmailConfirmed && (
