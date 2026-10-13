@@ -57,7 +57,7 @@ const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
     }
 
     return (
-        <div className="d-flex justify-content-end">
+        <div className="d-flex justify-content-end gap-1">
             <Tooltip title={preset.isDefault ? 'Default preset, click to unset' : 'Make default'}>
                 <Button
                     type={preset.isDefault ? 'primary' : 'text'}
@@ -112,15 +112,16 @@ const getColumns = (
         title: 'Usages',
         key: 'usageCount',
         dataIndex: 'usageCount',
-        width: '7rem',
-        align: 'right',
+        // Just wide enough for the title and the cell's 16px side padding.
+        width: '5.5rem',
+        align: 'center',
         responsive: ['sm'],
     },
     {
         title: <span className="visually-hidden">Actions</span>,
         key: 'actions',
-        // Three icon buttons, 36px each below 768px, plus the cell's 16px side padding.
-        width: '9rem',
+        // Three icon buttons, 36px each below 768px, the 0.25rem gaps between them, and the cell's 16px side padding.
+        width: '9.5rem',
         align: 'right',
         render: (_, preset) => <PresetRowActions preset={preset} onEdit={onEdit} />,
     },
