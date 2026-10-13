@@ -27,11 +27,12 @@ import {
 } from 'adlens-shared'
 import { Alert, Button, Progress } from 'antd'
 import { useRouter } from 'next/navigation'
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { toKnownSettings } from './known-settings'
 import { withPlatformPlacements } from './platform-placements'
 import { SettingsFields } from './SettingsFields'
-import { toKnownSettings } from './known-settings'
+import { SettingsPlaceholder } from './SettingsPlaceholder'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -117,6 +118,8 @@ export function AnalysisSettings({
     const isDefaultPresetAllowed = source.kind === 'file' && isSameSettings(defaultValues, DEFAULT_VALUES)
     const isPresetsLoaded = Boolean(user) && !isLoadingPresets
     const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
+    // Until the session and the presets load, a default preset may still be on its way, and the fields would show blank.
+    const isWaitingForDefault = isDefaultPresetAllowed && !appliedPresetId && (isInitializing || isLoadingPresets)
 
     const getChallengeToken = async (): Promise<string> => {
         if (!humanCheck.current) {
@@ -332,12 +335,17 @@ export function AnalysisSettings({
         )
 
     // The presets load after the panel mounts, so the default preset can only be applied once they arrive; only that
-    // first load counts, so a default set later (in another tab, say) never replaces settings mid-session.
-    useEffect(() => {
+    // first load counts, so a default set later (in another tab, say) never replaces settings mid-session. Before paint,
+    // so the fields never show blank between the spinner and the default.
+    useLayoutEffect(() => {
         if (isPresetsLoaded) {
             settleDefaultPreset()
         }
     }, [isPresetsLoaded])
+
+    if (isWaitingForDefault) {
+        return <SettingsPlaceholder />
+    }
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>

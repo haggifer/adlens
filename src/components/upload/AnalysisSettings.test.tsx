@@ -144,11 +144,16 @@ const renderSettings = (
     return renderWithProviders(<Panel source={source} carried={carried} />)
 }
 
-// The values chosen in the selects, not the options of a list left open.
-const getChosenTitles = () =>
-    Array.from(document.querySelectorAll('.ant-select-selection-item'), (item) => item.getAttribute('title'))
-
 const runButton = () => screen.getByRole('button', { name: /run analysis/i })
+
+// A member's upload waits for the presets (a default preset may fill the fields), so the panel shows a spinner first.
+const renderFilePanel = async (auth: AuthContextValue) => {
+    const result = renderSettings(auth, FILE_SOURCE)
+
+    await screen.findByRole('button', { name: /run analysis/i })
+
+    return result
+}
 
 const isAboveRun = (element: Element) =>
     Boolean(element.compareDocumentPosition(runButton()) & Node.DOCUMENT_POSITION_FOLLOWING)
@@ -610,7 +615,7 @@ describe('AnalysisSettings', () => {
 
     describe('for an uploaded file', () => {
         it('declares the file, uploads it to the signed URL, then starts the analysis', async () => {
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await user.click(runButton())
 
@@ -630,7 +635,7 @@ describe('AnalysisSettings', () => {
 
         it('doesn’t start the analysis when the upload fails', async () => {
             jest.mocked(uploadToSignedUrl).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.UploadIncomplete))
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await user.click(runButton())
 
@@ -646,8 +651,8 @@ describe('AnalysisSettings', () => {
 
         beforeEach(() => jest.mocked(listPresets).mockResolvedValue([PRESET]))
 
-        it('puts Save and Apply in the title row', () => {
-            renderSettings(memberAuth(), FILE_SOURCE)
+        it('puts Save and Apply in the title row', async () => {
+            await renderFilePanel(memberAuth())
 
             const titleRow = within(screen.getByRole('heading', { name: 'Where will it run?' }).parentElement!)
 
@@ -656,7 +661,7 @@ describe('AnalysisSettings', () => {
         })
 
         it('applies a preset to the fields, closes the popover and marks it selected', async () => {
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await applyLastUsedPreset(user)
 
@@ -673,7 +678,7 @@ describe('AnalysisSettings', () => {
             })
 
             jest.mocked(listPresets).mockResolvedValue([outdated])
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await applyLastUsedPreset(user)
 
@@ -682,7 +687,7 @@ describe('AnalysisSettings', () => {
         })
 
         it('drops the selected mark when a field changes, and brings it back when the change is undone', async () => {
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await applyLastUsedPreset(user)
             await waitFor(() => expect(getSelectedIcon(PRESET)).toBeInTheDocument())
@@ -710,7 +715,7 @@ describe('AnalysisSettings', () => {
         })
 
         it('runs an uploaded video with the applied preset, and refreshes the presets', async () => {
-            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+            const { user } = await renderFilePanel(memberAuth())
 
             await applyLastUsedPreset(user)
             await run(user)
@@ -797,38 +802,25 @@ describe('AnalysisSettings', () => {
                 expect(screen.queryByTitle(PLATFORM_LABELS[Platform.TikTok])).not.toBeInTheDocument()
             })
 
-            it('leaves the settings a visitor chose before the presets loaded', async () => {
+            it('shows a spinner, not blank fields, until the presets load, then the default preset', async () => {
                 let loadPresets!: (presets: Preset[]) => void
 
                 jest.mocked(listPresets).mockReturnValueOnce(new Promise((resolve) => (loadPresets = resolve)))
-                const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+                renderSettings(memberAuth(), FILE_SOURCE)
 
-                await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.EU])
+                expect(document.querySelector('.ant-spin')).toBeInTheDocument()
+                expect(screen.queryByRole('button', { name: /run analysis/i })).not.toBeInTheDocument()
+
                 await act(async () => loadPresets([PRESET, DEFAULT_PRESET]))
 
-                await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
-                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
-                // The markets list is still open, so only the chosen tags count.
-                expect(getChosenTitles()).toContain(MARKET_LABELS[Market.EU])
-                expect(getChosenTitles()).not.toContain(MARKET_LABELS[Market.US])
+                expect(await screen.findByLabelText(`Preset: ${DEFAULT_PRESET.name}`)).toBeInTheDocument()
+                expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
             })
 
-            it('leaves the settings of a run started before the presets loaded', async () => {
-                let loadPresets!: (presets: Preset[]) => void
+            it('shows the fields at once without a session, since no presets can load', () => {
+                renderSettings(signedOutAuth(), FILE_SOURCE)
 
-                jest.mocked(listPresets).mockReturnValueOnce(new Promise((resolve) => (loadPresets = resolve)))
-                const { user } = renderSettings(memberAuth(), FILE_SOURCE)
-
-                await run(user)
-                await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
-                await act(async () => loadPresets([PRESET, DEFAULT_PRESET]))
-                // Apply's tooltip turns from "No presets yet" once the panel has the presets.
-                await user.hover(screen.getByLabelText('Apply a preset').parentElement!)
-                await screen.findByText('Apply a preset')
-
-                expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: undefined }))
-                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
-                expect(screen.queryByTitle(MARKET_LABELS[Market.US])).not.toBeInTheDocument()
+                expect(runButton()).toBeInTheDocument()
             })
         })
     })
