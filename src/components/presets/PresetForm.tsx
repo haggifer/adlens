@@ -17,7 +17,7 @@ import {
     savePresetInputSchema,
 } from 'adlens-shared'
 import { Alert, App, Button, Checkbox, Input, Popconfirm } from 'antd'
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { isSameName } from './preset-name'
@@ -122,6 +122,13 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
         await save(values, false)
     }
 
+    // The modal renders through a portal, yet React bubbles its submit up the component tree: from the settings panel
+    // it would reach the panel's own form and start an analysis.
+    const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.stopPropagation()
+        void handleSubmit(handleSave)(event)
+    }
+
     const handleOverwrite = () => {
         setIsAskingOverwrite(false)
 
@@ -131,7 +138,7 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
     }
 
     return (
-        <form onSubmit={handleSubmit(handleSave)}>
+        <form onSubmit={handleFormSubmit}>
             {formError && <Alert className="mb-3" type="error" showIcon title={formError} />}
             <Field label="Name" htmlFor={NAME_INPUT_ID} error={errors.name?.message}>
                 <Controller
