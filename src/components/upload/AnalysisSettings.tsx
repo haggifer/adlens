@@ -322,9 +322,9 @@ export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChang
             </div>
         )
 
-    // The address holds the applied settings, so a reload or the next video keeps them. A navigation that drops them
-    // while the form keeps them (Analyze in the header links to a bare /) writes them back.
-    useEffect(() => writeSettingsToUrl(values), [values, searchParams])
+    // The address holds the applied settings and the preset they came from, so a reload or the next video keeps them. A
+    // navigation that drops them while the form keeps them (Analyze in the header links to a bare /) writes them back.
+    useEffect(() => writeSettingsToUrl(values, appliedPresetId), [values, appliedPresetId, searchParams])
 
     // The presets load after the panel mounts, so the default preset can only be applied once they arrive; only that
     // first load counts, so a default set later (in another tab, say) never replaces settings mid-session.

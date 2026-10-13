@@ -1,6 +1,12 @@
 import { Market, Placement, Platform } from 'adlens-shared'
 import { getPlatformPlacements } from './platform-placements'
-import { readSettingsParams, toKnownSettings, toSettingsSearch, writeSettingsToUrl } from './settings-url'
+import {
+    readPresetParam,
+    readSettingsParams,
+    toKnownSettings,
+    toSettingsSearch,
+    writeSettingsToUrl,
+} from './settings-url'
 
 describe('readSettingsParams', () => {
     it('reads each repeated key into its list', () => {
@@ -67,6 +73,20 @@ describe('toSettingsSearch', () => {
 
     it('leaves no question mark once nothing is selected', () => {
         expect(toSettingsSearch(`?platform=${Platform.Meta}`, { platforms: [], placements: [], markets: [] })).toBe('')
+    })
+})
+
+describe('the applied preset in the address', () => {
+    const NONE = { platforms: [], placements: [], markets: [] }
+
+    it('reads the preset id, or null without one', () => {
+        expect(readPresetParam('?platform=Meta&preset=preset-1')).toBe('preset-1')
+        expect(readPresetParam('?platform=Meta')).toBeNull()
+    })
+
+    it('writes the preset id beside the settings, and drops it once no preset is applied', () => {
+        expect(toSettingsSearch('', NONE, 'preset-1')).toBe('?preset=preset-1')
+        expect(toSettingsSearch('?preset=preset-1&error=x', NONE, null)).toBe('?error=x')
     })
 })
 

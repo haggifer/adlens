@@ -8,6 +8,7 @@ import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { SamplesModal } from './SamplesModal'
+import { readPresetParam } from './settings-url'
 import { useStyles } from './styles'
 import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
 import { UploadIntro } from './UploadIntro'
@@ -59,7 +60,11 @@ export function AdWorkspace() {
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
-    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
+    // The address keeps the applied preset beside its settings, so a reload restores both. Read on the client only: the
+    // settings panel that shows it renders once a video is chosen, so the server's null never reaches the markup.
+    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(() =>
+        typeof window === 'undefined' ? null : readPresetParam(window.location.search),
+    )
 
     // Asked on load, not only once a video is chosen: an API that can't answer can't run an analysis, so the page says
     // so before anyone uploads or picks settings. A run already under way keeps its page.

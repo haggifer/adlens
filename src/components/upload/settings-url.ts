@@ -15,6 +15,9 @@ const PARAM_KEYS: Record<SettingsField, string> = {
 
 const FIELDS = Object.keys(PARAM_KEYS) as SettingsField[]
 
+// The preset the settings were applied from, so a reload still runs with it.
+const PRESET_PARAM = 'preset'
+
 const PLATFORMS = Object.values(Platform)
 const PLACEMENTS = Object.values(Placement)
 const MARKETS = Object.values(Market)
@@ -50,8 +53,14 @@ export const readSettingsParams = (search: string): AnalysisSettingsInput => {
     })
 }
 
+export const readPresetParam = (search: string): string | null => new URLSearchParams(search).get(PRESET_PARAM)
+
 // Keeps the address's other parameters (a sign-in error, say) as they are.
-export const toSettingsSearch = (search: string, settings: Partial<AnalysisSettingsInput>): string => {
+export const toSettingsSearch = (
+    search: string,
+    settings: Partial<AnalysisSettingsInput>,
+    presetId: string | null = null,
+): string => {
     const params = new URLSearchParams(search)
 
     FIELDS.forEach((field) => {
@@ -59,15 +68,21 @@ export const toSettingsSearch = (search: string, settings: Partial<AnalysisSetti
         settings[field]?.forEach((value) => params.append(PARAM_KEYS[field], value))
     })
 
+    params.delete(PRESET_PARAM)
+
+    if (presetId) {
+        params.set(PRESET_PARAM, presetId)
+    }
+
     const query = params.toString()
 
     return query ? `?${query}` : ''
 }
 
 // Replaces the history entry instead of adding one, so Back still leaves the page rather than undoing a setting.
-export const writeSettingsToUrl = (settings: Partial<AnalysisSettingsInput>): void => {
+export const writeSettingsToUrl = (settings: Partial<AnalysisSettingsInput>, presetId: string | null = null): void => {
     const { pathname, search, hash } = window.location
-    const nextSearch = toSettingsSearch(search, settings)
+    const nextSearch = toSettingsSearch(search, settings, presetId)
 
     if (nextSearch !== search) {
         window.history.replaceState(null, '', `${pathname}${nextSearch}${hash}`)

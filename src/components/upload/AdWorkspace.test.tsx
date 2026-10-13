@@ -308,4 +308,28 @@ describe('AdWorkspace', () => {
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
     })
+
+    it('keeps the applied preset in the address, so a reload still runs with it', async () => {
+        jest.mocked(listPresets).mockResolvedValue([{ ...PRESET, isDefault: true }])
+        jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
+        const first = renderWorkspace()
+
+        await chooseFile(first.user, buildFile('launch.mp4'))
+        await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })
+
+        expect(new URLSearchParams(window.location.search).get('preset')).toBe(PRESET.id)
+
+        first.unmount()
+
+        const second = renderWorkspace()
+
+        await chooseFile(second.user, buildFile('launch.mp4'))
+
+        expect(await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })).toBeInTheDocument()
+
+        await second.user.click(runButton())
+
+        await waitFor(() => expect(createJob).toHaveBeenCalled())
+        expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
+    })
 })
