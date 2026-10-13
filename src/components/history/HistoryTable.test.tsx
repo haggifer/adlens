@@ -49,6 +49,35 @@ describe('HistoryTable', () => {
         jest.mocked(listJobs).mockResolvedValue(page([JOB]))
     })
 
+    describe('on a wide screen', () => {
+        const originalMatchMedia = window.matchMedia
+
+        // The Preset column is only there from the lg breakpoint, and jsdom matches no media query.
+        beforeEach(() => {
+            window.matchMedia = (query) => ({ ...originalMatchMedia(query), matches: query.includes('min-width') })
+        })
+
+        afterEach(() => {
+            window.matchMedia = originalMatchMedia
+        })
+
+        it('shows the preset a run was counted for in the Preset column', async () => {
+            jest.mocked(listJobs).mockResolvedValue(page([buildJob({ presetName: 'Meta US' })]))
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+
+            expect(screen.getByRole('columnheader', { name: 'Preset' })).toBeInTheDocument()
+            expect(within(row).getByText('Meta US')).toBeInTheDocument()
+        })
+
+        it('shows a dash for a run counted for no preset', async () => {
+            renderTable()
+
+            expect(within(await rowOf(JOB.file.name)).getByText('—')).toBeInTheDocument()
+        })
+    })
+
     it('tags an analysis of a sample ad', async () => {
         jest.mocked(listJobs).mockResolvedValue(page([buildJob({ sampleId: 'sample-1' })]))
         renderTable()

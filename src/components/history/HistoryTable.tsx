@@ -42,6 +42,13 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
         render: (_, job) => formatPlatforms(job.settings.platforms),
     },
     {
+        title: 'Preset',
+        key: 'preset',
+        responsive: ['lg'],
+        ellipsis: true,
+        render: (_, job) => job.presetName ?? '—',
+    },
+    {
         title: 'Status',
         key: 'status',
         width: '8.5rem',
