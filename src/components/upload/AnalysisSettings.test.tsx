@@ -16,6 +16,7 @@ import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import {
+    type AnalysisSettingsInput,
     type Job,
     Market,
     Platform,
@@ -39,7 +40,6 @@ let mockQuota: Quota | undefined
 
 jest.mock('next/navigation', () => ({
     useRouter: () => ({ push: mockPush }),
-    useSearchParams: () => new URLSearchParams(window.location.search),
 }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/auth/authClient', () => ({
@@ -116,23 +116,37 @@ const DEFAULT_PRESET: Preset = buildPreset({
 })
 
 // Holds the applied preset the way the workspace does, across the panel's remounts.
-const Panel = ({ source }: { source: AnalysisSource }) => {
+const NO_SETTINGS: AnalysisSettingsInput = { platforms: [], placements: [], markets: [] }
+
+// Holds what the workspace holds: the settings and the preset carried over from the previous video.
+const Panel = ({ source, carried = NO_SETTINGS }: { source: AnalysisSource; carried?: AnalysisSettingsInput }) => {
+    const [settings, setSettings] = useState(carried)
     const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
 
     return (
         <AnalysisSettings
             source={source}
+            settings={settings}
+            onSettingsChange={setSettings}
             appliedPresetId={appliedPresetId}
             onAppliedPresetChange={setAppliedPresetId}
         />
     )
 }
 
-const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
+const renderSettings = (
+    auth: AuthContextValue,
+    source: AnalysisSource = SAMPLE_SOURCE,
+    carried: AnalysisSettingsInput = NO_SETTINGS,
+) => {
     mockUseAuth.mockReturnValue(auth)
 
-    return renderWithProviders(<Panel source={source} />)
+    return renderWithProviders(<Panel source={source} carried={carried} />)
 }
+
+// The values chosen in the selects, not the options of a list left open.
+const getChosenTitles = () =>
+    Array.from(document.querySelectorAll('.ant-select-selection-item'), (item) => item.getAttribute('title'))
 
 const runButton = () => screen.getByRole('button', { name: /run analysis/i })
 
@@ -183,7 +197,6 @@ describe('AnalysisSettings', () => {
         jest.mocked(uploadToSignedUrl).mockResolvedValue(undefined)
         jest.mocked(listPresets).mockResolvedValue([])
         mockGetToken.mockResolvedValue(mockChallengeToken)
-        window.history.replaceState(null, '', '/')
     })
 
     afterEach(() => jest.restoreAllMocks())
@@ -595,18 +608,6 @@ describe('AnalysisSettings', () => {
         expect(mockPush).not.toHaveBeenCalled()
     })
 
-    it('writes the settings back when a navigation drops them from the address while the form keeps them', async () => {
-        const { rerender } = renderSettings(memberAuth())
-
-        await waitFor(() => expect(window.location.search).toContain('platform='))
-
-        // What following the header's Analyze link (a bare /) does while on the home page.
-        window.history.replaceState(null, '', '/')
-        rerender(<Panel source={SAMPLE_SOURCE} />)
-
-        await waitFor(() => expect(window.location.search).toContain('platform='))
-    })
-
     describe('for an uploaded file', () => {
         it('declares the file, uploads it to the signed URL, then starts the analysis', async () => {
             const { user } = renderSettings(memberAuth(), FILE_SOURCE)
@@ -654,7 +655,7 @@ describe('AnalysisSettings', () => {
             expect(titleRow.getByRole('button', { name: 'Apply a preset' })).toBeInTheDocument()
         })
 
-        it('applies a preset to the fields and the address, closes the popover and marks it selected', async () => {
+        it('applies a preset to the fields, closes the popover and marks it selected', async () => {
             const { user } = renderSettings(memberAuth(), FILE_SOURCE)
 
             await applyLastUsedPreset(user)
@@ -662,7 +663,6 @@ describe('AnalysisSettings', () => {
             await waitFor(() => expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument())
             expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
             expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
-            expect(window.location.search).toContain(`market=${Market.UK}`)
             expect(getSelectedIcon(PRESET)).toBeInTheDocument()
         })
 
@@ -677,8 +677,7 @@ describe('AnalysisSettings', () => {
 
             await applyLastUsedPreset(user)
 
-            await waitFor(() => expect(window.location.search).toContain(`market=${Market.UK}`))
-            expect(window.location.search).not.toContain('Mars')
+            await waitFor(() => expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument())
             expect(screen.queryByTitle('Mars')).not.toBeInTheDocument()
         })
 
@@ -765,11 +764,11 @@ describe('AnalysisSettings', () => {
         describe('the default preset', () => {
             beforeEach(() => jest.mocked(listPresets).mockResolvedValue([PRESET, DEFAULT_PRESET]))
 
-            it('applies to an uploaded video whose address carries no settings, once the presets load', async () => {
+            it('applies to an uploaded video with no settings carried over, once the presets load', async () => {
                 const { user } = renderSettings(memberAuth(), FILE_SOURCE)
 
                 expect(await screen.findByLabelText(`Preset: ${DEFAULT_PRESET.name}`)).toBeInTheDocument()
-                expect(window.location.search).toContain(`market=${Market.US}`)
+                expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
 
                 await run(user)
 
@@ -779,9 +778,8 @@ describe('AnalysisSettings', () => {
                 )
             })
 
-            it('leaves the settings the address carries', async () => {
-                window.history.replaceState(null, '', `/?market=${Market.EU}`)
-                renderSettings(memberAuth(), FILE_SOURCE)
+            it('leaves the settings carried over from the previous video', async () => {
+                renderSettings(memberAuth(), FILE_SOURCE, { ...NO_SETTINGS, markets: [Market.EU] })
 
                 await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
 
@@ -796,7 +794,7 @@ describe('AnalysisSettings', () => {
                 await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
 
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
-                expect(window.location.search).not.toContain(`platform=${Platform.TikTok}`)
+                expect(screen.queryByTitle(PLATFORM_LABELS[Platform.TikTok])).not.toBeInTheDocument()
             })
 
             it('leaves the settings a visitor chose before the presets loaded', async () => {
@@ -810,8 +808,9 @@ describe('AnalysisSettings', () => {
 
                 await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
-                expect(window.location.search).toContain(`market=${Market.EU}`)
-                expect(window.location.search).not.toContain(`market=${Market.US}`)
+                // The markets list is still open, so only the chosen tags count.
+                expect(getChosenTitles()).toContain(MARKET_LABELS[Market.EU])
+                expect(getChosenTitles()).not.toContain(MARKET_LABELS[Market.US])
             })
 
             it('leaves the settings of a run started before the presets loaded', async () => {
@@ -829,7 +828,7 @@ describe('AnalysisSettings', () => {
 
                 expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: undefined }))
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
-                expect(window.location.search).not.toContain(`market=${Market.US}`)
+                expect(screen.queryByTitle(MARKET_LABELS[Market.US])).not.toBeInTheDocument()
             })
         })
     })

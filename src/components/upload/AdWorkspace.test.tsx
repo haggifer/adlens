@@ -126,7 +126,6 @@ describe('AdWorkspace', () => {
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
         jest.mocked(getAdmissionRefusal).mockResolvedValue(null)
         jest.mocked(listPresets).mockResolvedValue([])
-        window.history.replaceState(null, '', '/')
     })
 
     it('says AdLens is unavailable and takes no video while the API can’t answer, until it can', async () => {
@@ -267,25 +266,7 @@ describe('AdWorkspace', () => {
         await waitFor(() => expect(screen.queryByText(UNAVAILABLE_COPY)).not.toBeInTheDocument())
     })
 
-    it('applies the settings in the address, keeps them there, and keeps them for a replacement video', async () => {
-        window.history.replaceState(null, '', '/?platform=Meta&market=US')
-        const { user } = renderWorkspace()
-
-        await chooseFile(user, buildFile('launch.mp4'))
-
-        expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
-        await waitFor(() => expect(window.location.search).toContain(`placement=${Placement.MetaFeed}`))
-
-        await user.upload(fileInput(), buildFile('second-cut.mp4'))
-
-        await waitFor(() =>
-            expect(URL.createObjectURL).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'second-cut.mp4' })),
-        )
-        expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
-        expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
-    })
-
-    it('keeps the applied preset for a replacement video, and runs it with that preset', async () => {
+    it('keeps the settings and the applied preset for a replacement video, and runs it with that preset', async () => {
         jest.mocked(listPresets).mockResolvedValue([PRESET])
         jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
         const { user } = renderWorkspace()
@@ -302,32 +283,10 @@ describe('AdWorkspace', () => {
         )
 
         expect(await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })).toBeInTheDocument()
+        expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
+        expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
 
         await user.click(runButton())
-
-        await waitFor(() => expect(createJob).toHaveBeenCalled())
-        expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
-    })
-
-    it('keeps the applied preset in the address, so a reload still runs with it', async () => {
-        jest.mocked(listPresets).mockResolvedValue([{ ...PRESET, isDefault: true }])
-        jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
-        const first = renderWorkspace()
-
-        await chooseFile(first.user, buildFile('launch.mp4'))
-        await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })
-
-        expect(new URLSearchParams(window.location.search).get('preset')).toBe(PRESET.id)
-
-        first.unmount()
-
-        const second = renderWorkspace()
-
-        await chooseFile(second.user, buildFile('launch.mp4'))
-
-        expect(await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })).toBeInTheDocument()
-
-        await second.user.click(runButton())
 
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))

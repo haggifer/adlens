@@ -26,12 +26,12 @@ import {
     RequestErrorCode,
 } from 'adlens-shared'
 import { Alert, Button, Progress } from 'antd'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { withPlatformPlacements } from './platform-placements'
 import { SettingsFields } from './SettingsFields'
-import { readSettingsParams, toKnownSettings, writeSettingsToUrl } from './settings-url'
+import { toKnownSettings } from './known-settings'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -41,11 +41,10 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
     markets: [],
 }
 
-// A file takes the settings in the address: the ones applied before a reload, or to the video this one replaces.
-// Rendered only once a video is chosen, so `window` is always there. A sample brings the settings it was published with.
-const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
+// A file takes the settings of the video it replaces; a sample brings the settings it was published with.
+const getDefaultValues = (source: AnalysisSource, carried: AnalysisSettingsInput): AnalysisSettingsInput => {
     if (source.kind !== 'sample') {
-        return readSettingsParams(window.location.search)
+        return carried
     }
 
     const { settings } = source.sample
@@ -69,17 +68,26 @@ const getQuotaRefusal = (isEmailConfirmed: boolean, isAnonymous: boolean): Reque
 
 interface IProps {
     source: AnalysisSource
-    // Held by the workspace, since this panel remounts for each video and the applied preset carries over to the next.
+    // Held by the workspace, since this panel remounts for each video and the settings and the applied preset carry
+    // over to the next.
+    settings: AnalysisSettingsInput
+    onSettingsChange: (settings: AnalysisSettingsInput) => void
     appliedPresetId: string | null
     onAppliedPresetChange: (presetId: string | null) => void
     // True from Run until the run fails; a run that succeeds stays locked while the page navigates away.
     onRunningChange?: (isRunning: boolean) => void
 }
 
-export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChange, onRunningChange }: IProps) {
+export function AnalysisSettings({
+    source,
+    settings,
+    onSettingsChange,
+    appliedPresetId,
+    onAppliedPresetChange,
+    onRunningChange,
+}: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
-    const searchParams = useSearchParams()
     const queryClient = useQueryClient()
     const { user, isAnonymous, isEmailConfirmed, isInitializing } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
@@ -90,7 +98,7 @@ export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChang
     // When the API last refused a run: an admission answer from then on reflects that refusal.
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
-    const [defaultValues] = useState(() => getDefaultValues(source))
+    const [defaultValues] = useState(() => getDefaultValues(source, settings))
     // Set once the visitor picks settings or saves a preset, or the default preset had its one chance.
     const isDefaultSettled = useRef(false)
     const { control, handleSubmit, setValue } = useForm<AnalysisSettingsInput, unknown, AnalysisSettingsValues>({
@@ -105,7 +113,7 @@ export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChang
 
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
-    // Settings the address carries win over the default preset, and a sample keeps its own.
+    // Settings carried from the previous video win over the default preset, and a sample keeps its own.
     const isDefaultPresetAllowed = source.kind === 'file' && isSameSettings(defaultValues, DEFAULT_VALUES)
     const isPresetsLoaded = Boolean(user) && !isLoadingPresets
     const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
@@ -232,6 +240,7 @@ export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChang
         setValue('platforms', next.platforms, { shouldDirty: true })
         setValue('placements', next.placements, { shouldDirty: true })
         setValue('markets', next.markets, { shouldDirty: true })
+        onSettingsChange(next)
     }
 
     // A preset saved under an older ruleset may name values that are gone; they drop, as from an outdated address.
@@ -321,10 +330,6 @@ export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChang
                 <Progress percent={Math.round(uploadProgress * 100)} size="small" />
             </div>
         )
-
-    // The address holds the applied settings and the preset they came from, so a reload or the next video keeps them. A
-    // navigation that drops them while the form keeps them (Analyze in the header links to a bare /) writes them back.
-    useEffect(() => writeSettingsToUrl(values, appliedPresetId), [values, appliedPresetId, searchParams])
 
     // The presets load after the panel mounts, so the default preset can only be applied once they arrive; only that
     // first load counts, so a default set later (in another tab, say) never replaces settings mid-session.

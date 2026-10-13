@@ -3,12 +3,11 @@
 import { describeRequestError } from '@/api/errors'
 import { ErrorState } from '@/components/status/ErrorState'
 import { useAdmission } from '@/hooks/useAdmission'
-import { RequestErrorCode, type Sample } from 'adlens-shared'
+import { type AnalysisSettingsInput, RequestErrorCode, type Sample } from 'adlens-shared'
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { SamplesModal } from './SamplesModal'
-import { readPresetParam } from './settings-url'
 import { useStyles } from './styles'
 import type { AcceptedVideo, AnalysisSource, SelectedVideo } from './types'
 import { UploadIntro } from './UploadIntro'
@@ -30,6 +29,8 @@ const SettingsPlaceholder = () => {
 const AnalysisSettings = dynamic(() => import('./AnalysisSettings').then((module) => module.AnalysisSettings), {
     loading: SettingsPlaceholder,
 })
+
+const NO_SETTINGS: AnalysisSettingsInput = { platforms: [], placements: [], markets: [] }
 
 // Whatever stopped the API answering, the visitor can't start an analysis until it's back.
 const UNAVAILABLE_COPY = describeRequestError(RequestErrorCode.Unavailable)
@@ -60,11 +61,8 @@ export function AdWorkspace() {
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
-    // The address keeps the applied preset beside its settings, so a reload restores both. Read on the client only: the
-    // settings panel that shows it renders once a video is chosen, so the server's null never reaches the markup.
-    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(() =>
-        typeof window === 'undefined' ? null : readPresetParam(window.location.search),
-    )
+    const [settings, setSettings] = useState<AnalysisSettingsInput>(NO_SETTINGS)
+    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
 
     // Asked on load, not only once a video is chosen: an API that can't answer can't run an analysis, so the page says
     // so before anyone uploads or picks settings. A run already under way keeps its page.
@@ -113,11 +111,13 @@ export function AdWorkspace() {
                 </div>
                 <div className={styles.right}>
                     {source ? (
-                        // A key per source, so no run error carries over to the next video; the settings do, through
-                        // the address, and so does the preset applied to them.
+                        // A key per source, so no run error carries over to the next video; the settings and the
+                        // preset applied to them do, held here.
                         <AnalysisSettings
                             key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
                             source={source}
+                            settings={settings}
+                            onSettingsChange={setSettings}
                             appliedPresetId={appliedPresetId}
                             onAppliedPresetChange={setAppliedPresetId}
                             onRunningChange={setIsRunning}

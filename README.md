@@ -136,11 +136,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   `src/app/site-metadata.ts` holds the shared title, description and Open Graph tags. The share image
   (`opengraph-image.tsx`) is drawn at build time with the brand fonts fetched from Google Fonts, so a build needs to
   reach them, as `next/font` already does.
-- **The applied settings live in the address** (`/?platform=YouTube&placement=youtube_bumper&market=US`, one repeated
-  key per value), written with `history.replaceState` so Back still leaves the page. A reload, a replaced video and a
-  redirect sign-in keep them, and a link can carry them. A sample still brings its own settings. Unknown values and
-  placements without their platform are dropped on reading. The preset they were applied from rides along
-  (`&preset=<id>`), so after a reload the run still counts for it.
+- **The settings and the applied preset carry over to a replaced video**, held by the page, not the address: presets
+  are how settings are kept, and a reload starts from the default preset (or none). A sample still brings its own
+  settings.
 - **Presets save analysis settings under a name** (up to 20 per user, names unique ignoring case). A preset counts
   as used when an analysis starts with its settings unchanged; the API does the counting. `/presets` needs no
   `PrivateRoute`: without a session it shows the empty state, and saving the first preset starts an anonymous session,
