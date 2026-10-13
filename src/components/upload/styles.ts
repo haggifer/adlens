@@ -343,6 +343,14 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         height: 100%;
     `,
 
+    panelHeader: css`
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    `,
+
     panelTitle: css`
         flex-shrink: 0;
         margin: 0;

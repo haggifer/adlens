@@ -3,6 +3,9 @@ import { withPlatformPlacements } from './platform-placements'
 
 type SettingsField = keyof AnalysisSettingsInput
 
+// Settings from outside the form, each value as a plain string: what an address or a stored preset holds.
+type LooseSettings = Partial<Record<SettingsField, readonly string[]>>
+
 // One repeated key per value (?platform=YouTube&platform=Meta): the values need no encoding, so a link reads plainly.
 const PARAM_KEYS: Record<SettingsField, string> = {
     platforms: 'platform',
@@ -16,27 +19,35 @@ const PLATFORMS = Object.values(Platform)
 const PLACEMENTS = Object.values(Placement)
 const MARKETS = Object.values(Market)
 
-const readValues = <T extends string>(params: URLSearchParams, key: string, allowed: T[]): T[] => {
-    const values = new Set(params.getAll(key))
+const pickKnown = <T extends string>(values: readonly string[] = [], allowed: T[]): T[] => {
+    const given = new Set(values)
 
-    return allowed.filter((value) => values.has(value))
+    return allowed.filter((value) => given.has(value))
 }
 
-// A hand-edited or outdated link may name values that no longer exist or a placement without its platform; those
-// drop, and a platform named alone brings its placements, as picking it does.
-export const readSettingsParams = (search: string): AnalysisSettingsInput => {
-    const params = new URLSearchParams(search)
-
-    const platforms = readValues(params, PARAM_KEYS.platforms, PLATFORMS)
-    const placements = readValues(params, PARAM_KEYS.placements, PLACEMENTS).filter((placement) =>
+// A hand-edited or outdated link, or a preset saved under an older ruleset, may name values that no longer exist or a
+// placement without its platform; those drop, and a platform named alone brings its placements, as picking it does.
+export const toKnownSettings = (settings: LooseSettings): AnalysisSettingsInput => {
+    const platforms = pickKnown(settings.platforms, PLATFORMS)
+    const placements = pickKnown(settings.placements, PLACEMENTS).filter((placement) =>
         platforms.includes(PLACEMENT_PLATFORM[placement]),
     )
 
     return {
         platforms,
         placements: withPlatformPlacements(platforms, placements),
-        markets: readValues(params, PARAM_KEYS.markets, MARKETS),
+        markets: pickKnown(settings.markets, MARKETS),
     }
+}
+
+export const readSettingsParams = (search: string): AnalysisSettingsInput => {
+    const params = new URLSearchParams(search)
+
+    return toKnownSettings({
+        platforms: params.getAll(PARAM_KEYS.platforms),
+        placements: params.getAll(PARAM_KEYS.placements),
+        markets: params.getAll(PARAM_KEYS.markets),
+    })
 }
 
 // Keeps the address's other parameters (a sign-in error, say) as they are.

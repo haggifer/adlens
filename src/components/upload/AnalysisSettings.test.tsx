@@ -1,21 +1,32 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, createSampleJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { getQuota } from '@/api/me'
+import { listPresets } from '@/api/presets'
 import { authClient, signIn } from '@/auth/authClient'
 import { refreshSession } from '@/auth/session'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import type { UseQuotaResult } from '@/hooks/useQuota'
+import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
-import { buildJob, buildSample } from '@/test/fixtures'
+import { buildJob, buildPreset, buildSample } from '@/test/fixtures'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
-import { type Job, type Quota, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
+import {
+    type Job,
+    Market,
+    Platform,
+    type Preset,
+    type Quota,
+    RequestErrorCode,
+    type UploadTarget,
+    VideoMimeType,
+} from 'adlens-shared'
 import { AnalysisSettings } from './AnalysisSettings'
-import { withPlatformPlacements } from './platform-placements'
+import { getPlatformPlacements, withPlatformPlacements } from './platform-placements'
 import type { AnalysisSource } from './types'
 
 const mockPush = jest.fn()
@@ -43,6 +54,7 @@ jest.mock('@/api/jobs', () => ({
     startAnalysis: jest.fn(),
 }))
 jest.mock('@/api/me', () => ({ getQuota: jest.fn() }))
+jest.mock('@/api/presets', () => ({ listPresets: jest.fn() }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => mockUseQuota() }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken resolves with.
@@ -67,6 +79,10 @@ const SAMPLE_RUN_SETTINGS = {
     placements: withPlatformPlacements(SAMPLE.settings.platforms, SAMPLE.settings.placements),
 }
 
+const FILE = new File(['video-bytes'], 'launch.mp4', { type: VideoMimeType.Mp4 })
+
+const FILE_SOURCE: AnalysisSource = { kind: 'file', file: FILE, contentType: VideoMimeType.Mp4, url: 'blob:launch' }
+
 const JOB: Job = buildJob({ id: 'job-7' })
 
 const UPLOAD_TARGET: UploadTarget = {
@@ -79,6 +95,13 @@ const UNAVAILABLE_COPY = describeRequestError(RequestErrorCode.Unavailable)
 const CONFIRMATION_REQUIRED_COPY = describeRequestError(RequestErrorCode.EmailConfirmationRequired)
 
 const SIGN_UP_REQUIRED_COPY = describeRequestError(RequestErrorCode.SignUpRequired)
+
+const PRESET: Preset = buildPreset({
+    id: 'preset-1',
+    name: 'Meta UK',
+    settings: { platforms: [Platform.Meta], placements: getPlatformPlacements(Platform.Meta), markets: [Market.UK] },
+    lastUsedAt: '2026-10-10T09:00:00.000Z',
+})
 
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)
@@ -95,6 +118,29 @@ const run = async (user: UserEvent) => {
     await user.click(runButton())
 }
 
+const getSelectedIcon = (preset: Preset) => screen.queryByRole('img', { name: `Preset: ${preset.name}` })
+
+const getMarketsSelect = () => screen.getAllByRole('combobox')[2]
+
+// A chosen option shows twice, as a tag and in the open list, so the list entry is picked by its class.
+const toggleOption = async (user: UserEvent, select: HTMLElement, label: string) => {
+    await user.click(select)
+
+    const matches = await screen.findAllByTitle(label)
+    const option = matches.find((match) => match.classList.contains('ant-select-item-option'))
+
+    await user.click(option ?? matches[0])
+}
+
+// The popover preselects the last used preset.
+const applyLastUsedPreset = async (user: UserEvent) => {
+    const applyPreset = screen.getByRole('button', { name: 'Apply a preset' })
+
+    await waitFor(() => expect(applyPreset).toBeEnabled())
+    await user.click(applyPreset)
+    await user.click(await screen.findByRole('button', { name: 'Apply' }))
+}
+
 describe('AnalysisSettings', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -109,6 +155,7 @@ describe('AnalysisSettings', () => {
         jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
         jest.mocked(uploadToSignedUrl).mockResolvedValue(undefined)
+        jest.mocked(listPresets).mockResolvedValue([])
         mockGetToken.mockResolvedValue(mockChallengeToken)
         window.history.replaceState(null, '', '/')
     })
@@ -535,15 +582,6 @@ describe('AnalysisSettings', () => {
     })
 
     describe('for an uploaded file', () => {
-        const FILE = new File(['video-bytes'], 'launch.mp4', { type: VideoMimeType.Mp4 })
-
-        const FILE_SOURCE: AnalysisSource = {
-            kind: 'file',
-            file: FILE,
-            contentType: VideoMimeType.Mp4,
-            url: 'blob:launch',
-        }
-
         it('declares the file, uploads it to the signed URL, then starts the analysis', async () => {
             const { user } = renderSettings(memberAuth(), FILE_SOURCE)
 
@@ -572,6 +610,109 @@ describe('AnalysisSettings', () => {
             expect(await screen.findByText("The upload didn't finish. Please try again.")).toBeInTheDocument()
             expect(startAnalysis).not.toHaveBeenCalled()
             expect(mockPush).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('with presets', () => {
+        // The popover, its select and the fields' selects take seconds under a full parallel run.
+        jest.setTimeout(20_000)
+
+        beforeEach(() => jest.mocked(listPresets).mockResolvedValue([PRESET]))
+
+        it('puts Save and Apply in the title row', () => {
+            renderSettings(memberAuth(), FILE_SOURCE)
+
+            const titleRow = within(screen.getByRole('heading', { name: 'Where will it run?' }).parentElement!)
+
+            expect(titleRow.getByRole('button', { name: 'Save as preset' })).toBeInTheDocument()
+            expect(titleRow.getByRole('button', { name: 'Apply a preset' })).toBeInTheDocument()
+        })
+
+        it('applies a preset to the fields and the address, closes the popover and marks it selected', async () => {
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await applyLastUsedPreset(user)
+
+            await waitFor(() => expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument())
+            expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
+            expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
+            expect(window.location.search).toContain(`market=${Market.UK}`)
+            expect(getSelectedIcon(PRESET)).toBeInTheDocument()
+        })
+
+        it('applies a preset holding a value that no longer exists, without it', async () => {
+            const outdated = buildPreset({
+                ...PRESET,
+                settings: { ...PRESET.settings, markets: [Market.UK, 'Mars' as Market] },
+            })
+
+            jest.mocked(listPresets).mockResolvedValue([outdated])
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await applyLastUsedPreset(user)
+
+            await waitFor(() => expect(window.location.search).toContain(`market=${Market.UK}`))
+            expect(window.location.search).not.toContain('Mars')
+            expect(screen.queryByTitle('Mars')).not.toBeInTheDocument()
+        })
+
+        it('drops the selected mark when a field changes, and brings it back when the change is undone', async () => {
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await applyLastUsedPreset(user)
+            await waitFor(() => expect(getSelectedIcon(PRESET)).toBeInTheDocument())
+
+            await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.UK])
+
+            expect(getSelectedIcon(PRESET)).not.toBeInTheDocument()
+
+            await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.UK])
+
+            expect(getSelectedIcon(PRESET)).toBeInTheDocument()
+        })
+
+        it('opens Save as preset with the panel’s settings', async () => {
+            const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+            await user.click(screen.getByRole('button', { name: 'Save as preset' }))
+
+            const dialog = within(await screen.findByRole('dialog'))
+
+            expect(dialog.getByText('Save as preset')).toBeInTheDocument()
+            SAMPLE.settings.platforms.forEach((platform) =>
+                expect(dialog.getByTitle(PLATFORM_LABELS[platform])).toBeInTheDocument(),
+            )
+        })
+
+        it('runs an uploaded video with the applied preset, and refreshes the presets', async () => {
+            const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+            await applyLastUsedPreset(user)
+            await run(user)
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+            expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
+            // Its usage count and last use changed.
+            await waitFor(() => expect(listPresets).toHaveBeenCalledTimes(2))
+        })
+
+        it('runs a sample with the applied preset', async () => {
+            const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+            await applyLastUsedPreset(user)
+            await run(user)
+
+            await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
+            expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
+        })
+
+        it('sends no preset when none was applied', async () => {
+            const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+            await run(user)
+
+            await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
+            expect(jest.mocked(createSampleJob).mock.calls[0][0].presetId).toBeUndefined()
         })
     })
 })

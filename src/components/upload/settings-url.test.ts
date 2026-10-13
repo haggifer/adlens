@@ -1,6 +1,6 @@
 import { Market, Placement, Platform } from 'adlens-shared'
 import { getPlatformPlacements } from './platform-placements'
-import { readSettingsParams, toSettingsSearch, writeSettingsToUrl } from './settings-url'
+import { readSettingsParams, toKnownSettings, toSettingsSearch, writeSettingsToUrl } from './settings-url'
 
 describe('readSettingsParams', () => {
     it('reads each repeated key into its list', () => {
@@ -31,6 +31,26 @@ describe('readSettingsParams', () => {
 
     it('reads nothing from an empty address', () => {
         expect(readSettingsParams('')).toEqual({ platforms: [], placements: [], markets: [] })
+    })
+})
+
+describe('toKnownSettings', () => {
+    it('drops values that no longer exist, as a preset saved under an older ruleset may hold', () => {
+        expect(
+            toKnownSettings({
+                platforms: [Platform.Meta, 'Myspace'],
+                placements: [Placement.MetaFeed, 'MyspaceTop'],
+                markets: [Market.US, 'Mars'],
+            }),
+        ).toEqual({ platforms: [Platform.Meta], placements: [Placement.MetaFeed], markets: [Market.US] })
+    })
+
+    it('links platforms and placements the way the fields do', () => {
+        expect(toKnownSettings({ platforms: [Platform.Meta], placements: [Placement.YouTubeBumper] })).toEqual({
+            platforms: [Platform.Meta],
+            placements: getPlatformPlacements(Platform.Meta),
+            markets: [],
+        })
     })
 })
 

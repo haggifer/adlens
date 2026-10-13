@@ -6,9 +6,11 @@ import { ensureSession } from '@/auth/anonymous-session'
 import { useAuth } from '@/auth/AuthContext'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
 import { formatQuotaDate } from '@/components/layout/quota-label'
+import { PresetActions } from '@/components/presets/PresetActions'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useAdmission } from '@/hooks/useAdmission'
+import { PRESETS_KEY, usePresets } from '@/hooks/usePresets'
 import { useQuota } from '@/hooks/useQuota'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { ThunderboltOutlined } from '@ant-design/icons'
@@ -19,6 +21,7 @@ import {
     analysisSettingsSchema,
     type AnalysisSettings as AnalysisSettingsValues,
     type ApiErrorCode,
+    type Preset,
     RequestErrorCode,
 } from 'adlens-shared'
 import { Alert, Button, Progress } from 'antd'
@@ -27,7 +30,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { withPlatformPlacements } from './platform-placements'
 import { SettingsFields } from './SettingsFields'
-import { readSettingsParams, writeSettingsToUrl } from './settings-url'
+import { readSettingsParams, toKnownSettings, writeSettingsToUrl } from './settings-url'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
 
@@ -83,6 +86,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // When the API last refused a run: an admission answer from then on reflects that refusal.
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
+    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
     const { control, handleSubmit, setValue } = useForm<AnalysisSettingsInput, unknown, AnalysisSettingsValues>({
         resolver: zodResolver(analysisSettingsSchema),
         defaultValues: getDefaultValues(source),
@@ -91,9 +95,11 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     const { quota } = useQuota()
     const { refusal, updatedAt } = useAdmission()
+    const { presets } = usePresets()
 
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
+    const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
 
     const getChallengeToken = async (): Promise<string> => {
         if (!humanCheck.current) {
@@ -104,8 +110,11 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     }
 
     const startRun = async (settings: AnalysisSettingsValues, challengeToken?: string): Promise<string> => {
+        // A preset deleted since it was applied still goes out; the API counts nothing for it (spec D4).
+        const presetId = appliedPresetId ?? undefined
+
         if (source.kind === 'sample') {
-            const job = await createSampleJob({ sampleId: source.sample.id, settings, challengeToken })
+            const job = await createSampleJob({ sampleId: source.sample.id, settings, presetId, challengeToken })
 
             await startAnalysis(job.id)
 
@@ -116,6 +125,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         const { job, upload } = await createJob({
             settings,
             file: { name: file.name, contentType, size: file.size },
+            presetId,
             challengeToken,
         })
 
@@ -174,6 +184,8 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             void queryClient.invalidateQueries({ queryKey: ['quota'] })
             void queryClient.invalidateQueries({ queryKey: ['admission'] })
             void queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            // The server may have counted the run for the applied preset (spec D4).
+            void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] })
         },
         onError: (error) => {
             const { code } = toApiRequestError(error)
@@ -210,6 +222,12 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         setValue('platforms', next.platforms, { shouldDirty: true })
         setValue('placements', next.placements, { shouldDirty: true })
         setValue('markets', next.markets, { shouldDirty: true })
+    }
+
+    // A preset saved under an older ruleset may name values that are gone; they drop, as from an outdated address.
+    const handleApplyPreset = (preset: Preset) => {
+        handleSettingsChange(toKnownSettings(preset.settings))
+        setAppliedPresetId(preset.id)
     }
 
     // A per-call callback, which TanStack skips once this form has unmounted: a visitor who left the page mid-run
@@ -280,7 +298,15 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
-            <h2 className={styles.panelTitle}>Where will it run?</h2>
+            <div className={styles.panelHeader}>
+                <h2 className={styles.panelTitle}>Where will it run?</h2>
+                <PresetActions
+                    settings={values}
+                    appliedPreset={appliedPreset}
+                    onApply={handleApplyPreset}
+                    isDisabled={isRunning}
+                />
+            </div>
             <div className={styles.settingsScroll}>
                 <SettingsFields value={values} onChange={handleSettingsChange} isDisabled={isRunning} />
             </div>

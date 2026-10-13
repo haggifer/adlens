@@ -29,6 +29,7 @@ jest.mock('@/api/jobs', () => ({
     getAdmissionRefusal: jest.fn(async () => null),
     startAnalysis: jest.fn(),
 }))
+jest.mock('@/api/presets', () => ({ listPresets: jest.fn(async () => []) }))
 jest.mock('@/api/samples', () => ({ listSamples: jest.fn(async () => []) }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: undefined }) }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn(async () => undefined) }))
