@@ -162,12 +162,20 @@ describe('PresetModal', () => {
         await user.click(screen.getByRole('button', { name: 'Overwrite' }))
 
         await waitFor(() => expect(onClose).toHaveBeenCalled())
-        expect(createPreset).toHaveBeenCalledWith({
-            name: 'meta us',
-            settings: SETTINGS,
-            isDefault: false,
-            overwrite: true,
-        })
+        expect(createPreset).toHaveBeenCalledWith({ name: 'meta us', settings: SETTINGS, overwrite: true })
+    })
+
+    // The checkbox started unchecked for a new preset; it never described the preset being overwritten.
+    it('leaves the default alone when Overwrite replaces it with Select as default unchecked', async () => {
+        const { user, onClose } = renderModal({ initialSettings: SETTINGS })
+        await waitForPresets()
+
+        await enterName(user, EDITED.name)
+        await clickSave(user)
+        await user.click(await screen.findByRole('button', { name: 'Overwrite' }))
+
+        await waitFor(() => expect(onClose).toHaveBeenCalled())
+        expect(jest.mocked(createPreset).mock.calls[0][0]).not.toHaveProperty('isDefault')
     })
 
     it('sends nothing when the overwrite is cancelled', async () => {
@@ -199,9 +207,9 @@ describe('PresetModal', () => {
         expect(createPreset).toHaveBeenLastCalledWith({
             name: 'Saved in another tab',
             settings: SETTINGS,
-            isDefault: false,
             overwrite: true,
         })
+        expect(jest.mocked(createPreset).mock.lastCall?.[0]).not.toHaveProperty('isDefault')
     })
 
     it('shows the limit error in the modal', async () => {

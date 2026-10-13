@@ -38,12 +38,17 @@ const getDefaultValues = (preset?: Preset, initialSettings?: AnalysisSettingsInp
     isDefault: preset?.isDefault ?? false,
 })
 
-// isDefault always goes out, so unchecking the current default clears it.
-const toSaveInput = (values: PresetFormValues, isOverwrite: boolean): SavePresetInput => ({
-    ...values,
-    isDefault: Boolean(values.isDefault),
-    ...(isOverwrite && { overwrite: true }),
-})
+// An edit always sends isDefault, so unchecking the current default clears it. A new preset sends it only when checked:
+// its checkbox started unchecked, so it never described a preset the save overwrites, whose default must stay.
+const toSaveInput = (values: PresetFormValues, isEdit: boolean, isOverwrite: boolean): SavePresetInput => {
+    const { isDefault, ...fields } = values
+
+    return {
+        ...fields,
+        ...((isEdit || isDefault) && { isDefault: Boolean(isDefault) }),
+        ...(isOverwrite && { overwrite: true }),
+    }
+}
 
 const renderSettings = ({ field }: { field: ControllerRenderProps<PresetFormInput, 'settings'> }) => (
     <SettingsFields value={field.value} onChange={field.onChange} />
@@ -95,7 +100,7 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
                 await ensureSession()
             }
 
-            const saved = await savePreset({ id: preset?.id, input: toSaveInput(values, isOverwrite) })
+            const saved = await savePreset({ id: preset?.id, input: toSaveInput(values, Boolean(preset), isOverwrite) })
 
             notification.success({ title: 'Preset saved', placement: 'bottomRight' })
             onSaved?.(saved)
