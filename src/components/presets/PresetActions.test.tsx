@@ -78,6 +78,8 @@ describe('PresetActions', () => {
         const icon = screen.getByRole('img', { name: SELECTED_LABEL })
 
         expect(icon).toHaveAttribute('tabindex', '0')
+        // A mark, not a control: it does nothing on click.
+        expect(icon).toHaveStyle({ cursor: 'default' })
         // Left of Save and Apply.
         expect(icon.compareDocumentPosition(getSaveButton()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 

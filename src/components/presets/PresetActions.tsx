@@ -34,7 +34,7 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
                         aria-label={`Preset: ${appliedPreset.name}`}
                         tabIndex={0}
                         className="px-2"
-                        style={{ color: token.colorPrimary }}
+                        style={{ color: token.colorPrimary, cursor: 'default' }}
                     />
                 </Tooltip>
             )}
