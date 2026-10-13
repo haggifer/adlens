@@ -7,10 +7,10 @@ import { formatQuotaLeft, getQuotaResetDate } from '@/components/layout/quota-la
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
+import { useMenuSwipe } from '@/hooks/useMenuSwipe'
 import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
-import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import {
     FileSearchOutlined,
     HistoryOutlined,
@@ -71,8 +71,9 @@ export function MobileMenu() {
 
     const [isOpen, setIsOpen] = useState(false)
 
+    const handleOpen = () => setIsOpen(true)
     const handleClose = () => setIsOpen(false)
-    const { swipeHandlers, resetSwipe } = useSwipeToClose(handleClose)
+    const { panelRef, resetSwipe } = useMenuSwipe(isOpen, handleOpen, handleClose)
 
     const { quota } = useQuota()
 
@@ -106,7 +107,7 @@ export function MobileMenu() {
 
     // pan-y leaves vertical moves to the browser, so the menu scrolls, and gives horizontal ones to the swipe.
     const renderSwipeablePanel = (panel: ReactNode) => (
-        <div {...swipeHandlers} className="h-100" style={{ touchAction: 'pan-y' }}>
+        <div ref={panelRef} className="h-100" style={{ touchAction: 'pan-y' }}>
             {panel}
         </div>
     )
@@ -119,7 +120,7 @@ export function MobileMenu() {
                 className={styles.menuButton}
                 aria-label="Open menu"
                 aria-expanded={isOpen}
-                onClick={() => setIsOpen(true)}
+                onClick={handleOpen}
             />
             <Drawer
                 open={isOpen}

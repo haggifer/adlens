@@ -26,7 +26,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
 - **react-hook-form + zod**; the analysis settings form validates with the shared `analysisSettingsSchema`
 - Direct-to-GCS uploads via V4 signed URLs, with progress
 - **Vidstack** player for the uploaded and replayed video
-- **react-swipeable** to swipe the phone menu closed (`useSwipeToClose`)
+- **react-swipeable** to open the phone menu with a swipe left anywhere on the page and close it with a swipe right
+  (`useMenuSwipe`)
 - **Jest + React Testing Library** for tests
 - Deployed on **Vercel**
 

@@ -248,31 +248,91 @@ describe('MobileMenu', () => {
     })
 
     describe('swiping', () => {
-        // The swipe listens on the element the drawer's panel is wrapped in.
-        const swipe = (from: [number, number], to: [number, number]) => {
-            const target = screen.getByRole('dialog', { name: 'Menu' }).parentElement!
+        const originalMatchMedia = window.matchMedia
+        let isNarrow = true
 
+        // The swipe listens on the whole page, so a touch anywhere reaches it.
+        const swipe = (target: Element, from: [number, number], to: [number, number]) => {
             fireEvent.touchStart(target, { touches: [{ clientX: from[0], clientY: from[1] }] })
             fireEvent.touchMove(target, { touches: [{ clientX: to[0], clientY: to[1] }] })
             fireEvent.touchEnd(target, { touches: [] })
         }
 
-        it('closes the menu on a swipe right', async () => {
+        const expectOpen = (isOpen: boolean) =>
+            waitFor(() =>
+                expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute(
+                    'aria-expanded',
+                    String(isOpen),
+                ),
+            )
+
+        const renderClosed = () => {
+            mockUseAuth.mockReturnValue(memberAuth())
+            renderWithProviders(<MobileMenu />)
+        }
+
+        beforeEach(() => {
+            isNarrow = true
+            window.matchMedia = (query) => ({
+                ...originalMatchMedia(query),
+                matches: isNarrow && query === '(max-width: 991.98px)',
+            })
+        })
+
+        afterEach(() => {
+            window.matchMedia = originalMatchMedia
+        })
+
+        it('opens the menu on a swipe left anywhere on the page', async () => {
+            renderClosed()
+
+            swipe(document.body, [300, 200], [100, 210])
+
+            await expectOpen(true)
+        })
+
+        it('leaves a swipe left in a text field to the field', async () => {
+            renderClosed()
+
+            const input = document.body.appendChild(document.createElement('input'))
+
+            swipe(input, [300, 200], [100, 210])
+
+            await expectOpen(false)
+            input.remove()
+        })
+
+        it('leaves the page alone where the header shows its links instead of the menu', async () => {
+            isNarrow = false
+            renderClosed()
+
+            swipe(document.body, [300, 200], [100, 210])
+
+            await expectOpen(false)
+        })
+
+        it('closes the menu on a swipe right over the menu', async () => {
             await openMenu(memberAuth())
 
-            swipe([40, 200], [240, 210])
+            swipe(screen.getByRole('dialog', { name: 'Menu' }), [40, 200], [240, 210])
 
-            await waitFor(() =>
-                expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false'),
-            )
+            await expectOpen(false)
+        })
+
+        it('closes the menu on a swipe right beside it', async () => {
+            await openMenu(memberAuth())
+
+            swipe(document.body, [10, 200], [210, 210])
+
+            await expectOpen(false)
         })
 
         it('keeps the menu open on a mostly vertical swipe, which scrolls it', async () => {
             await openMenu(memberAuth())
 
-            swipe([40, 400], [70, 100])
+            swipe(screen.getByRole('dialog', { name: 'Menu' }), [40, 400], [70, 100])
 
-            expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'true')
+            await expectOpen(true)
         })
     })
 })
