@@ -3,7 +3,7 @@ import type { AnalysisSettingsInput } from 'adlens-shared'
 const isSameSet = (a: readonly string[] = [], b: readonly string[] = []) =>
     a.length === b.length && a.every((value) => b.includes(value))
 
-// The API's rule for counting a run (spec D4), so the panel marks a preset as selected exactly when its run would
-// count: the same values in each field, in any order. The form leaves an untouched field out, which counts as empty.
+// The API's rule for counting a run towards a preset, so the panel marks a preset as selected exactly when its run
+// would count: the same values in each field, in any order. The form leaves an untouched field out, which counts as empty.
 export const isSameSettings = (a: AnalysisSettingsInput, b: AnalysisSettingsInput): boolean =>
     isSameSet(a.platforms, b.platforms) && isSameSet(a.placements, b.placements) && isSameSet(a.markets, b.markets)

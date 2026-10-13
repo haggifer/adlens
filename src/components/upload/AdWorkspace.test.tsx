@@ -1,9 +1,10 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
+import { listPresets } from '@/api/presets'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
-import { buildJob } from '@/test/fixtures'
+import { buildJob, buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { QueryClient } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
@@ -56,6 +57,12 @@ jest.mock('@vidstack/react', () => ({
 jest.mock('@vidstack/react/player/layouts/default', () => ({ DefaultVideoLayout: () => null, defaultLayoutIcons: {} }))
 
 const JOB = buildJob({ id: 'job-7' })
+
+const PRESET = buildPreset({
+    name: 'Meta UK',
+    settings: { platforms: [Platform.Meta], placements: [Placement.MetaFeed], markets: [Market.UK] },
+    lastUsedAt: '2026-10-10T09:00:00.000Z',
+})
 
 const UPLOAD_TARGET: UploadTarget = { url: 'https://storage.googleapis.com/bucket/video', headers: {} }
 
@@ -118,6 +125,7 @@ describe('AdWorkspace', () => {
         jest.clearAllMocks()
         jest.mocked(startAnalysis).mockResolvedValue(JOB)
         jest.mocked(getAdmissionRefusal).mockResolvedValue(null)
+        jest.mocked(listPresets).mockResolvedValue([])
         window.history.replaceState(null, '', '/')
     })
 
@@ -275,5 +283,29 @@ describe('AdWorkspace', () => {
         )
         expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
         expect(screen.getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
+    })
+
+    it('keeps the applied preset for a replacement video, and runs it with that preset', async () => {
+        jest.mocked(listPresets).mockResolvedValue([PRESET])
+        jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
+        const { user } = renderWorkspace()
+
+        await chooseFile(user, buildFile('launch.mp4'))
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+        await user.click(screen.getByRole('button', { name: 'Apply a preset' }))
+        await user.click(await screen.findByRole('button', { name: 'Apply' }))
+        await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })
+
+        await user.upload(fileInput(), buildFile('second-cut.mp4'))
+        await waitFor(() =>
+            expect(URL.createObjectURL).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'second-cut.mp4' })),
+        )
+
+        expect(await screen.findByRole('img', { name: `Preset: ${PRESET.name}` })).toBeInTheDocument()
+
+        await user.click(runButton())
+
+        await waitFor(() => expect(createJob).toHaveBeenCalled())
+        expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
     })
 })

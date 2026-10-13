@@ -13,15 +13,16 @@ interface IProps {
     settings: AnalysisSettingsInput
     appliedPreset: Preset | null
     onApply: (preset: Preset) => void
+    onSaved: (preset: Preset) => void
     isDisabled?: boolean
 }
 
-export function PresetActions({ settings, appliedPreset, onApply, isDisabled }: IProps) {
+export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDisabled }: IProps) {
     const token = useTheme()
 
     const [isSaveOpen, setIsSaveOpen] = useState(false)
 
-    // Shown exactly while a run would count for the preset (spec D4, D18).
+    // Shown exactly while the API would count a run towards the preset: its settings, in any order.
     const isSelected = appliedPreset !== null && isSameSettings(settings, appliedPreset.settings)
 
     return (
@@ -38,13 +39,16 @@ export function PresetActions({ settings, appliedPreset, onApply, isDisabled }: 
                 </Tooltip>
             )}
             <Tooltip title="Save as preset">
-                <Button
-                    type="text"
-                    icon={<SaveOutlined />}
-                    aria-label="Save as preset"
-                    disabled={isDisabled}
-                    onClick={() => setIsSaveOpen(true)}
-                />
+                {/* A disabled button takes no pointer events, so the wrapper carries the tooltip during a run. */}
+                <span className="d-inline-flex">
+                    <Button
+                        type="text"
+                        icon={<SaveOutlined />}
+                        aria-label="Save as preset"
+                        disabled={isDisabled}
+                        onClick={() => setIsSaveOpen(true)}
+                    />
+                </span>
             </Tooltip>
             <ApplyPresetPopover onApply={onApply} isDisabled={isDisabled} />
             <PresetModal
@@ -52,6 +56,7 @@ export function PresetActions({ settings, appliedPreset, onApply, isDisabled }: 
                 initialSettings={settings}
                 title="Save as preset"
                 onClose={() => setIsSaveOpen(false)}
+                onSaved={onSaved}
             />
         </div>
     )

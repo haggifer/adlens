@@ -59,6 +59,7 @@ export function AdWorkspace() {
     const [source, setSource] = useState<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
+    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
 
     // Asked on load, not only once a video is chosen: an API that can't answer can't run an analysis, so the page says
     // so before anyone uploads or picks settings. A run already under way keeps its page.
@@ -108,10 +109,12 @@ export function AdWorkspace() {
                 <div className={styles.right}>
                     {source ? (
                         // A key per source, so no run error carries over to the next video; the settings do, through
-                        // the address.
+                        // the address, and so does the preset applied to them.
                         <AnalysisSettings
                             key={source.kind === 'sample' ? `sample-${source.sample.id}` : source.url}
                             source={source}
+                            appliedPresetId={appliedPresetId}
+                            onAppliedPresetChange={setAppliedPresetId}
                             onRunningChange={setIsRunning}
                         />
                     ) : (

@@ -1,7 +1,7 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, createSampleJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { getQuota } from '@/api/me'
-import { listPresets } from '@/api/presets'
+import { createPreset, listPresets } from '@/api/presets'
 import { authClient, signIn } from '@/auth/authClient'
 import { refreshSession } from '@/auth/session'
 import type { AuthContextValue } from '@/auth/AuthContext'
@@ -25,6 +25,7 @@ import {
     type UploadTarget,
     VideoMimeType,
 } from 'adlens-shared'
+import { useState } from 'react'
 import { AnalysisSettings } from './AnalysisSettings'
 import { getPlatformPlacements, withPlatformPlacements } from './platform-placements'
 import type { AnalysisSource } from './types'
@@ -54,7 +55,7 @@ jest.mock('@/api/jobs', () => ({
     startAnalysis: jest.fn(),
 }))
 jest.mock('@/api/me', () => ({ getQuota: jest.fn() }))
-jest.mock('@/api/presets', () => ({ listPresets: jest.fn() }))
+jest.mock('@/api/presets', () => ({ listPresets: jest.fn(), createPreset: jest.fn() }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => mockUseQuota() }))
 jest.mock('@/storage/upload', () => ({ uploadToSignedUrl: jest.fn() }))
 // Turnstile's widget can't run in jsdom; the stand-in hands out whatever mockGetToken resolves with.
@@ -114,10 +115,23 @@ const DEFAULT_PRESET: Preset = buildPreset({
     isDefault: true,
 })
 
+// Holds the applied preset the way the workspace does, across the panel's remounts.
+const Panel = ({ source }: { source: AnalysisSource }) => {
+    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
+
+    return (
+        <AnalysisSettings
+            source={source}
+            appliedPresetId={appliedPresetId}
+            onAppliedPresetChange={setAppliedPresetId}
+        />
+    )
+}
+
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)
 
-    return renderWithProviders(<AnalysisSettings source={source} />)
+    return renderWithProviders(<Panel source={source} />)
 }
 
 const runButton = () => screen.getByRole('button', { name: /run analysis/i })
@@ -129,7 +143,8 @@ const run = async (user: UserEvent) => {
     await user.click(runButton())
 }
 
-const getSelectedIcon = (preset: Preset) => screen.queryByRole('img', { name: `Preset: ${preset.name}` })
+// Label queries: once the preset modal's styles have loaded, role queries resolve computed styles for seconds.
+const getSelectedIcon = (preset: Preset) => screen.queryByLabelText(`Preset: ${preset.name}`)
 
 const getMarketsSelect = () => screen.getAllByRole('combobox')[2]
 
@@ -145,7 +160,7 @@ const toggleOption = async (user: UserEvent, select: HTMLElement, label: string)
 
 // The popover preselects the last used preset.
 const applyLastUsedPreset = async (user: UserEvent) => {
-    const applyPreset = screen.getByRole('button', { name: 'Apply a preset' })
+    const applyPreset = screen.getByLabelText('Apply a preset')
 
     await waitFor(() => expect(applyPreset).toBeEnabled())
     await user.click(applyPreset)
@@ -180,7 +195,7 @@ describe('AnalysisSettings', () => {
             // The run creates a new anonymous user, whose queries the pre-run user id wouldn't match.
             queryClient.setQueryData(['quota', 'anon-new'], { used: 0, limit: 3, nextFreeAt: null })
             mockUseAuth.mockReturnValue(signedOutAuth())
-            const { user } = renderWithProviders(<AnalysisSettings source={SAMPLE_SOURCE} />, queryClient)
+            const { user } = renderWithProviders(<Panel source={SAMPLE_SOURCE} />, queryClient)
 
             expect(runButton()).toBeEnabled()
             expect(mockGetToken).not.toHaveBeenCalled()
@@ -587,7 +602,7 @@ describe('AnalysisSettings', () => {
 
         // What following the header's Analyze link (a bare /) does while on the home page.
         window.history.replaceState(null, '', '/')
-        rerender(<AnalysisSettings source={SAMPLE_SOURCE} />)
+        rerender(<Panel source={SAMPLE_SOURCE} />)
 
         await waitFor(() => expect(window.location.search).toContain('platform='))
     })
@@ -717,6 +732,27 @@ describe('AnalysisSettings', () => {
             expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
         })
 
+        it('marks a preset saved from the panel as applied, and runs with it', async () => {
+            const saved = buildPreset({ id: 'preset-3', name: 'Sample Meta', settings: SAMPLE_RUN_SETTINGS })
+
+            jest.mocked(createPreset).mockResolvedValue(saved)
+            const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+            await user.click(screen.getByRole('button', { name: 'Save as preset' }))
+            await user.type(await screen.findByLabelText('Name'), saved.name)
+            jest.mocked(listPresets).mockResolvedValue([PRESET, saved])
+            await user.click(screen.getByRole('button', { name: 'Save' }))
+
+            expect(await screen.findByLabelText(`Preset: ${saved.name}`)).toBeInTheDocument()
+            // The modal's form sits inside the panel's in the component tree; saving mustn't submit the panel's too.
+            expect(createSampleJob).not.toHaveBeenCalled()
+
+            await run(user)
+
+            await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
+            expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: saved.id }))
+        })
+
         it('sends no preset when none was applied', async () => {
             const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
 
@@ -732,7 +768,7 @@ describe('AnalysisSettings', () => {
             it('applies to an uploaded video whose address carries no settings, once the presets load', async () => {
                 const { user } = renderSettings(memberAuth(), FILE_SOURCE)
 
-                expect(await screen.findByRole('img', { name: `Preset: ${DEFAULT_PRESET.name}` })).toBeInTheDocument()
+                expect(await screen.findByLabelText(`Preset: ${DEFAULT_PRESET.name}`)).toBeInTheDocument()
                 expect(window.location.search).toContain(`market=${Market.US}`)
 
                 await run(user)
@@ -747,7 +783,7 @@ describe('AnalysisSettings', () => {
                 window.history.replaceState(null, '', `/?market=${Market.EU}`)
                 renderSettings(memberAuth(), FILE_SOURCE)
 
-                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+                await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
 
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
                 expect(screen.getByTitle(MARKET_LABELS[Market.EU])).toBeInTheDocument()
@@ -757,7 +793,7 @@ describe('AnalysisSettings', () => {
             it('leaves a sample its own settings', async () => {
                 renderSettings(memberAuth(), SAMPLE_SOURCE)
 
-                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+                await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
 
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
                 expect(window.location.search).not.toContain(`platform=${Platform.TikTok}`)
@@ -772,9 +808,27 @@ describe('AnalysisSettings', () => {
                 await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.EU])
                 await act(async () => loadPresets([PRESET, DEFAULT_PRESET]))
 
-                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+                await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
                 expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
                 expect(window.location.search).toContain(`market=${Market.EU}`)
+                expect(window.location.search).not.toContain(`market=${Market.US}`)
+            })
+
+            it('leaves the settings of a run started before the presets loaded', async () => {
+                let loadPresets!: (presets: Preset[]) => void
+
+                jest.mocked(listPresets).mockReturnValueOnce(new Promise((resolve) => (loadPresets = resolve)))
+                const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+                await run(user)
+                await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`))
+                await act(async () => loadPresets([PRESET, DEFAULT_PRESET]))
+                // Apply's tooltip turns from "No presets yet" once the panel has the presets.
+                await user.hover(screen.getByLabelText('Apply a preset').parentElement!)
+                await screen.findByText('Apply a preset')
+
+                expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: undefined }))
+                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
                 expect(window.location.search).not.toContain(`market=${Market.US}`)
             })
         })

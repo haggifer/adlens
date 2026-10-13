@@ -69,11 +69,14 @@ const getQuotaRefusal = (isEmailConfirmed: boolean, isAnonymous: boolean): Reque
 
 interface IProps {
     source: AnalysisSource
+    // Held by the workspace, since this panel remounts for each video and the applied preset carries over to the next.
+    appliedPresetId: string | null
+    onAppliedPresetChange: (presetId: string | null) => void
     // True from Run until the run fails; a run that succeeds stays locked while the page navigates away.
     onRunningChange?: (isRunning: boolean) => void
 }
 
-export function AnalysisSettings({ source, onRunningChange }: IProps) {
+export function AnalysisSettings({ source, appliedPresetId, onAppliedPresetChange, onRunningChange }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -88,8 +91,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
     const [defaultValues] = useState(() => getDefaultValues(source))
-    const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
-    // Set once the visitor picks settings or the default preset had its one chance, whichever comes first.
+    // Set once the visitor picks settings or saves a preset, or the default preset had its one chance.
     const isDefaultSettled = useRef(false)
     const { control, handleSubmit, setValue } = useForm<AnalysisSettingsInput, unknown, AnalysisSettingsValues>({
         resolver: zodResolver(analysisSettingsSchema),
@@ -103,7 +105,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
-    // Settings the address carries win over the default preset, and a sample keeps its own (spec D20).
+    // Settings the address carries win over the default preset, and a sample keeps its own.
     const isDefaultPresetAllowed = source.kind === 'file' && isSameSettings(defaultValues, DEFAULT_VALUES)
     const isPresetsLoaded = Boolean(user) && !isLoadingPresets
     const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
@@ -117,7 +119,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     }
 
     const startRun = async (settings: AnalysisSettingsValues, challengeToken?: string): Promise<string> => {
-        // A preset deleted since it was applied still goes out; the API counts nothing for it (spec D4).
+        // A preset deleted since it was applied still goes out; the API counts nothing for it.
         const presetId = appliedPresetId ?? undefined
 
         if (source.kind === 'sample') {
@@ -191,7 +193,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
             void queryClient.invalidateQueries({ queryKey: ['quota'] })
             void queryClient.invalidateQueries({ queryKey: ['admission'] })
             void queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            // The server may have counted the run for the applied preset (spec D4).
+            // The server may have counted the run towards the applied preset.
             void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] })
         },
         onError: (error) => {
@@ -235,7 +237,13 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // A preset saved under an older ruleset may name values that are gone; they drop, as from an outdated address.
     const handleApplyPreset = (preset: Preset) => {
         handleSettingsChange(toKnownSettings(preset.settings))
-        setAppliedPresetId(preset.id)
+        onAppliedPresetChange(preset.id)
+    }
+
+    // The preset was saved from the panel's settings, so it is the one they now run with.
+    const handlePresetSaved = (preset: Preset) => {
+        isDefaultSettled.current = true
+        onAppliedPresetChange(preset.id)
     }
 
     const settleDefaultPreset = useEffectEvent(() => {
@@ -245,7 +253,9 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
 
         isDefaultSettled.current = true
 
-        if (defaultPreset && isDefaultPresetAllowed) {
+        // Once Run was pressed, a late default would change the fields under the run, or after it the settings it ran
+        // with; a preset carried over from the previous video stays.
+        if (defaultPreset && isDefaultPresetAllowed && !appliedPresetId && run.isIdle) {
             handleApplyPreset(defaultPreset)
         }
     })
@@ -320,7 +330,6 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // first load counts, so a default set later (in another tab, say) never replaces settings mid-session.
     useEffect(() => {
         if (isPresetsLoaded) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- applies server data once, guarded by a ref
             settleDefaultPreset()
         }
     }, [isPresetsLoaded])
@@ -333,6 +342,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
                     settings={values}
                     appliedPreset={appliedPreset}
                     onApply={handleApplyPreset}
+                    onSaved={handlePresetSaved}
                     isDisabled={isRunning}
                 />
             </div>

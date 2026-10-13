@@ -37,7 +37,13 @@ interface RenderOptions {
 
 const renderActions = ({ settings = SETTINGS, appliedPreset = null, isDisabled }: RenderOptions = {}) =>
     renderWithProviders(
-        <PresetActions settings={settings} appliedPreset={appliedPreset} onApply={jest.fn()} isDisabled={isDisabled} />,
+        <PresetActions
+            settings={settings}
+            appliedPreset={appliedPreset}
+            onApply={jest.fn()}
+            onSaved={jest.fn()}
+            isDisabled={isDisabled}
+        />,
     )
 
 const getSaveButton = () => screen.getByRole('button', { name: 'Save as preset' })
@@ -104,12 +110,17 @@ describe('PresetActions', () => {
         expect(within(dialog).getByTitle(MARKET_LABELS[Market.US])).toBeInTheDocument()
     })
 
-    it('disables Save and Apply while the analysis runs', async () => {
-        renderActions({ isDisabled: true })
+    it('disables Save and Apply while the analysis runs, still naming Save in its tooltip', async () => {
+        const { user } = renderActions({ isDisabled: true })
 
         await waitFor(() => expect(listPresets).toHaveBeenCalled())
 
         expect(getSaveButton()).toBeDisabled()
         expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeDisabled()
+
+        // The disabled button takes no pointer events, so its tooltip shows from the wrapper around it.
+        await user.hover(getSaveButton().parentElement as HTMLElement)
+
+        expect(await screen.findByText('Save as preset')).toBeInTheDocument()
     })
 })
