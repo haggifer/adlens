@@ -151,10 +151,9 @@ describe('MobileMenu', () => {
             expect(confirm.compareDocumentPosition(quota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
         })
 
-        it('shows the name, email, count, Confirm email and Sign Out, but no account page', async () => {
+        it('shows the email, count, Confirm email and Sign Out, but no account page', async () => {
             const { menu } = await openMenu(unconfirmedAuth())
 
-            expect(menu.getByText('Ann')).toBeInTheDocument()
             expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
             expect(menu.getByText('2/3 analyses left')).toBeInTheDocument()
             expect(menu.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
@@ -184,19 +183,11 @@ describe('MobileMenu', () => {
             ).toBeInTheDocument()
         })
 
-        it('shows just the email for an account without a name, as sign-up asks for none', async () => {
-            const auth = memberAuth()
-            const { menu } = await openMenu({ ...auth, user: { ...auth.user!, name: '' } })
+        it('shows the email but not the name a Google or GitHub sign-in brought, the account page, and Sign Out', async () => {
+            const { menu } = await openMenu(memberAuth())
 
             expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
             expect(menu.queryByText('Ann')).not.toBeInTheDocument()
-        })
-
-        it('shows the name, email and account page, and Sign Out', async () => {
-            const { menu } = await openMenu(memberAuth())
-
-            expect(menu.getByText('Ann')).toBeInTheDocument()
-            expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
             expect(menu.getByRole('link', { name: /Account/ })).toBeInTheDocument()
             expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
             expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
