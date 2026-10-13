@@ -21,12 +21,17 @@ const getApplyPresetButton = () => screen.getByRole('button', { name: 'Apply a p
 
 const getApplyButton = () => screen.getByRole('button', { name: 'Apply' })
 
-const renderPopover = (presets: Preset[], isDisabled?: boolean) => {
+const renderPopover = (presets: Preset[], isDisabled?: boolean, selectedPresetId: string | null = null) => {
     const onApply = jest.fn()
 
     jest.mocked(listPresets).mockResolvedValue(presets)
 
-    return { ...renderWithProviders(<ApplyPresetPopover onApply={onApply} isDisabled={isDisabled} />), onApply }
+    return {
+        ...renderWithProviders(
+            <ApplyPresetPopover onApply={onApply} isDisabled={isDisabled} selectedPresetId={selectedPresetId} />,
+        ),
+        onApply,
+    }
 }
 
 const waitForPresets = () => waitFor(() => expect(getApplyPresetButton()).toBeEnabled())
@@ -122,5 +127,29 @@ describe('ApplyPresetPopover', () => {
         await user.click(getApplyButton())
 
         expect(onApply).toHaveBeenCalledWith(unusedOther)
+    })
+
+    it('disables the preset already applied to the settings, and says so on hover', async () => {
+        const { user } = renderPopover([LAST_USED, OTHER], false, OTHER.id)
+
+        await openPopover(user)
+        await user.click(screen.getByRole('combobox'))
+
+        const applied = (await screen.findByText(OTHER.name)).closest('.ant-select-item-option') as HTMLElement
+
+        expect(applied).toHaveClass('ant-select-item-option-disabled')
+
+        await user.hover(screen.getByText(OTHER.name))
+
+        expect(await screen.findByText('Already applied')).toBeInTheDocument()
+    })
+
+    it('preselects nothing when the last used preset is the one already applied', async () => {
+        const { user } = renderPopover([LAST_USED, OTHER], false, LAST_USED.id)
+
+        const apply = await openPopover(user)
+
+        expect(apply).toBeDisabled()
+        expect(screen.queryByTitle(LAST_USED.name)).not.toBeInTheDocument()
     })
 })

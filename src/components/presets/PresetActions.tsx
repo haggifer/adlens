@@ -50,7 +50,11 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
                     />
                 </span>
             </Tooltip>
-            <ApplyPresetPopover onApply={onApply} isDisabled={isDisabled} />
+            <ApplyPresetPopover
+                onApply={onApply}
+                selectedPresetId={isSelected ? appliedPreset.id : null}
+                isDisabled={isDisabled}
+            />
             <PresetModal
                 isOpen={isSaveOpen}
                 initialSettings={settings}
