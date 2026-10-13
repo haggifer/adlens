@@ -20,6 +20,8 @@ jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, se
 
 const QUOTA: Quota = { used: 1, limit: 3, nextFreeAt: null }
 
+const PAGE_HREFS = ['/', '/history', '/presets', '/demo', '/account']
+
 const openMenu = async (auth: AuthContextValue) => {
     mockUseAuth.mockReturnValue(auth)
 
@@ -126,6 +128,7 @@ describe('MobileMenu', () => {
             expect(menu.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
             expect(menu.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
             expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
+            expect(menu.getByRole('link', { name: /Presets/ })).toHaveAttribute('href', '/presets')
             expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
             expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()
             expect(menu.queryByText(/@/)).not.toBeInTheDocument()
@@ -219,6 +222,12 @@ describe('MobileMenu', () => {
             consoleError.mockRestore()
         })
 
+        it('lists the pages Analyze, History, Presets, Examples, Account', async () => {
+            const { menu } = await openMenu(memberAuth())
+
+            expect(menu.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(PAGE_HREFS)
+        })
+
         it('opens the contact form', async () => {
             const { user, menu } = await openMenu(memberAuth())
 
@@ -234,6 +243,7 @@ describe('MobileMenu', () => {
         expect(menu.getByRole('link', { name: /Analyze/ })).toBeInTheDocument()
         expect(menu.getByRole('link', { name: /Examples/ })).toHaveAttribute('href', '/demo')
         expect(menu.queryByRole('link', { name: /History/ })).not.toBeInTheDocument()
+        expect(menu.queryByRole('link', { name: /Presets/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()
     })

@@ -36,7 +36,7 @@ describe('Header', () => {
         expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
     })
 
-    it('orders the navigation Analyze, History, Examples', () => {
+    it('orders the navigation Analyze, History, Presets, Examples', () => {
         renderHeader(memberAuth(), QUOTA)
 
         const nav = screen.getByRole('navigation', { name: 'Main' })
@@ -45,7 +45,7 @@ describe('Header', () => {
             within(nav)
                 .getAllByRole('link')
                 .map((link) => link.textContent),
-        ).toEqual(['Analyze', 'History', 'Examples'])
+        ).toEqual(['Analyze', 'History', 'Presets', 'Examples'])
     })
 
     it('marks the current page in the navigation', () => {
@@ -56,13 +56,14 @@ describe('Header', () => {
     })
 
     // A quota is given even here, so the count is hidden by the sign-in check, not by a missing quota.
-    it('shows a signed-out visitor Sign In and the public pages: no History and no count', () => {
+    it('shows a signed-out visitor Sign In and the public pages: no History, no Presets and no count', () => {
         renderHeader(signedOutAuth(), QUOTA)
 
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Analyze' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute('href', '/demo')
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Presets' })).not.toBeInTheDocument()
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
@@ -73,6 +74,12 @@ describe('Header', () => {
         expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
+    })
+
+    it('links Presets for an anonymous session too', () => {
+        renderHeader(anonymousAuth())
+
+        expect(screen.getByRole('link', { name: 'Presets' })).toHaveAttribute('href', '/presets')
     })
 
     it('offers an account whose email isn’t confirmed a Confirm email button instead of the account menu', () => {

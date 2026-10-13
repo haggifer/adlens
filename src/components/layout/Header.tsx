@@ -16,10 +16,11 @@ import { useStyles } from './styles'
 // Focus too, so a keyboard reaches the reset date the label's tooltip holds.
 const QUOTA_TOOLTIP_TRIGGER: TooltipProps['trigger'] = ['hover', 'focus']
 
-// History lists a session's own analyses; the other pages are for anyone.
+// History and Presets list a session's own analyses and presets; the other pages are for anyone.
 const NAV_LINKS = [
     { href: '/', label: 'Analyze', isSessionOnly: false },
     { href: '/history', label: 'History', isSessionOnly: true },
+    { href: '/presets', label: 'Presets', isSessionOnly: true },
     { href: '/demo', label: 'Examples', isSessionOnly: false },
 ]
 
