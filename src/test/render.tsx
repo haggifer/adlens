@@ -24,5 +24,7 @@ export const renderWithProviders = (
         </QueryClientProvider>
     )
 
-    return { user: userEvent.setup(), queryClient, ...render<typeof queries>(ui, { wrapper }) }
+    // user-event's pointer-events check reads computed styles up the tree on every click and keystroke, which antd's
+    // injected CSS makes slow in jsdom (a test that opens a confirm took twice as long).
+    return { user: userEvent.setup({ pointerEventsCheck: 0 }), queryClient, ...render<typeof queries>(ui, { wrapper }) }
 }
