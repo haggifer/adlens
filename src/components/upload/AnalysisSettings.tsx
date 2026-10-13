@@ -10,7 +10,6 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useAdmission } from '@/hooks/useAdmission'
 import { useQuota } from '@/hooks/useQuota'
-import { formatPlacementLabel, MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { uploadToSignedUrl } from '@/storage/upload'
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,28 +19,17 @@ import {
     analysisSettingsSchema,
     type AnalysisSettings as AnalysisSettingsValues,
     type ApiErrorCode,
-    Market,
-    Placement,
-    Platform,
     RequestErrorCode,
 } from 'adlens-shared'
-import { Alert, Button, Progress, Select } from 'antd'
+import { Alert, Button, Progress } from 'antd'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
-import {
-    getPlatformPlacements,
-    toPlacementsForPlatforms,
-    toPlatformsForPlacements,
-    withPlatformPlacements,
-} from './platform-placements'
+import { useForm, useWatch } from 'react-hook-form'
+import { withPlatformPlacements } from './platform-placements'
+import { SettingsFields } from './SettingsFields'
 import { readSettingsParams, writeSettingsToUrl } from './settings-url'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
-
-const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))
-
-const MARKET_OPTIONS = Object.values(Market).map((value) => ({ value, label: MARKET_LABELS[value] }))
 
 const DEFAULT_VALUES: AnalysisSettingsInput = {
     platforms: [],
@@ -64,12 +52,6 @@ const getDefaultValues = (source: AnalysisSource): AnalysisSettingsInput => {
         placements: withPlatformPlacements(settings.platforms, settings.placements),
     }
 }
-
-const getPlacementOptions = (platforms: Platform[]) =>
-    platforms.map((platform) => ({
-        label: PLATFORM_LABELS[platform],
-        options: getPlatformPlacements(platform).map((value) => ({ value, label: formatPlacementLabel(value) })),
-    }))
 
 // What a spent quota means the API would refuse: an account's week is used up, while an anonymous session or an
 // unconfirmed account had a single analysis and needs an account or a confirmed email for more.
@@ -101,11 +83,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // When the API last refused a run: an admission answer from then on reflects that refusal.
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
-    const { control, handleSubmit, getValues, setValue } = useForm<
-        AnalysisSettingsInput,
-        unknown,
-        AnalysisSettingsValues
-    >({
+    const { control, handleSubmit, setValue } = useForm<AnalysisSettingsInput, unknown, AnalysisSettingsValues>({
         resolver: zodResolver(analysisSettingsSchema),
         defaultValues: getDefaultValues(source),
     })
@@ -114,7 +92,6 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const { quota } = useQuota()
     const { refusal, updatedAt } = useAdmission()
 
-    const platforms = values.platforms ?? []
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
 
@@ -229,17 +206,10 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const admissionRefusal = refusal !== undefined ? refusal : quotaRefusal
     const blockingRefusal = isRunning ? null : (runRefusal ?? admissionRefusal)
 
-    const handlePlatformsChange = (next: Platform[]) => {
-        setValue(
-            'placements',
-            toPlacementsForPlatforms(getValues('placements') ?? [], getValues('platforms') ?? [], next),
-        )
-        setValue('platforms', next)
-    }
-
-    const handlePlacementsChange = (next: Placement[]) => {
-        setValue('placements', next)
-        setValue('platforms', toPlatformsForPlacements(getValues('platforms') ?? [], next))
+    const handleSettingsChange = (next: AnalysisSettingsInput) => {
+        setValue('platforms', next.platforms, { shouldDirty: true })
+        setValue('placements', next.placements, { shouldDirty: true })
+        setValue('markets', next.markets, { shouldDirty: true })
     }
 
     // A per-call callback, which TanStack skips once this form has unmounted: a visitor who left the page mid-run
@@ -312,67 +282,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>
             <h2 className={styles.panelTitle}>Where will it run?</h2>
             <div className={styles.settingsScroll}>
-                <div className={styles.field}>
-                    <label className={styles.fieldLabel}>Platforms</label>
-                    <Controller
-                        name="platforms"
-                        control={control}
-                        render={({ field }) => (
-                            <Select
-                                value={field.value}
-                                onChange={handlePlatformsChange}
-                                onBlur={field.onBlur}
-                                mode="multiple"
-                                // No search box: the lists are short, and on a phone tapping one opens the keyboard.
-                                showSearch={false}
-                                placeholder="Leave empty to check every platform"
-                                options={PLATFORM_OPTIONS}
-                                disabled={isRunning}
-                                allowClear
-                            />
-                        )}
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label className={styles.fieldLabel}>Placements</label>
-                    <Controller
-                        name="placements"
-                        control={control}
-                        render={({ field }) => (
-                            <Select
-                                value={field.value}
-                                onChange={handlePlacementsChange}
-                                onBlur={field.onBlur}
-                                mode="multiple"
-                                showSearch={false}
-                                // Seen only with no platform chosen, since a chosen platform keeps at least one
-                                // placement. Nothing chosen is checked as everything (the API resolves it in full).
-                                placeholder="Every placement is checked; pick a platform to narrow"
-                                options={getPlacementOptions(platforms)}
-                                disabled={!platforms.length || isRunning}
-                                allowClear
-                            />
-                        )}
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label className={styles.fieldLabel}>Markets</label>
-                    <Controller
-                        name="markets"
-                        control={control}
-                        render={({ field }) => (
-                            <Select
-                                {...field}
-                                mode="multiple"
-                                showSearch={false}
-                                placeholder="Leave empty to check every market"
-                                options={MARKET_OPTIONS}
-                                disabled={isRunning}
-                                allowClear
-                            />
-                        )}
-                    />
-                </div>
+                <SettingsFields value={values} onChange={handleSettingsChange} isDisabled={isRunning} />
             </div>
             <HumanCheck ref={humanCheck} action="start the analysis" />
             {renderNotice()}
