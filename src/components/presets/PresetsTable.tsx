@@ -17,7 +17,7 @@ interface IActionsProps {
     onEdit: (preset: Preset) => void
 }
 
-const PresetActions = ({ preset, onEdit }: IActionsProps) => {
+const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
     const { modal, notification } = App.useApp()
 
     const { deletePreset } = useDeletePreset()
@@ -122,7 +122,7 @@ const getColumns = (
         // Three icon buttons, 36px each below 768px, plus the cell's 16px side padding.
         width: '9rem',
         align: 'right',
-        render: (_, preset) => <PresetActions preset={preset} onEdit={onEdit} />,
+        render: (_, preset) => <PresetRowActions preset={preset} onEdit={onEdit} />,
     },
 ]
 
