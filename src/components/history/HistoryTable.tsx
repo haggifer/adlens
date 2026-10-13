@@ -37,13 +37,15 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
     {
         title: 'Platforms',
         key: 'platforms',
-        width: '25%',
+        // With the Preset column, Video keeps about 200px of a 944px table at 992px and about 300px at 1200px.
+        width: '20%',
         responsive: ['lg'],
         render: (_, job) => formatPlatforms(job.settings.platforms),
     },
     {
         title: 'Preset',
         key: 'preset',
+        width: '9rem',
         responsive: ['lg'],
         ellipsis: true,
         render: (_, job) => job.presetName ?? '—',
