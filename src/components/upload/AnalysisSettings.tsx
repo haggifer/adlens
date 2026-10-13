@@ -2,10 +2,8 @@
 
 import { ApiRequestError, describeRequestError, toApiRequestError } from '@/api/errors'
 import { createJob, createSampleJob, isAdmissionRefusal, startAnalysis } from '@/api/jobs'
-import { authClient, signIn } from '@/auth/authClient'
+import { ensureSession } from '@/auth/anonymous-session'
 import { useAuth } from '@/auth/AuthContext'
-import { isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
-import { refreshSession } from '@/auth/session'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
 import { formatQuotaDate } from '@/components/layout/quota-label'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -40,8 +38,6 @@ import {
 import { readSettingsParams, writeSettingsToUrl } from './settings-url'
 import { useStyles } from './styles'
 import type { AnalysisSource } from './types'
-
-type SessionCheck = 'active' | 'none' | 'unknown'
 
 const PLATFORM_OPTIONS = Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))
 
@@ -83,34 +79,6 @@ const getQuotaRefusal = (isEmailConfirmed: boolean, isAnonymous: boolean): Reque
     }
 
     return isAnonymous ? RequestErrorCode.SignUpRequired : RequestErrorCode.EmailConfirmationRequired
-}
-
-// A `get-session` blip can leave the client's own state momentarily null for an otherwise signed-in member; a fresh
-// fetch confirms there really is no session before signing in anonymously overwrites that member's cookie. Any
-// error, a network failure included, counts as "couldn't tell": only a clean response with no user may proceed.
-const checkSession = async (): Promise<SessionCheck> => {
-    const { data, error } = await runAuthQuery(() => authClient.getSession())
-
-    if (error) {
-        return 'unknown'
-    }
-
-    return data?.user ? 'active' : 'none'
-}
-
-// Visitors get an anonymous session only when they start an analysis, so crawlers and passers-by create no users.
-const startAnonymousSession = async (): Promise<void> => {
-    const error = await runAuthRequest(() => signIn.anonymous())
-
-    if (!error) {
-        return
-    }
-
-    if (isRateLimited(error)) {
-        throw new ApiRequestError(RequestErrorCode.RateLimited)
-    }
-
-    throw new ApiRequestError(isNetworkError(error) ? RequestErrorCode.Unavailable : RequestErrorCode.Internal)
 }
 
 interface IProps {
@@ -203,21 +171,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         }
 
         if (!user) {
-            const sessionCheck = await checkSession()
-
-            if (sessionCheck === 'unknown') {
-                throw new ApiRequestError(RequestErrorCode.Unavailable)
-            }
-
-            if (sessionCheck === 'none') {
-                await startAnonymousSession()
-            }
-
-            // The cookie holds a session this tab's state missed (its first fetch failed, or another tab signed in):
-            // without catching up, the analysis page would ask to sign in.
-            if (sessionCheck === 'active') {
-                refreshSession()
-            }
+            await ensureSession()
         }
 
         try {
