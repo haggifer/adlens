@@ -132,12 +132,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         overflow-wrap: anywhere;
     `,
 
-    drawerUserName: css`
-        color: ${token.colorText};
-        font-size: 1rem;
-        font-weight: 600;
-    `,
-
     drawerUserEmail: css`
         color: ${token.colorTextSecondary};
         font-size: 1rem;
