@@ -5,6 +5,7 @@ import {
     JobStatus,
     type MetadataCheck,
     Platform,
+    type Preset,
     RulePlatform,
     type Sample,
     VideoMimeType,
@@ -17,6 +18,7 @@ export const buildJob = (overrides: Partial<Job> = {}): Job => ({
     status: JobStatus.Analyzed,
     settings: { platforms: [], placements: [], markets: [] },
     file: { name: 'summer-ad.mp4', contentType: VideoMimeType.Mp4, size: 1000 },
+    presetName: null,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
     ...overrides,
@@ -73,5 +75,17 @@ export const buildSample = (overrides: Partial<Sample> = {}): Sample => ({
     },
     contentType: VideoMimeType.Mp4,
     previewUrl: 'https://storage.googleapis.com/bucket/samples/sample-1.mp4?X-Goog-Signature=abc',
+    ...overrides,
+})
+
+export const buildPreset = (overrides: Partial<Preset> = {}): Preset => ({
+    id: 'preset-1',
+    name: 'Stories',
+    settings: { platforms: [Platform.Meta], placements: [], markets: [] },
+    isDefault: false,
+    usageCount: 0,
+    lastUsedAt: null,
+    createdAt: CREATED_AT,
+    updatedAt: CREATED_AT,
     ...overrides,
 })

@@ -5,6 +5,7 @@ import {
     apiErrorSchema,
     JobErrorCode,
     MAX_DURATION_S,
+    MAX_PRESETS,
     MAX_UPLOAD_BYTES,
     RequestErrorCode,
 } from 'adlens-shared'
@@ -37,6 +38,8 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
     [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
+    [RequestErrorCode.PresetNameTaken]: 'A preset with this name already exists.',
+    [RequestErrorCode.PresetLimitReached]: `You can keep up to ${MAX_PRESETS} presets. Delete one to save another.`,
     [RequestErrorCode.Unauthenticated]: 'Please sign in again.',
     [RequestErrorCode.NotFound]: "We couldn't find that analysis.",
     [RequestErrorCode.RateLimited]: 'Too many attempts. Wait a moment and try again.',
@@ -51,6 +54,11 @@ const CONTACT_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
     [RequestErrorCode.ValidationFailed]: 'We couldn’t send this message. Check it, then try again.',
     [RequestErrorCode.RateLimited]: 'Too many messages in the last hour. Please try again later.',
     [RequestErrorCode.UploadIncomplete]: 'An image didn’t finish uploading. Please try again.',
+}
+
+// The shared copy speaks of a missing analysis.
+const PRESET_ERROR_COPY: Partial<Record<ApiErrorCode, string>> = {
+    [RequestErrorCode.NotFound]: 'This preset no longer exists.',
 }
 
 // A failed API call, reduced to its stable code; the message is the copy shown to the user.
@@ -101,4 +109,10 @@ export const describeContactError = (err: unknown): string => {
     const { code, message } = toApiRequestError(err)
 
     return CONTACT_ERROR_COPY[code] ?? message
+}
+
+export const describePresetError = (err: unknown): string => {
+    const { code, message } = toApiRequestError(err)
+
+    return PRESET_ERROR_COPY[code] ?? message
 }

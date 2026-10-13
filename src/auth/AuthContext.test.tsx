@@ -235,13 +235,14 @@ describe('AuthProvider', () => {
             expect(invalidate).not.toHaveBeenCalled()
         })
 
-        it('refreshes the limits and the history when another user takes over the session', () => {
+        it('refreshes the limits, the history and the presets when another user takes over the session', () => {
             const { invalidate, changeSessionTo } = renderChangingSession(ANONYMOUS_SESSION)
 
             changeSessionTo(MEMBER_SESSION)
 
             expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
             expect(invalidate).toHaveBeenCalledWith({ queryKey: ['jobs'] })
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['presets'] })
         })
 
         it('refreshes the limits and whether Run is allowed once the email is confirmed, in this tab or another', () => {

@@ -107,11 +107,12 @@ const createAuthValue = (
 }
 
 // Per-user data is keyed by the user id, but a quota cached for that id still carries the old limits, and an
-// account's history cached earlier in this tab misses what an anonymous session just moved into it.
+// account's history and presets cached earlier in this tab miss what an anonymous session just moved into it.
 const invalidateChangedAccount = (queryClient: QueryClient, previous: SessionAccount, current: SessionAccount) => {
     if (previous.userId !== current.userId) {
         void queryClient.invalidateQueries({ queryKey: ['quota'] })
         void queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        void queryClient.invalidateQueries({ queryKey: ['presets'] })
         return
     }
 

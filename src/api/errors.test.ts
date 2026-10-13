@@ -3,6 +3,7 @@ import {
     describeContactError,
     describeJobError,
     describeJobErrorTitle,
+    describePresetError,
     toApiRequestError,
 } from '@/api/errors'
 import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
@@ -150,6 +151,29 @@ describe('describeContactError', () => {
             'AdLens is briefly unavailable. Please try again.',
         )
         expect(describeContactError(new Error('socket hang up'))).toBe(
+            'Something went wrong on our side. Please try again.',
+        )
+    })
+})
+
+describe('describePresetError', () => {
+    it('says a preset name is taken, the preset limit is reached, or the preset no longer exists', () => {
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.PresetNameTaken))).toBe(
+            'A preset with this name already exists.',
+        )
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.PresetLimitReached))).toBe(
+            'You can keep up to 20 presets. Delete one to save another.',
+        )
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.NotFound))).toBe(
+            'This preset no longer exists.',
+        )
+    })
+
+    it('falls back to the shared copy, and never shows the raw text of an unknown failure', () => {
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.Unavailable))).toBe(
+            'AdLens is briefly unavailable. Please try again.',
+        )
+        expect(describePresetError(new Error('socket hang up'))).toBe(
             'Something went wrong on our side. Please try again.',
         )
     })
