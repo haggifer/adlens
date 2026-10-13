@@ -62,7 +62,9 @@ const PresetActions = ({ preset, onEdit }: IActionsProps) => {
                 <Button
                     type={preset.isDefault ? 'primary' : 'text'}
                     icon={preset.isDefault ? <StarFilled /> : <StarOutlined />}
-                    aria-label={`Make ${preset.name} the default`}
+                    aria-label={
+                        preset.isDefault ? `${preset.name} is the default, unset it` : `Make ${preset.name} the default`
+                    }
                     aria-pressed={preset.isDefault}
                     loading={isSetting}
                     onClick={handleToggleDefault}
@@ -117,8 +119,8 @@ const getColumns = (
     {
         title: <span className="visually-hidden">Actions</span>,
         key: 'actions',
-        // Three 32px icon buttons plus the cell's 16px side padding.
-        width: '8rem',
+        // Three icon buttons, 36px each below 768px, plus the cell's 16px side padding.
+        width: '9rem',
         align: 'right',
         render: (_, preset) => <PresetActions preset={preset} onEdit={onEdit} />,
     },

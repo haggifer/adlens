@@ -108,11 +108,16 @@ describe('PresetsTable', () => {
         expect(row.getByRole('button', { name: 'Make Meta US the default' })).toBeInTheDocument()
         expect(row.getByRole('button', { name: 'Edit Meta US' })).toBeInTheDocument()
         expect(row.getByRole('button', { name: 'Delete Meta US' })).toBeInTheDocument()
+        expect(
+            within(rowOf('Launch week')).getByRole('button', { name: 'Launch week is the default, unset it' }),
+        ).toBeInTheDocument()
     })
 
     it('marks the default with a pressed primary button that unsets it', async () => {
         const { user } = renderTable()
-        const button = within(rowOf('Launch week')).getByRole('button', { name: 'Make Launch week the default' })
+        const button = within(rowOf('Launch week')).getByRole('button', {
+            name: 'Launch week is the default, unset it',
+        })
 
         expect(button).toHaveAttribute('aria-pressed', 'true')
         expect(button).toHaveClass('ant-btn-primary')
