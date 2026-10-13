@@ -7,6 +7,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { HumanCheck, type HumanCheckHandle } from '@/components/human-check/HumanCheck'
 import { formatQuotaDate } from '@/components/layout/quota-label'
 import { PresetActions } from '@/components/presets/PresetActions'
+import { isSameSettings } from '@/components/presets/same-settings'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useAdmission } from '@/hooks/useAdmission'
@@ -26,7 +27,7 @@ import {
 } from 'adlens-shared'
 import { Alert, Button, Progress } from 'antd'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { withPlatformPlacements } from './platform-placements'
 import { SettingsFields } from './SettingsFields'
@@ -86,19 +87,25 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // When the API last refused a run: an admission answer from then on reflects that refusal.
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
+    const [defaultValues] = useState(() => getDefaultValues(source))
     const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
+    // Set once the visitor picks settings or the default preset had its one chance, whichever comes first.
+    const isDefaultSettled = useRef(false)
     const { control, handleSubmit, setValue } = useForm<AnalysisSettingsInput, unknown, AnalysisSettingsValues>({
         resolver: zodResolver(analysisSettingsSchema),
-        defaultValues: getDefaultValues(source),
+        defaultValues,
     })
     const values = useWatch({ control })
 
     const { quota } = useQuota()
     const { refusal, updatedAt } = useAdmission()
-    const { presets } = usePresets()
+    const { presets, defaultPreset, isLoading: isLoadingPresets } = usePresets()
 
     // A null limit is an unlimited (admin) account.
     const hasQuotaLeft = !quota || quota.limit === null || quota.used < quota.limit
+    // Settings the address carries win over the default preset, and a sample keeps its own (spec D20).
+    const isDefaultPresetAllowed = source.kind === 'file' && isSameSettings(defaultValues, DEFAULT_VALUES)
+    const isPresetsLoaded = Boolean(user) && !isLoadingPresets
     const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
 
     const getChallengeToken = async (): Promise<string> => {
@@ -219,6 +226,7 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     const blockingRefusal = isRunning ? null : (runRefusal ?? admissionRefusal)
 
     const handleSettingsChange = (next: AnalysisSettingsInput) => {
+        isDefaultSettled.current = true
         setValue('platforms', next.platforms, { shouldDirty: true })
         setValue('placements', next.placements, { shouldDirty: true })
         setValue('markets', next.markets, { shouldDirty: true })
@@ -229,6 +237,18 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
         handleSettingsChange(toKnownSettings(preset.settings))
         setAppliedPresetId(preset.id)
     }
+
+    const settleDefaultPreset = useEffectEvent(() => {
+        if (isDefaultSettled.current) {
+            return
+        }
+
+        isDefaultSettled.current = true
+
+        if (defaultPreset && isDefaultPresetAllowed) {
+            handleApplyPreset(defaultPreset)
+        }
+    })
 
     // A per-call callback, which TanStack skips once this form has unmounted: a visitor who left the page mid-run
     // isn't pulled back to the analysis, though the run (already charged) still finishes.
@@ -295,6 +315,15 @@ export function AnalysisSettings({ source, onRunningChange }: IProps) {
     // The address holds the applied settings, so a reload or the next video keeps them. A navigation that drops them
     // while the form keeps them (Analyze in the header links to a bare /) writes them back.
     useEffect(() => writeSettingsToUrl(values), [values, searchParams])
+
+    // The presets load after the panel mounts, so the default preset can only be applied once they arrive; only that
+    // first load counts, so a default set later (in another tab, say) never replaces settings mid-session.
+    useEffect(() => {
+        if (isPresetsLoaded) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- applies server data once, guarded by a ref
+            settleDefaultPreset()
+        }
+    }, [isPresetsLoaded])
 
     return (
         <form className={cx(styles.panel, styles.settingsPanel)} onSubmit={handleSubmit(onSubmit)}>

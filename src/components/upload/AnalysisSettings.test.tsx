@@ -103,6 +103,17 @@ const PRESET: Preset = buildPreset({
     lastUsedAt: '2026-10-10T09:00:00.000Z',
 })
 
+const DEFAULT_PRESET: Preset = buildPreset({
+    id: 'preset-2',
+    name: 'TikTok US',
+    settings: {
+        platforms: [Platform.TikTok],
+        placements: getPlatformPlacements(Platform.TikTok),
+        markets: [Market.US],
+    },
+    isDefault: true,
+})
+
 const renderSettings = (auth: AuthContextValue, source: AnalysisSource = SAMPLE_SOURCE) => {
     mockUseAuth.mockReturnValue(auth)
 
@@ -713,6 +724,59 @@ describe('AnalysisSettings', () => {
 
             await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
             expect(jest.mocked(createSampleJob).mock.calls[0][0].presetId).toBeUndefined()
+        })
+
+        describe('the default preset', () => {
+            beforeEach(() => jest.mocked(listPresets).mockResolvedValue([PRESET, DEFAULT_PRESET]))
+
+            it('applies to an uploaded video whose address carries no settings, once the presets load', async () => {
+                const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+                expect(await screen.findByRole('img', { name: `Preset: ${DEFAULT_PRESET.name}` })).toBeInTheDocument()
+                expect(window.location.search).toContain(`market=${Market.US}`)
+
+                await run(user)
+
+                await waitFor(() => expect(createJob).toHaveBeenCalled())
+                expect(createJob).toHaveBeenCalledWith(
+                    expect.objectContaining({ settings: DEFAULT_PRESET.settings, presetId: DEFAULT_PRESET.id }),
+                )
+            })
+
+            it('leaves the settings the address carries', async () => {
+                window.history.replaceState(null, '', `/?market=${Market.EU}`)
+                renderSettings(memberAuth(), FILE_SOURCE)
+
+                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+
+                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
+                expect(screen.getByTitle(MARKET_LABELS[Market.EU])).toBeInTheDocument()
+                expect(screen.queryByTitle(MARKET_LABELS[Market.US])).not.toBeInTheDocument()
+            })
+
+            it('leaves a sample its own settings', async () => {
+                renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+
+                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
+                expect(window.location.search).not.toContain(`platform=${Platform.TikTok}`)
+            })
+
+            it('leaves the settings a visitor chose before the presets loaded', async () => {
+                let loadPresets!: (presets: Preset[]) => void
+
+                jest.mocked(listPresets).mockReturnValueOnce(new Promise((resolve) => (loadPresets = resolve)))
+                const { user } = renderSettings(memberAuth(), FILE_SOURCE)
+
+                await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.EU])
+                await act(async () => loadPresets([PRESET, DEFAULT_PRESET]))
+
+                await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+                expect(getSelectedIcon(DEFAULT_PRESET)).not.toBeInTheDocument()
+                expect(window.location.search).toContain(`market=${Market.EU}`)
+                expect(window.location.search).not.toContain(`market=${Market.US}`)
+            })
         })
     })
 })
