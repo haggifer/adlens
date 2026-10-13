@@ -2,6 +2,7 @@ import { ApiRequestError, describePresetError } from '@/api/errors'
 import { createPreset, listPresets, updatePreset } from '@/api/presets'
 import { ensureSession } from '@/auth/anonymous-session'
 import { useAuth } from '@/auth/AuthContext'
+import { PRESETS_KEY } from '@/hooks/usePresets'
 import { formatPlacementLabel, MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { memberAuth, signedOutAuth } from '@/test/auth'
 import { buildPreset } from '@/test/fixtures'
@@ -210,6 +211,20 @@ describe('PresetModal', () => {
             overwrite: true,
         })
         expect(jest.mocked(createPreset).mock.lastCall?.[0]).not.toHaveProperty('isDefault')
+    })
+
+    it('shows the copy and refreshes the list when the edited preset was deleted elsewhere', async () => {
+        const error = new ApiRequestError(RequestErrorCode.NotFound)
+        jest.mocked(updatePreset).mockRejectedValueOnce(error)
+        const { user, onClose, queryClient } = renderModal({ preset: EDITED })
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+        await waitForPresets()
+
+        await clickSave(user)
+
+        expect(await screen.findByText(describePresetError(error))).toBeInTheDocument()
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: [PRESETS_KEY] })
+        expect(onClose).not.toHaveBeenCalled()
     })
 
     it('shows the limit error in the modal', async () => {

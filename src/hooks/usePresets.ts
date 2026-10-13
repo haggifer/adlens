@@ -1,8 +1,8 @@
-import type { ApiRequestError } from '@/api/errors'
+import { type ApiRequestError, toApiRequestError } from '@/api/errors'
 import { listPresets } from '@/api/presets'
 import { useAuth } from '@/auth/AuthContext'
-import { useQuery } from '@tanstack/react-query'
-import type { Preset } from 'adlens-shared'
+import { type QueryClient, useQuery } from '@tanstack/react-query'
+import { type Preset, RequestErrorCode } from 'adlens-shared'
 import { useMemo } from 'react'
 
 export interface UsePresetsResult {
@@ -26,6 +26,13 @@ const isUsedAfter = (preset: Preset, other: Preset | null): boolean =>
 
 const findLastUsed = (presets: Preset[]): Preset | null =>
     presets.reduce<Preset | null>((last, preset) => (isUsedAfter(preset, last) ? preset : last), null)
+
+// A preset deleted in another tab answers NOT_FOUND; refetching drops its stale row.
+export const refreshPresetsWhenGone = (queryClient: QueryClient, error: unknown) => {
+    if (toApiRequestError(error).code === RequestErrorCode.NotFound) {
+        void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] })
+    }
+}
 
 export function usePresets(): UsePresetsResult {
     const { user } = useAuth()

@@ -1,5 +1,5 @@
 import { setDefaultPreset } from '@/api/presets'
-import { PRESETS_KEY } from '@/hooks/usePresets'
+import { PRESETS_KEY, refreshPresetsWhenGone } from '@/hooks/usePresets'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export interface UseSetDefaultPresetResult {
@@ -14,6 +14,7 @@ export function useSetDefaultPreset(): UseSetDefaultPresetResult {
     const { mutateAsync, isPending } = useMutation({
         mutationFn: setDefaultPreset,
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
+        onError: (error) => refreshPresetsWhenGone(queryClient, error),
     })
 
     return { setDefaultPreset: mutateAsync, isSetting: isPending }

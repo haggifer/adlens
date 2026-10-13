@@ -1,5 +1,5 @@
 import { deletePreset } from '@/api/presets'
-import { PRESETS_KEY } from '@/hooks/usePresets'
+import { PRESETS_KEY, refreshPresetsWhenGone } from '@/hooks/usePresets'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export interface UseDeletePresetResult {
@@ -13,6 +13,7 @@ export function useDeletePreset(): UseDeletePresetResult {
     const { mutateAsync, isPending } = useMutation({
         mutationFn: deletePreset,
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
+        onError: (error) => refreshPresetsWhenGone(queryClient, error),
     })
 
     return { deletePreset: mutateAsync, isDeleting: isPending }

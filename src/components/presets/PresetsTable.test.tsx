@@ -1,11 +1,12 @@
-import { ApiRequestError, describePresetError } from '@/api/errors'
+import { ApiRequestError, describePresetError, describeRequestError } from '@/api/errors'
 import { deletePreset, listPresets, setDefaultPreset } from '@/api/presets'
 import { useAuth } from '@/auth/AuthContext'
+import { PRESETS_KEY } from '@/hooks/usePresets'
 import { memberAuth } from '@/test/auth'
 import { buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { StarFilled, StarOutlined } from '@ant-design/icons'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { type Preset, RequestErrorCode } from 'adlens-shared'
 import type { ReactElement } from 'react'
 import { PresetsTable } from './PresetsTable'
@@ -161,6 +162,29 @@ describe('PresetsTable', () => {
         expect(await screen.findByText(describePresetError(error))).toBeInTheDocument()
     })
 
+    it('refreshes the list when the preset was deleted elsewhere', async () => {
+        jest.mocked(setDefaultPreset).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.NotFound))
+        jest.spyOn(console, 'error').mockImplementationOnce(() => {})
+        const { user, queryClient } = renderTable()
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+
+        await user.click(within(rowOf('Meta US')).getByRole('button', { name: 'Make Meta US the default' }))
+
+        await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: [PRESETS_KEY] }))
+    })
+
+    it('leaves the list alone when changing the default fails for another reason', async () => {
+        jest.mocked(setDefaultPreset).mockRejectedValueOnce(new ApiRequestError(RequestErrorCode.Unavailable))
+        jest.spyOn(console, 'error').mockImplementationOnce(() => {})
+        const { user, queryClient } = renderTable()
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
+
+        await user.click(within(rowOf('Meta US')).getByRole('button', { name: 'Make Meta US the default' }))
+
+        expect(await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
+        expect(invalidate).not.toHaveBeenCalled()
+    })
+
     it('opens Edit preset filled with the preset', async () => {
         const { user } = renderTable()
         const button = within(rowOf('Meta US')).getByRole('button', { name: 'Edit Meta US' })
@@ -199,12 +223,15 @@ describe('PresetsTable', () => {
 
         jest.mocked(deletePreset).mockRejectedValueOnce(error)
         jest.spyOn(console, 'error').mockImplementationOnce(() => {})
-        const { user } = renderTable()
+        const { user, queryClient } = renderTable()
+        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
         const confirm = await openDeleteConfirm('Meta US')
 
         await user.click(confirm.getByRole('button', { name: 'Delete' }))
 
         expect(await screen.findByText(describePresetError(error))).toBeInTheDocument()
         expect(screen.queryByText('Preset deleted')).not.toBeInTheDocument()
+        // Deleted elsewhere: the refreshed list drops its row.
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: [PRESETS_KEY] })
     })
 })

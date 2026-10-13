@@ -1,5 +1,5 @@
 import { createPreset, updatePreset } from '@/api/presets'
-import { PRESETS_KEY } from '@/hooks/usePresets'
+import { PRESETS_KEY, refreshPresetsWhenGone } from '@/hooks/usePresets'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Preset, SavePresetInput } from 'adlens-shared'
 
@@ -24,6 +24,7 @@ export function useSavePreset(): UseSavePresetResult {
         mutationFn: savePresetRequest,
         // By prefix: the save may have just started an anonymous session, whose id the pre-save user id wouldn't match.
         onSuccess: () => void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
+        onError: (error) => refreshPresetsWhenGone(queryClient, error),
     })
 
     return { savePreset: mutateAsync, isSaving: isPending }
