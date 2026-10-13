@@ -237,13 +237,13 @@ describe('MobileMenu', () => {
         })
     })
 
-    it('shows a signed-out visitor only the public pages', async () => {
+    it('shows a signed-out visitor only the public pages, Presets among them', async () => {
         const { menu } = await openMenu(signedOutAuth())
 
         expect(menu.getByRole('link', { name: /Analyze/ })).toBeInTheDocument()
         expect(menu.getByRole('link', { name: /Examples/ })).toHaveAttribute('href', '/demo')
         expect(menu.queryByRole('link', { name: /History/ })).not.toBeInTheDocument()
-        expect(menu.queryByRole('link', { name: /Presets/ })).not.toBeInTheDocument()
+        expect(menu.getByRole('link', { name: /Presets/ })).toHaveAttribute('href', '/presets')
         expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
         expect(menu.queryByRole('button', { name: /Sign Out/ })).not.toBeInTheDocument()
     })

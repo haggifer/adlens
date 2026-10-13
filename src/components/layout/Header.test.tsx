@@ -56,14 +56,14 @@ describe('Header', () => {
     })
 
     // A quota is given even here, so the count is hidden by the sign-in check, not by a missing quota.
-    it('shows a signed-out visitor Sign In and the public pages: no History, no Presets and no count', () => {
+    it('shows a signed-out visitor Sign In and the public pages: Presets, but no History and no count', () => {
         renderHeader(signedOutAuth(), QUOTA)
 
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Analyze' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Examples' })).toHaveAttribute('href', '/demo')
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
-        expect(screen.queryByRole('link', { name: 'Presets' })).not.toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Presets' })).toHaveAttribute('href', '/presets')
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 

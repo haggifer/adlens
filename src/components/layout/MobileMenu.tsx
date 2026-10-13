@@ -48,7 +48,7 @@ const DRAWER_STYLES = { header: DRAWER_SECTION_STYLE, body: DRAWER_SECTION_STYLE
 const MENU_LINKS: MenuLink[] = [
     { href: '/', label: 'Analyze', icon: <UploadOutlined />, access: 'public' },
     { href: '/history', label: 'History', icon: <HistoryOutlined />, access: 'session' },
-    { href: '/presets', label: 'Presets', icon: <ProfileOutlined />, access: 'session' },
+    { href: '/presets', label: 'Presets', icon: <ProfileOutlined />, access: 'public' },
     { href: '/demo', label: 'Examples', icon: <FileSearchOutlined />, access: 'public' },
     { href: '/account', label: 'Account', icon: <SettingOutlined />, access: 'account' },
 ]
