@@ -29,13 +29,16 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
         <div className="d-flex align-items-center gap-1">
             {isSelected && (
                 <Tooltip title={`Preset: ${appliedPreset.name}`}>
-                    <TagFilled
+                    {/* As tall as the buttons beside it, so all three tooltips open at the same height. */}
+                    <span
                         role="img"
                         aria-label={`Preset: ${appliedPreset.name}`}
                         tabIndex={0}
-                        className="px-2"
+                        className="d-inline-flex align-items-center align-self-stretch px-2"
                         style={{ color: token.colorPrimary, cursor: 'default' }}
-                    />
+                    >
+                        <TagFilled aria-hidden />
+                    </span>
                 </Tooltip>
             )}
             <Tooltip title="Save as preset">
