@@ -17,6 +17,10 @@ export const PRESETS_KEY = 'presets'
 
 const NO_PRESETS: Preset[] = []
 
+// Saving, deleting or running with a preset refreshes the list itself; without this, every component that starts
+// reading it later (the settings panel's actions, once its spinner gives way) would fetch it again.
+const PRESETS_STALE_MS = 60 * 1000
+
 const sortByName = (presets: Preset[]): Preset[] =>
     [...presets].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 
@@ -41,6 +45,7 @@ export function usePresets(): UsePresetsResult {
         queryKey: [PRESETS_KEY, user?.id],
         queryFn: listPresets,
         enabled: Boolean(user),
+        staleTime: PRESETS_STALE_MS,
     })
 
     const presets = useMemo(() => sortByName(data ?? NO_PRESETS), [data])
