@@ -30,7 +30,7 @@ import { useRouter } from 'next/navigation'
 import { useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toKnownSettings } from './known-settings'
-import { withPlatformPlacements } from './platform-placements'
+import { getSampleSettings } from './sample-settings'
 import { SettingsFields } from './SettingsFields'
 import { SettingsPlaceholder } from './SettingsPlaceholder'
 import { useStyles } from './styles'
@@ -43,19 +43,8 @@ const DEFAULT_VALUES: AnalysisSettingsInput = {
 }
 
 // A file takes the settings of the video it replaces; a sample brings the settings it was published with.
-const getDefaultValues = (source: AnalysisSource, carried: AnalysisSettingsInput): AnalysisSettingsInput => {
-    if (source.kind !== 'sample') {
-        return carried
-    }
-
-    const { settings } = source.sample
-
-    return {
-        ...DEFAULT_VALUES,
-        ...settings,
-        placements: withPlatformPlacements(settings.platforms, settings.placements),
-    }
-}
+const getDefaultValues = (source: AnalysisSource, carried: AnalysisSettingsInput): AnalysisSettingsInput =>
+    source.kind === 'sample' ? getSampleSettings(source.sample) : carried
 
 // What a spent quota means the API would refuse: an account's week is used up, while an anonymous session or an
 // unconfirmed account had a single analysis and needs an account or a confirmed email for more.

@@ -7,6 +7,7 @@ import { type AnalysisSettingsInput, RequestErrorCode, type Sample } from 'adlen
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
+import { getSampleSettings } from './sample-settings'
 import { SamplesModal } from './SamplesModal'
 import { SettingsPlaceholder } from './SettingsPlaceholder'
 import { useStyles } from './styles'
@@ -76,8 +77,10 @@ export function AdWorkspace() {
     const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) =>
         replaceSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
 
+    // The sample's settings are what the panel shows now, so they, not the ones from before it, carry to the next file.
     const handleSelectSample = (sample: Sample) => {
         replaceSource({ kind: 'sample', sample })
+        setSettings(getSampleSettings(sample))
         setIsSamplesOpen(false)
     }
 

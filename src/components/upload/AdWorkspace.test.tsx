@@ -1,11 +1,12 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { listPresets } from '@/api/presets'
+import { listSamples } from '@/api/samples'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
-import { buildJob, buildPreset } from '@/test/fixtures'
+import { buildJob, buildPreset, buildSample } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { QueryClient } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
@@ -13,6 +14,7 @@ import type { UserEvent } from '@testing-library/user-event'
 import { Market, Placement, Platform, RequestErrorCode, type UploadTarget, VideoMimeType } from 'adlens-shared'
 import type { ReactNode } from 'react'
 import { AdWorkspace } from './AdWorkspace'
+import { getSampleSettings } from './sample-settings'
 
 const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
@@ -293,6 +295,33 @@ describe('AdWorkspace', () => {
 
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
+    })
+
+    it('gives a file that replaces a sample the sample’s settings, not the ones from before it', async () => {
+        const sample = buildSample()
+
+        jest.mocked(listPresets).mockResolvedValue([PRESET])
+        jest.mocked(listSamples).mockResolvedValue([sample])
+        jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
+        const { user } = renderWorkspace()
+
+        await chooseFile(user, buildFile('launch.mp4'))
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+        await user.click(screen.getByRole('button', { name: 'Apply a preset' }))
+        await user.click(await screen.findByRole('button', { name: 'Apply' }))
+        expect(await screen.findByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
+
+        await user.click(removeButton())
+        await user.click(screen.getByText('Try a sample ad'))
+        await user.click(await screen.findByText(sample.description))
+        await waitFor(() => expect(screen.queryByTitle(MARKET_LABELS[Market.UK])).not.toBeInTheDocument())
+
+        await user.click(removeButton())
+        await chooseFile(user, buildFile('second-cut.mp4'))
+        await user.click(runButton())
+
+        await waitFor(() => expect(createJob).toHaveBeenCalled())
+        expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ settings: getSampleSettings(sample) }))
     })
 
     // The metadata check makes and releases URLs of its own, so each test asks that none is left unreleased.
