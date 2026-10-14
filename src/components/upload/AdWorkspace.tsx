@@ -6,7 +6,7 @@ import { useAdmission } from '@/hooks/useAdmission'
 import { type AnalysisSettingsInput, RequestErrorCode, type Sample } from 'adlens-shared'
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SamplesModal } from './SamplesModal'
 import { SettingsPlaceholder } from './SettingsPlaceholder'
 import { useStyles } from './styles'
@@ -49,6 +49,8 @@ export function AdWorkspace() {
     const { styles } = useStyles()
 
     const [source, setSource] = useState<AnalysisSource | null>(null)
+    // The source a pick finishing later must release: a handler from an earlier render would see a stale one.
+    const sourceRef = useRef<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
     const [settings, setSettings] = useState<AnalysisSettingsInput>(NO_SETTINGS)
@@ -63,21 +65,22 @@ export function AdWorkspace() {
     // Neither the upload, which would vanish again if the retries fail too, nor the notice, which they may lift.
     const isRecovering = admission.isRecovering && !isRunning
 
-    const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
-        releasePreview(source)
-        setSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
+    // The preview URL is what keeps the in-memory copy of a picked video alive, so each replaced one is released.
+    const replaceSource = (next: AnalysisSource | null) => {
+        releasePreview(sourceRef.current)
+        sourceRef.current = next
+        setSource(next)
     }
 
+    const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) =>
+        replaceSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
+
     const handleSelectSample = (sample: Sample) => {
-        releasePreview(source)
-        setSource({ kind: 'sample', sample })
+        replaceSource({ kind: 'sample', sample })
         setIsSamplesOpen(false)
     }
 
-    const handleClearVideo = () => {
-        releasePreview(source)
-        setSource(null)
-    }
+    const handleClearVideo = () => replaceSource(null)
 
     const renderWorkspace = () => {
         if (isUnavailable) {
@@ -119,6 +122,10 @@ export function AdWorkspace() {
             </div>
         )
     }
+
+    // A run leaves for its analysis with a client-side navigation, so without this the copy (up to the upload limit)
+    // would stay in memory until the tab reloads.
+    useEffect(() => () => releasePreview(sourceRef.current), [])
 
     return (
         <div className={styles.page}>

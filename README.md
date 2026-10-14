@@ -119,7 +119,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   metadata check, the preview and the upload all use the copy. Chrome checks a picked file's modification time on every
   later read and upload and fails them once it has moved (`net::ERR_UPLOAD_FILE_CHANGED`), which on Android happens to
   a video another app is still finishing, such as a fresh Telegram download. The type and size are checked first, so a
-  file that can't be used is never copied; the copy costs the video's size in memory while it stays selected.
+  file that can't be used is never copied; the copy costs the video's size in memory while it stays selected,
+  and is released once it is replaced or removed or the page is left (a run's client-side navigation included).
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache. A failed analysis never shows a player: its video backs no results and is deleted about a day after the
   failure, so its page shows why it failed and offers to analyze another video. No other analysis without a video to

@@ -3,6 +3,7 @@ import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { listPresets } from '@/api/presets'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
+import { readFileSnapshot } from '@/storage/file-snapshot'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
 import { buildJob, buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
@@ -102,6 +103,8 @@ const chooseFile = async (user: UserEvent, file: File) => {
     await user.upload(fileInput(), file)
     await screen.findByRole('button', { name: 'Remove video' })
 }
+
+const getCreatedUrls = () => jest.mocked(URL.createObjectURL).mock.results.map((result) => result.value as string)
 
 const renderWorkspace = (auth: AuthContextValue = memberAuth()) => {
     mockUseAuth.mockReturnValue(auth)
@@ -290,5 +293,39 @@ describe('AdWorkspace', () => {
 
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
+    })
+
+    // The metadata check makes and releases URLs of its own, so each test asks that none is left unreleased.
+    it('releases the picked video’s copy when the page leaves it, as after a run', async () => {
+        const { user, unmount } = renderWorkspace()
+
+        await chooseFile(user, buildFile('launch.mp4'))
+
+        expect(URL.revokeObjectURL).not.toHaveBeenCalledWith(getCreatedUrls().at(-1))
+
+        unmount()
+
+        getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))
+    })
+
+    it('releases every replaced video when picks overlap', async () => {
+        const first = deferred<File>()
+        const second = deferred<File>()
+        const firstFile = buildFile('launch.mp4')
+        const secondFile = buildFile('second-cut.mp4')
+
+        jest.mocked(readFileSnapshot).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+        const { user, unmount } = renderWorkspace()
+
+        await user.upload(fileInput(), firstFile)
+        await user.upload(fileInput(), secondFile)
+        await act(async () => first.resolve(firstFile))
+        await act(async () => second.resolve(secondFile))
+        await waitFor(() =>
+            expect(URL.createObjectURL).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'second-cut.mp4' })),
+        )
+        unmount()
+
+        getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))
     })
 })
