@@ -1,3 +1,4 @@
+import { ApiRequestError, describePresetError } from '@/api/errors'
 import { listPresets } from '@/api/presets'
 import { useAuth } from '@/auth/AuthContext'
 import { memberAuth, signedOutAuth } from '@/test/auth'
@@ -5,7 +6,7 @@ import { buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
-import type { Preset } from 'adlens-shared'
+import { type Preset, RequestErrorCode } from 'adlens-shared'
 import { ApplyPresetPopover } from './ApplyPresetPopover'
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: jest.fn() }))
@@ -91,6 +92,30 @@ describe('ApplyPresetPopover', () => {
 
         await expectUnavailable(user)
         expect(listPresets).not.toHaveBeenCalled()
+    })
+
+    it('is unavailable when the only preset is the one already applied, and says so', async () => {
+        const { user } = renderPopover([LAST_USED], false, LAST_USED.id)
+
+        await waitFor(() => expect(listPresets).toHaveBeenCalled())
+        await user.hover(getApplyPresetButton().parentElement as HTMLElement)
+
+        expect(await screen.findByText('No other preset to apply')).toBeInTheDocument()
+        expect(getApplyPresetButton()).toBeDisabled()
+    })
+
+    it('says the presets couldn’t load, not that there are none', async () => {
+        const failure = new ApiRequestError(RequestErrorCode.Unavailable)
+
+        jest.mocked(listPresets).mockRejectedValue(failure)
+        const { user } = renderWithProviders(<ApplyPresetPopover onApply={jest.fn()} />)
+
+        await waitFor(() => expect(listPresets).toHaveBeenCalled())
+        await user.hover(getApplyPresetButton().parentElement as HTMLElement)
+
+        expect(await screen.findByText(describePresetError(failure))).toBeInTheDocument()
+        expect(screen.queryByText('No presets yet')).not.toBeInTheDocument()
+        expect(getApplyPresetButton()).toBeDisabled()
     })
 
     it('is disabled while the analysis runs', async () => {

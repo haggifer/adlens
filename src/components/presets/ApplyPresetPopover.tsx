@@ -1,5 +1,6 @@
 'use client'
 
+import { type ApiRequestError, describePresetError } from '@/api/errors'
 import { usePresets } from '@/hooks/usePresets'
 import { ImportOutlined } from '@ant-design/icons'
 import type { Preset } from 'adlens-shared'
@@ -8,6 +9,9 @@ import { useState } from 'react'
 
 // Seconds before "Already applied" shows, so moving the pointer down the list doesn't flash it.
 const ALREADY_APPLIED_DELAY_S = 0.4
+
+// 14rem beside Apply, narrowed on a phone so the popover still fits a 320px screen with its padding and margins.
+const SELECT_STYLE = { width: 'min(14rem, 100vw - 9rem)' }
 
 interface IFormProps {
     presets: Preset[]
@@ -49,13 +53,26 @@ const ApplyPresetForm = ({ presets, initialId, selectedPresetId, onApply }: IFor
                 showSearch={false}
                 placeholder="Choose a preset"
                 aria-label="Preset"
-                style={{ width: '14rem' }}
+                style={SELECT_STYLE}
             />
             <Button type="primary" disabled={!preset} onClick={() => preset && onApply(preset)}>
                 Apply
             </Button>
         </div>
     )
+}
+
+const getTriggerTitle = (presets: Preset[], selectedPresetId: string | null, error: ApiRequestError | null) => {
+    if (error && !presets.length) {
+        return describePresetError(error)
+    }
+
+    // Without a session the list never loads, so it reads as empty too.
+    if (!presets.length) {
+        return 'No presets yet'
+    }
+
+    return presets.some((preset) => preset.id !== selectedPresetId) ? 'Apply a preset' : 'No other preset to apply'
 }
 
 interface IProps {
@@ -68,13 +85,13 @@ interface IProps {
 export function ApplyPresetPopover({ onApply, selectedPresetId = null, isDisabled }: IProps) {
     const [isOpen, setIsOpen] = useState(false)
 
-    // Without a session the list never loads, so it reads as empty too.
-    const { presets, lastUsedPreset, isLoading } = usePresets()
+    const { presets, lastUsedPreset, isLoading, error } = usePresets()
 
-    const hasPresets = !isLoading && presets.length > 0
+    // The applied preset alone leaves nothing to apply.
+    const hasPresetToApply = !isLoading && presets.some((preset) => preset.id !== selectedPresetId)
     // A disabled choice can't be applied, so the applied preset is never the one preselected.
     const initialId = lastUsedPreset && lastUsedPreset.id !== selectedPresetId ? lastUsedPreset.id : undefined
-    const isUnavailable = !hasPresets || Boolean(isDisabled)
+    const isUnavailable = !hasPresetToApply || Boolean(isDisabled)
 
     const handleOpenChange = (next: boolean) => setIsOpen(next && !isUnavailable)
 
@@ -99,7 +116,7 @@ export function ApplyPresetPopover({ onApply, selectedPresetId = null, isDisable
                 />
             }
         >
-            <Tooltip title={hasPresets ? 'Apply a preset' : 'No presets yet'}>
+            <Tooltip title={getTriggerTitle(isLoading ? [] : presets, selectedPresetId, error)}>
                 {/* A disabled button takes no pointer events, so the wrapper carries the tooltip and the click. */}
                 <span className="d-inline-flex">
                     <Button
