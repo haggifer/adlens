@@ -124,7 +124,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   file that can't be used is never copied; the copy costs the video's size in memory while it stays selected,
   and is released once it is replaced or removed or the page is left (a run's client-side navigation included). The
   copy and the check take seconds on a phone, so meanwhile the upload panel says it's reading the video and takes no
-  other pick, and Run waits; a pick that finishes once a run has started is dropped.
+  other pick, and Run waits; a pick that finishes once a run has started is dropped, and one whose copy or check
+  hasn't finished in 30 seconds is given up with an error.
 - **The replay URL is fetched on demand**, not embedded in the job: signed URLs expire and would go stale in the
   cache. A failed analysis never shows a player: its video backs no results and is deleted about a day after the
   failure, so its page shows why it failed and offers to analyze another video. No other analysis without a video to

@@ -20,6 +20,10 @@ const MAX_UPLOAD_MB = toMegabytes(MAX_UPLOAD_BYTES)
 
 const REQUIREMENTS_TRIGGER: TooltipProps['trigger'] = ['hover', 'click']
 
+// Neither the copy nor the metadata read reports a stall (a file another app never finishes, a video the browser
+// neither loads nor rejects); past this a pick is given up, so the panel isn't locked until a reload.
+const READ_TIMEOUT_MS = 30_000
+
 // For the two buttons inside the Dragger: their clicks and keys must not reach it and open the file dialog. Anything
 // else in the drop zone, its text and divider included, opens it.
 const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()
@@ -27,19 +31,38 @@ const stopAtControl = (event: SyntheticEvent) => event.stopPropagation()
 // A drop target must cancel dragover, or the browser never fires drop on it.
 const allowDrop = (event: DragEvent<HTMLDivElement>) => event.preventDefault()
 
+// The copy itself can't be cancelled; a late one is simply dropped.
+const withReadTimeout = <T,>(read: Promise<T>): Promise<T> =>
+    new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Reading the video timed out')), READ_TIMEOUT_MS)
+
+        read.then(resolve, reject).finally(() => clearTimeout(timer))
+    })
+
 // Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
 // the browser can't decode) surface as an error so a doomed upload is stopped client-side.
 const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
     new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file)
         const video = document.createElement('video')
+        const settle = () => {
+            clearTimeout(timer)
+            URL.revokeObjectURL(url)
+            video.onloadedmetadata = null
+            video.onerror = null
+        }
+        const timer = setTimeout(() => {
+            settle()
+            reject(new Error('Reading the video metadata timed out'))
+        }, READ_TIMEOUT_MS)
+
         video.preload = 'metadata'
         video.onloadedmetadata = () => {
-            URL.revokeObjectURL(url)
+            settle()
             resolve({ durationS: video.duration, width: video.videoWidth, height: video.videoHeight })
         }
         video.onerror = () => {
-            URL.revokeObjectURL(url)
+            settle()
             reject(new Error('Could not read video metadata'))
         }
         video.src = url
@@ -113,7 +136,7 @@ export function UploadPanel({
         let file: File
 
         try {
-            file = await readFileSnapshot(picked)
+            file = await withReadTimeout(readFileSnapshot(picked))
         } catch {
             notification.error({
                 title: 'We couldn’t read this video. Please choose it again.',
@@ -155,10 +178,14 @@ export function UploadPanel({
         isReadingRef.current = true
         onReadingChange(true)
 
-        const accepted = await verifyFile(picked)
+        let accepted: AcceptedFile | null = null
 
-        isReadingRef.current = false
-        onReadingChange(false)
+        try {
+            accepted = await verifyFile(picked)
+        } finally {
+            isReadingRef.current = false
+            onReadingChange(false)
+        }
 
         if (accepted && !isDisabledRef.current) {
             onSelect(accepted.file, accepted.video)

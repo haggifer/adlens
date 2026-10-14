@@ -1,6 +1,6 @@
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { renderWithProviders } from '@/test/render'
-import { act, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { useState } from 'react'
 import { UploadPanel } from './UploadPanel'
@@ -160,6 +160,59 @@ describe('UploadPanel', () => {
         await act(async () => snapshot.resolve(picked))
 
         expect(onSelect).not.toHaveBeenCalled()
+    })
+
+    describe('when a read never finishes', () => {
+        const READ_TIMEOUT_MS = 30_000
+
+        const pick = () => {
+            const view = renderPanel()
+
+            fireEvent.change(view.input, { target: { files: [new File(['picked'], 'ad.mp4', { type: 'video/mp4' })] } })
+
+            return view
+        }
+
+        // user-event waits on timers of its own, which fake timers would stall.
+        beforeEach(() => jest.useFakeTimers())
+
+        afterEach(() => jest.useRealTimers())
+
+        it('gives up a copy that never finishes, says so and unlocks the panel', async () => {
+            mockReadFileSnapshot.mockReturnValue(new Promise<File>(() => {}))
+            const { onSelect } = pick()
+
+            expect(await screen.findByRole('status')).toHaveTextContent('Reading your video…')
+
+            await act(async () => jest.advanceTimersByTime(READ_TIMEOUT_MS))
+
+            expect(await screen.findByText('We couldn’t read this video. Please choose it again.')).toBeInTheDocument()
+            expect(screen.queryByText('Reading your video…')).not.toBeInTheDocument()
+            expect(getFileInput()).toBeEnabled()
+            expect(onSelect).not.toHaveBeenCalled()
+        })
+
+        it('gives up a video whose metadata never loads, says so and unlocks the panel', async () => {
+            const picked = new File(['picked'], 'ad.mp4', { type: 'video/mp4' })
+
+            mockReadFileSnapshot.mockResolvedValue(picked)
+            jest.mocked(document.createElement).mockImplementation((tag: string, options?: ElementCreationOptions) =>
+                tag === 'video' ? ({} as HTMLVideoElement) : createElement(tag, options),
+            )
+            const { onSelect } = pick()
+
+            expect(await screen.findByRole('status')).toHaveTextContent('Reading your video…')
+
+            await act(async () => jest.advanceTimersByTime(READ_TIMEOUT_MS))
+
+            expect(
+                await screen.findByText('Could not read the video. Please try a different file.'),
+            ).toBeInTheDocument()
+            expect(screen.queryByText('Reading your video…')).not.toBeInTheDocument()
+            expect(getFileInput()).toBeEnabled()
+            expect(URL.revokeObjectURL).toHaveBeenCalled()
+            expect(onSelect).not.toHaveBeenCalled()
+        })
     })
 
     describe('in the empty drop zone', () => {
