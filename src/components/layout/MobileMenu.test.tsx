@@ -12,8 +12,9 @@ import { describeNextFree } from './quota-label'
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
 let mockQuota: Quota | undefined
+let mockPathname = '/'
 
-jest.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({ usePathname: () => mockPathname, useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/hooks/useQuota', () => ({ useQuota: () => ({ quota: mockQuota }) }))
 jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, setScheme: jest.fn() }) }))
@@ -41,8 +42,20 @@ describe('MobileMenu', () => {
     beforeEach(() => {
         mockPush.mockClear()
         mockQuota = QUOTA
+        mockPathname = '/'
         useAuthModalStore.setState({ view: null })
         useContactModalStore.setState({ isOpen: false })
+    })
+
+    it('closes when the page changes without it, as on Back', async () => {
+        const { rerender } = await openMenu(memberAuth())
+
+        mockPathname = '/history'
+        rerender(<MobileMenu />)
+
+        await waitFor(() =>
+            expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false'),
+        )
     })
 
     describe('while the session loads', () => {

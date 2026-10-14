@@ -72,6 +72,13 @@ export function MobileMenu() {
     const signOut = useSignOut()
 
     const [isOpen, setIsOpen] = useState(false)
+    // The page the menu last saw: a navigation it didn't start (Back, a redirect, a link elsewhere) closes it too.
+    const [shownPathname, setShownPathname] = useState(pathname)
+
+    if (pathname !== shownPathname) {
+        setShownPathname(pathname)
+        setIsOpen(false)
+    }
 
     const handleOpen = () => setIsOpen(true)
     const handleClose = () => setIsOpen(false)
