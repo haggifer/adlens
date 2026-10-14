@@ -102,6 +102,10 @@ export function AnalysisSettings({
     // When the API last refused a run: an admission answer from then on reflects that refusal.
     const [refusedAt, setRefusedAt] = useState(0)
     const humanCheck = useRef<HumanCheckHandle>(null)
+    // The spinner only ever covers the panel's first load. A session that starts later (the anonymous sign-in of a
+    // first run or a first saved preset, or a sign-in) loads the presets again, and a spinner then would replace the
+    // run's progress or an open Save as preset dialog.
+    const [hasShownForm, setHasShownForm] = useState(false)
     const [defaultValues] = useState(() => getDefaultValues(source, settings))
     // Set once the visitor picks settings or saves a preset, or the default preset had its one chance.
     const isDefaultSettled = useRef(false)
@@ -122,7 +126,12 @@ export function AnalysisSettings({
     const isPresetsLoaded = Boolean(user) && !isLoadingPresets
     const appliedPreset = presets.find((preset) => preset.id === appliedPresetId) ?? null
     // Until the session and the presets load, a default preset may still be on its way, and the fields would show blank.
-    const isWaitingForDefault = isDefaultPresetAllowed && !appliedPresetId && (isInitializing || isLoadingPresets)
+    const isWaitingForDefault =
+        !hasShownForm && isDefaultPresetAllowed && !appliedPresetId && (isInitializing || isLoadingPresets)
+
+    if (!isWaitingForDefault && !hasShownForm) {
+        setHasShownForm(true)
+    }
 
     const getChallengeToken = async (): Promise<string> => {
         if (!humanCheck.current) {

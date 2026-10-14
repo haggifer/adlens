@@ -822,6 +822,58 @@ describe('AnalysisSettings', () => {
 
                 expect(runButton()).toBeInTheDocument()
             })
+
+            describe('when a write starts the session, so the new session’s presets load', () => {
+                beforeEach(() => {
+                    jest.mocked(signIn.anonymous).mockImplementation(async () => {
+                        mockUseAuth.mockReturnValue(anonymousAuth())
+
+                        return { data: null, error: null } as never
+                    })
+                })
+
+                it('keeps the form and the run’s progress during a first run', async () => {
+                    jest.mocked(listPresets).mockReturnValue(new Promise(() => {}))
+                    jest.mocked(createJob).mockReturnValue(new Promise(() => {}))
+                    const { user, rerender } = renderSettings(signedOutAuth(), FILE_SOURCE)
+
+                    await run(user)
+                    await waitFor(() => expect(createJob).toHaveBeenCalled())
+                    rerender(<Panel source={FILE_SOURCE} />)
+                    await waitFor(() => expect(listPresets).toHaveBeenCalled())
+
+                    expect(runButton()).toBeDisabled()
+                })
+
+                it('keeps Save as preset open during a first save, then marks the saved preset', async () => {
+                    const saved = buildPreset({
+                        id: 'preset-3',
+                        name: 'First cut',
+                        settings: { platforms: [], placements: [], markets: [] },
+                    })
+                    let loadPresets!: (presets: Preset[]) => void
+                    let finishSave!: (preset: Preset) => void
+
+                    jest.mocked(listPresets).mockReturnValue(new Promise((resolve) => (loadPresets = resolve)))
+                    jest.mocked(createPreset).mockReturnValue(new Promise((resolve) => (finishSave = resolve)))
+                    const { user, rerender } = renderSettings(signedOutAuth(), FILE_SOURCE)
+
+                    await user.click(screen.getByRole('button', { name: 'Save as preset' }))
+                    await user.type(await screen.findByLabelText('Name'), saved.name)
+                    await user.click(screen.getByRole('button', { name: 'Save' }))
+                    await waitFor(() => expect(createPreset).toHaveBeenCalled())
+                    rerender(<Panel source={FILE_SOURCE} />)
+                    await waitFor(() => expect(listPresets).toHaveBeenCalled())
+
+                    expect(screen.getByRole('dialog')).toBeInTheDocument()
+                    expect(runButton()).toBeInTheDocument()
+
+                    await act(async () => finishSave(saved))
+                    await act(async () => loadPresets([saved]))
+
+                    expect(await screen.findByLabelText(`Preset: ${saved.name}`)).toBeInTheDocument()
+                })
+            })
         })
     })
 })
