@@ -142,10 +142,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **The settings and the applied preset carry over to a replaced video**, held by the page, not the address: presets
   are how settings are kept, and a reload starts from the default preset (or none). A sample still brings its own
   settings.
-- **Presets save analysis settings under a name** (up to 20 per user, names unique ignoring case). A preset counts
-  as used when an analysis starts with its settings unchanged; the API does the counting. `/presets` needs no
-  `PrivateRoute`: without a session it shows the empty state, and saving the first preset starts an anonymous session,
-  as a first analysis does.
+- **Presets save analysis settings under a name** (up to 20 per user, names unique ignoring case, Unicode form and
+  runs of spaces: the API's rule, which `preset-name.ts` repeats). A preset counts as used when an analysis starts with
+  its settings unchanged; the API does the counting. `/presets` needs no `PrivateRoute`: without a session it shows the
+  empty state, and saving the first preset starts an anonymous session, as a first analysis does.
 - **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
