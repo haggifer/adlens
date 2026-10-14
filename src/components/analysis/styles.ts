@@ -159,6 +159,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    // The vertical steps leave room under their last item, so the panel's own bottom padding shrinks to match the top.
+    progressPanel: css`
+        padding-bottom: 0.5rem;
+    `,
+
     panelTitle: css`
         flex-shrink: 0;
         margin: 0;

@@ -26,7 +26,7 @@ interface IProps {
 }
 
 export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
-    const { styles } = useStyles()
+    const { styles, cx } = useStyles()
     const router = useRouter()
 
     const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
@@ -69,7 +69,7 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     }
 
     return (
-        <div className={styles.panel}>
+        <div className={cx(styles.panel, styles.progressPanel)}>
             <h2 className={styles.panelTitle}>Analyzing your ad</h2>
             <p className={styles.hint}>This usually takes under a minute. You can leave this page and come back.</p>
             {isDisconnected && (
