@@ -293,6 +293,17 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
     `,
 
+    /* Translucent, so the drop zone or the previous video still shows under it; above the player and its controls. */
+    reading: css`
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in srgb, ${token.colorBgContainer} 80%, transparent);
+    `,
+
     overlay: css`
         position: absolute;
         top: 0.6rem;

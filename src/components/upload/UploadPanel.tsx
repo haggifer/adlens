@@ -7,9 +7,9 @@ import { VIDEO_FORMATS_LABEL } from '@/labels'
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
-import { App, Button, Divider, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
+import { App, Button, Divider, Spin, Tag, Tooltip, type TooltipProps, Upload } from 'antd'
 import { useTheme } from 'antd-style'
-import { DragEvent, SyntheticEvent, useState } from 'react'
+import { DragEvent, SyntheticEvent, useEffect, useRef, useState } from 'react'
 import { useStyles } from './styles'
 import type { AcceptedFile, AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
@@ -52,14 +52,31 @@ interface IProps {
     onBrowseSamples: () => void
     // Set while an analysis runs: the video and its source can't change under it.
     isDisabled?: boolean
+    // Set while a picked video is copied and checked, which takes seconds on a phone; Run waits for it too.
+    isReading: boolean
+    onReadingChange: (isReading: boolean) => void
 }
 
-export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisabled = false }: IProps) {
+export function UploadPanel({
+    video,
+    onSelect,
+    onClear,
+    onBrowseSamples,
+    isDisabled = false,
+    isReading,
+    onReadingChange,
+}: IProps) {
     const theme = useTheme()
     const { styles, cx } = useStyles()
     const { notification } = App.useApp()
 
     const [isDragging, setIsDragging] = useState(false)
+    // Read once a pick's copy is done, after an await, when the props of the render that started it may be stale.
+    const isDisabledRef = useRef(isDisabled)
+    // Set in the tick a pick starts, so a second pick can't slip in before the panel re-renders locked.
+    const isReadingRef = useRef(false)
+
+    const isLocked = isDisabled || isReading
 
     const requirements = (
         <div className="d-flex flex-column gap-1">
@@ -128,10 +145,22 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         return { file, video: { ...metadata, contentType } }
     }
 
+    // One pick at a time. A pick that finishes once a run has locked the panel is dropped: the run keeps the video it
+    // started with.
     const selectIfAccepted = async (picked: File) => {
+        if (isReadingRef.current) {
+            return
+        }
+
+        isReadingRef.current = true
+        onReadingChange(true)
+
         const accepted = await verifyFile(picked)
 
-        if (accepted) {
+        isReadingRef.current = false
+        onReadingChange(false)
+
+        if (accepted && !isDisabledRef.current) {
             onSelect(accepted.file, accepted.video)
         }
     }
@@ -147,7 +176,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         return false
     }
 
-    const handleDragEnter = () => setIsDragging(!isDisabled)
+    const handleDragEnter = () => setIsDragging(!isLocked)
 
     const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
@@ -162,12 +191,23 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
         event.preventDefault()
         setIsDragging(false)
 
-        if (!file || isDisabled) {
+        if (!file || isLocked) {
             return
         }
 
         await selectIfAccepted(file)
     }
+
+    const renderReading = () =>
+        isReading && (
+            <div className={styles.reading} role="status">
+                <Spin description="Reading your video…" />
+            </div>
+        )
+
+    useEffect(() => {
+        isDisabledRef.current = isDisabled
+    }, [isDisabled])
 
     if (video) {
         return (
@@ -198,7 +238,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         accept={VIDEO_FILE_ACCEPT}
                         maxCount={1}
                         showUploadList={false}
-                        disabled={isDisabled}
+                        disabled={isLocked}
                         beforeUpload={handleBeforeUpload}
                     >
                         <Button
@@ -206,7 +246,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                             icon={<SwapOutlined />}
                             aria-label="Replace video"
                             title="Replace"
-                            disabled={isDisabled}
+                            disabled={isLocked}
                         />
                     </Upload>
                     <Button
@@ -215,9 +255,10 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         aria-label="Remove video"
                         title="Remove"
                         onClick={onClear}
-                        disabled={isDisabled}
+                        disabled={isLocked}
                     />
                 </div>
+                {renderReading()}
             </div>
         )
     }
@@ -236,7 +277,7 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                 accept={VIDEO_FILE_ACCEPT}
                 maxCount={1}
                 showUploadList={false}
-                disabled={isDisabled}
+                disabled={isLocked}
                 beforeUpload={handleBeforeUpload}
             >
                 <p className={styles.icon} data-icon>
@@ -273,12 +314,13 @@ export function UploadPanel({ video, onSelect, onClear, onBrowseSamples, isDisab
                         icon={<PlaySquareOutlined />}
                         onClick={handleBrowseSamples}
                         onKeyDown={stopAtControl}
-                        disabled={isDisabled}
+                        disabled={isLocked}
                     >
                         Try a sample ad
                     </Button>
                 </div>
             </Dragger>
+            {renderReading()}
         </div>
     )
 }

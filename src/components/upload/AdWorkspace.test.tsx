@@ -308,22 +308,29 @@ describe('AdWorkspace', () => {
         getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))
     })
 
-    it('releases every replaced video when picks overlap', async () => {
-        const first = deferred<File>()
-        const second = deferred<File>()
-        const firstFile = buildFile('launch.mp4')
+    it('reads one replacement at a time with Run disabled, and releases every replaced video', async () => {
+        const replacement = deferred<File>()
         const secondFile = buildFile('second-cut.mp4')
-
-        jest.mocked(readFileSnapshot).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
         const { user, unmount } = renderWorkspace()
 
-        await user.upload(fileInput(), firstFile)
+        await chooseFile(user, buildFile('launch.mp4'))
+        jest.mocked(readFileSnapshot).mockReturnValueOnce(replacement.promise)
         await user.upload(fileInput(), secondFile)
-        await act(async () => first.resolve(firstFile))
-        await act(async () => second.resolve(secondFile))
+
+        expect(screen.getByRole('status')).toHaveTextContent('Reading your video…')
+        expect(runButton()).toBeDisabled()
+
+        await user.upload(fileInput(), buildFile('third-cut.mp4'))
+
+        expect(readFileSnapshot).toHaveBeenCalledTimes(2)
+
+        await act(async () => replacement.resolve(secondFile))
         await waitFor(() =>
             expect(URL.createObjectURL).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'second-cut.mp4' })),
         )
+
+        await waitFor(() => expect(runButton()).toBeEnabled())
+
         unmount()
 
         getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))

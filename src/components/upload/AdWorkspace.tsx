@@ -53,6 +53,7 @@ export function AdWorkspace() {
     const sourceRef = useRef<AnalysisSource | null>(null)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
+    const [isReadingVideo, setIsReadingVideo] = useState(false)
     const [settings, setSettings] = useState<AnalysisSettingsInput>(NO_SETTINGS)
     const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
 
@@ -100,6 +101,8 @@ export function AdWorkspace() {
                         onClear={handleClearVideo}
                         onBrowseSamples={() => setIsSamplesOpen(true)}
                         isDisabled={isRunning}
+                        isReading={isReadingVideo}
+                        onReadingChange={setIsReadingVideo}
                     />
                 </div>
                 <div className={styles.right}>
@@ -114,6 +117,7 @@ export function AdWorkspace() {
                             appliedPresetId={appliedPresetId}
                             onAppliedPresetChange={setAppliedPresetId}
                             onRunningChange={setIsRunning}
+                            isVideoReading={isReadingVideo}
                         />
                     ) : (
                         <UploadIntro />

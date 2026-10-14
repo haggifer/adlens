@@ -77,6 +77,8 @@ interface IProps {
     onAppliedPresetChange: (presetId: string | null) => void
     // True from Run until the run fails; a run that succeeds stays locked while the page navigates away.
     onRunningChange?: (isRunning: boolean) => void
+    // A replacement video is being read: a run started now would be for the video about to be replaced.
+    isVideoReading?: boolean
 }
 
 export function AnalysisSettings({
@@ -86,6 +88,7 @@ export function AnalysisSettings({
     appliedPresetId,
     onAppliedPresetChange,
     onRunningChange,
+    isVideoReading = false,
 }: IProps) {
     const { styles, cx } = useStyles()
     const router = useRouter()
@@ -374,7 +377,7 @@ export function AnalysisSettings({
                 loading={isRunning}
                 // Waiting out `isInitializing` keeps a member's still-loading session from being replaced by an
                 // anonymous one.
-                disabled={isRunning || isInitializing || Boolean(blockingRefusal)}
+                disabled={isRunning || isInitializing || isVideoReading || Boolean(blockingRefusal)}
             >
                 Run Analysis
             </Button>

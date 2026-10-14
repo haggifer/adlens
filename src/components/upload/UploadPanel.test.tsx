@@ -1,7 +1,8 @@
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { renderWithProviders } from '@/test/render'
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { MAX_UPLOAD_BYTES } from 'adlens-shared'
+import { useState } from 'react'
 import { UploadPanel } from './UploadPanel'
 
 // Vidstack's custom elements don't run in jsdom, and the empty state renders no player.
@@ -22,13 +23,47 @@ const fakeVideoElement = () => {
     return video
 }
 
+// Holds the reading flag the way the workspace does.
+const Panel = ({
+    onSelect = jest.fn(),
+    onBrowseSamples = jest.fn(),
+    isDisabled = false,
+}: {
+    onSelect?: jest.Mock
+    onBrowseSamples?: jest.Mock
+    isDisabled?: boolean
+}) => {
+    const [isReading, setIsReading] = useState(false)
+
+    return (
+        <UploadPanel
+            video={null}
+            onSelect={onSelect}
+            onClear={jest.fn()}
+            onBrowseSamples={onBrowseSamples}
+            isDisabled={isDisabled}
+            isReading={isReading}
+            onReadingChange={setIsReading}
+        />
+    )
+}
+
+const getFileInput = () => document.querySelector<HTMLInputElement>('input[type="file"]')!
+
 const renderPanel = () => {
     const onSelect = jest.fn()
-    const view = renderWithProviders(
-        <UploadPanel video={null} onSelect={onSelect} onClear={jest.fn()} onBrowseSamples={jest.fn()} />,
-    )
+    const view = renderWithProviders(<Panel onSelect={onSelect} />)
 
-    return { ...view, onSelect, input: document.querySelector<HTMLInputElement>('input[type="file"]')! }
+    return { ...view, onSelect, input: getFileInput() }
+}
+
+const deferred = <T,>() => {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>((onResolve) => {
+        resolve = onResolve
+    })
+
+    return { promise, resolve }
 }
 
 describe('UploadPanel', () => {
@@ -48,15 +83,7 @@ describe('UploadPanel', () => {
     })
 
     it('offers no way to pick a video while disabled', () => {
-        renderWithProviders(
-            <UploadPanel
-                video={null}
-                onSelect={jest.fn()}
-                onClear={jest.fn()}
-                onBrowseSamples={jest.fn()}
-                isDisabled
-            />,
-        )
+        renderWithProviders(<Panel isDisabled />)
 
         expect(screen.getByText('Try a sample ad').closest('button')).toBeDisabled()
         expect(document.querySelector('input[type="file"]')).toBeDisabled()
@@ -102,13 +129,44 @@ describe('UploadPanel', () => {
         expect(onSelect).not.toHaveBeenCalled()
     })
 
+    it('says the video is being read and takes no other pick until it is', async () => {
+        const snapshot = deferred<File>()
+        const picked = new File(['picked'], 'ad.mp4', { type: 'video/mp4' })
+        mockReadFileSnapshot.mockReturnValueOnce(snapshot.promise)
+        const { user, onSelect, input } = renderPanel()
+
+        await user.upload(input, picked)
+
+        expect(screen.getByRole('status')).toHaveTextContent('Reading your video…')
+        expect(getFileInput()).toBeDisabled()
+        expect(screen.getByText('Try a sample ad').closest('button')).toBeDisabled()
+
+        await act(async () => snapshot.resolve(picked))
+
+        expect(onSelect).toHaveBeenCalledTimes(1)
+        expect(screen.queryByText('Reading your video…')).not.toBeInTheDocument()
+        expect(getFileInput()).toBeEnabled()
+    })
+
+    it('drops a pick that finishes once a run has disabled the panel', async () => {
+        const snapshot = deferred<File>()
+        const picked = new File(['picked'], 'ad.mp4', { type: 'video/mp4' })
+        const onSelect = jest.fn()
+        mockReadFileSnapshot.mockReturnValueOnce(snapshot.promise)
+        const { user, rerender } = renderWithProviders(<Panel onSelect={onSelect} />)
+
+        await user.upload(getFileInput(), picked)
+        rerender(<Panel onSelect={onSelect} isDisabled />)
+        await act(async () => snapshot.resolve(picked))
+
+        expect(onSelect).not.toHaveBeenCalled()
+    })
+
     describe('in the empty drop zone', () => {
         const renderEmpty = () => {
             const onBrowseSamples = jest.fn()
             const openFileDialog = jest.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
-            const view = renderWithProviders(
-                <UploadPanel video={null} onSelect={jest.fn()} onClear={jest.fn()} onBrowseSamples={onBrowseSamples} />,
-            )
+            const view = renderWithProviders(<Panel onBrowseSamples={onBrowseSamples} />)
 
             return { ...view, onBrowseSamples, openFileDialog }
         }
