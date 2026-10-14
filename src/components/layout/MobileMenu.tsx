@@ -75,7 +75,7 @@ export function MobileMenu() {
 
     const handleOpen = () => setIsOpen(true)
     const handleClose = () => setIsOpen(false)
-    const { panelRef, resetSwipe } = useMenuSwipe(isOpen, handleOpen, handleClose)
+    const { panelRef } = useMenuSwipe(isOpen, handleOpen, handleClose)
 
     const { quota } = useQuota()
 
@@ -132,7 +132,6 @@ export function MobileMenu() {
                 classNames={{ body: styles.drawerBody }}
                 styles={DRAWER_STYLES}
                 drawerRender={renderSwipeablePanel}
-                afterOpenChange={(isNowOpen) => !isNowOpen && resetSwipe()}
             >
                 {hasAccount && (user || !isEmailConfirmed) && (
                     <div className="mx-1">

@@ -1,11 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { type SwipeEventData, useSwipeable } from 'react-swipeable'
 
 export interface UseMenuSwipeResult {
     // For an element directly inside the panel that a swipe moves: its parent is the panel.
     panelRef: (element: HTMLElement | null) => void
-    // Clears what a swipe left on the panel. Call it once the panel is closed, before it opens again.
-    resetSwipe: () => void
 }
 
 // Where the header swaps its links for the menu (layout/styles.ts); wider, the menu isn't shown.
@@ -132,11 +130,17 @@ export function useMenuSwipe(isOpen: boolean, onOpen: () => void, onClose: () =>
         return () => attachSwipe(null)
     }, [attachSwipe])
 
+    // Cleared on opening rather than once closed: a menu reopened before its closing slide ends never finishes closing,
+    // and would open with the panel still where the swipe left it, off screen.
+    useLayoutEffect(() => {
+        if (isOpen) {
+            movePanel(panel.current, '', '')
+        }
+    }, [isOpen])
+
     const panelRef = (element: HTMLElement | null) => {
         panel.current = element?.parentElement ?? null
     }
 
-    const resetSwipe = () => movePanel(panel.current, '', '')
-
-    return { panelRef, resetSwipe }
+    return { panelRef }
 }
