@@ -297,28 +297,33 @@ describe('AdWorkspace', () => {
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
     })
 
+    // Label and text queries: once a dialog's styles have loaded, role queries resolve computed styles for seconds.
     it('gives a file that replaces a sample the sample’s settings and no preset, not those from before it', async () => {
         const sample = buildSample()
+        const pickFile = async (name: string) => {
+            await user.upload(fileInput(), buildFile(name))
+            await screen.findByLabelText('Remove video')
+        }
 
         jest.mocked(listPresets).mockResolvedValue([PRESET])
         jest.mocked(listSamples).mockResolvedValue([sample])
         jest.mocked(createJob).mockResolvedValue({ job: JOB, upload: UPLOAD_TARGET })
         const { user } = renderWorkspace()
 
-        await chooseFile(user, buildFile('launch.mp4'))
-        await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
-        await user.click(screen.getByRole('button', { name: 'Apply a preset' }))
-        await user.click(await screen.findByRole('button', { name: 'Apply' }))
+        await pickFile('launch.mp4')
+        await waitFor(() => expect(screen.getByLabelText('Apply a preset')).toBeEnabled())
+        await user.click(screen.getByLabelText('Apply a preset'))
+        await user.click((await screen.findByText('Apply')).closest('button') as HTMLElement)
         expect(await screen.findByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
 
-        await user.click(removeButton())
+        await user.click(screen.getByLabelText('Remove video'))
         await user.click(screen.getByText('Try a sample ad'))
         await user.click(await screen.findByText(sample.description))
         await waitFor(() => expect(screen.queryByTitle(MARKET_LABELS[Market.UK])).not.toBeInTheDocument())
 
-        await user.click(removeButton())
-        await chooseFile(user, buildFile('second-cut.mp4'))
-        await user.click(runButton())
+        await user.click(screen.getByLabelText('Remove video'))
+        await pickFile('second-cut.mp4')
+        await user.click(screen.getByText('Run Analysis').closest('button') as HTMLElement)
 
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ settings: getSampleSettings(sample) }))
