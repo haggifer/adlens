@@ -5,16 +5,11 @@ import { formatSeconds } from '@/components/analysis/results'
 import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
 import { ErrorState } from '@/components/status/ErrorState'
 import { useDemos } from '@/hooks/useDemos'
-import { formatPlatforms, MARKET_LABELS } from '@/labels'
-import type { Demo, Market } from 'adlens-shared'
+import { formatMarkets, formatPlatforms } from '@/labels'
+import type { Demo } from 'adlens-shared'
 import { Empty, Segmented, Spin } from 'antd'
 import { useState } from 'react'
 import { useStyles } from './styles'
-
-const ALL_MARKETS_LABEL = 'all markets'
-
-const formatMarkets = (markets: Market[]): string =>
-    markets.length ? markets.map((market) => MARKET_LABELS[market]).join(', ') : ALL_MARKETS_LABEL
 
 // What the demo's report was run against, as the analysis page shows a user's own settings.
 const describeDemoRun = ({ job }: Demo): string => {

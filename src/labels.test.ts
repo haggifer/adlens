@@ -1,5 +1,5 @@
-import { ALL_PLATFORMS_LABEL, formatPlatforms, formatTopic } from '@/labels'
-import { Platform } from 'adlens-shared'
+import { ALL_MARKETS_LABEL, ALL_PLATFORMS_LABEL, formatMarkets, formatPlatforms, formatTopic } from '@/labels'
+import { Market, Platform } from 'adlens-shared'
 
 describe('formatPlatforms', () => {
     it('lists the chosen platforms', () => {
@@ -8,6 +8,16 @@ describe('formatPlatforms', () => {
 
     it('names every platform when none was chosen', () => {
         expect(formatPlatforms([])).toBe(ALL_PLATFORMS_LABEL)
+    })
+})
+
+describe('formatMarkets', () => {
+    it('lists the chosen markets', () => {
+        expect(formatMarkets([Market.US, Market.UK])).toBe('United States, United Kingdom')
+    })
+
+    it('names every market when none was chosen', () => {
+        expect(formatMarkets([])).toBe(ALL_MARKETS_LABEL)
     })
 })
 

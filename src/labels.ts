@@ -57,6 +57,12 @@ export const MARKET_LABELS: Record<Market, string> = {
     [Market.Other]: 'Other markets',
 }
 
+// Mid-sentence ("checked for Meta in all markets"): an analysis with no market chosen is checked for every one.
+export const ALL_MARKETS_LABEL = 'all markets'
+
+export const formatMarkets = (markets: Market[]): string =>
+    markets.length ? markets.map((market) => MARKET_LABELS[market]).join(', ') : ALL_MARKETS_LABEL
+
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
     [JobStatus.Pending]: 'Not started',
     [JobStatus.Verifying]: 'Checking video',
