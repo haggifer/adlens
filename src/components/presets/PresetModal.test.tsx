@@ -90,20 +90,20 @@ describe('PresetModal', () => {
         jest.mocked(updatePreset).mockReset().mockResolvedValue(EDITED)
     })
 
-    it('fills Edit from the preset, with Select as default checked for the default', () => {
+    it('fills Edit from the preset, with Make default checked for the default', () => {
         renderModal({ preset: EDITED })
 
         expect(screen.getByLabelText('Name')).toHaveValue(EDITED.name)
         expect(screen.getByTitle(PLATFORM_LABELS[Platform.Meta])).toBeInTheDocument()
         expect(screen.getByTitle(formatPlacementLabel(Placement.MetaFeed))).toBeInTheDocument()
         expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
-        expect(screen.getByRole('checkbox', { name: 'Select as default' })).toBeChecked()
+        expect(screen.getByRole('checkbox', { name: 'Make default' })).toBeChecked()
     })
 
-    it('starts Select as default unchecked for a new preset', () => {
+    it('starts Make default unchecked for a new preset', () => {
         renderModal({ initialSettings: SETTINGS })
 
-        expect(screen.getByRole('checkbox', { name: 'Select as default' })).not.toBeChecked()
+        expect(screen.getByRole('checkbox', { name: 'Make default' })).not.toBeChecked()
     })
 
     it('creates a preset from the given settings, then closes with a notification', async () => {
@@ -111,7 +111,7 @@ describe('PresetModal', () => {
         await waitForPresets()
 
         await enterName(user, '  Spring sale ')
-        await user.click(screen.getByRole('checkbox', { name: 'Select as default' }))
+        await user.click(screen.getByRole('checkbox', { name: 'Make default' }))
         await clickSave(user)
 
         await waitFor(() => expect(onClose).toHaveBeenCalled())
@@ -125,7 +125,7 @@ describe('PresetModal', () => {
         const { user, onClose } = renderModal({ preset: EDITED })
         await waitForPresets()
 
-        await user.click(screen.getByRole('checkbox', { name: 'Select as default' }))
+        await user.click(screen.getByRole('checkbox', { name: 'Make default' }))
         await clickSave(user)
 
         await waitFor(() => expect(onClose).toHaveBeenCalled())
@@ -165,7 +165,7 @@ describe('PresetModal', () => {
     })
 
     // The checkbox started unchecked for a new preset; it never described the preset being overwritten.
-    it('leaves the default alone when Overwrite replaces it with Select as default unchecked', async () => {
+    it('leaves the default alone when Overwrite replaces it with Make default unchecked', async () => {
         const { user, onClose } = renderModal({ initialSettings: SETTINGS })
         await waitForPresets()
 

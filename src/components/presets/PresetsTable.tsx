@@ -58,12 +58,14 @@ const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
 
     return (
         <div className="d-flex justify-content-end gap-1">
-            <Tooltip title={preset.isDefault ? 'Default preset, click to unset' : 'Make default'}>
+            <Tooltip title={preset.isDefault ? 'Default, click to unset' : 'Make default'}>
                 <Button
                     type={preset.isDefault ? 'primary' : 'text'}
                     icon={preset.isDefault ? <StarFilled /> : <StarOutlined />}
                     aria-label={
-                        preset.isDefault ? `${preset.name} is the default, unset it` : `Make ${preset.name} the default`
+                        preset.isDefault
+                            ? `${preset.name} is the default, click to unset`
+                            : `Make ${preset.name} the default`
                     }
                     aria-pressed={preset.isDefault}
                     loading={isSetting}

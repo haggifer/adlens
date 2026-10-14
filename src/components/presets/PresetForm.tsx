@@ -56,7 +56,7 @@ const renderSettings = ({ field }: { field: ControllerRenderProps<PresetFormInpu
 
 const renderIsDefault = ({ field }: { field: ControllerRenderProps<PresetFormInput, 'isDefault'> }) => (
     <Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)}>
-        Select as default
+        Make default
     </Checkbox>
 )
 
