@@ -8,7 +8,7 @@ export const generateMetadata = (_props: unknown, parent: ResolvingMetadata): Pr
 
 export default function PrivacyPage() {
     return (
-        <LegalPage title="Privacy Policy" lastUpdated="October 12, 2026">
+        <LegalPage title="Privacy Policy" lastUpdated="October 14, 2026">
             <Privacy />
         </LegalPage>
     )

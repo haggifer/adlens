@@ -17,7 +17,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   itself, where a failed sign-in comes back with `?error=`, shown once by `useSignInErrorNotice`, and only in a
   tab that left for that sign-in), and
   anonymous sessions (Better Auth's anonymous plugin): a visitor is signed in anonymously right before their first
-  analysis. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com` and `api.useadlens.com`
+  analysis or first saved preset. The session is an httpOnly, `SameSite=Lax` cookie shared by `www.useadlens.com`
+  and `api.useadlens.com`
 - **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts or a contact
   message is sent, and invisible unless Cloudflare asks for a click
 - **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
@@ -161,8 +162,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   In the report a failed placement spec carries its placement as a tag in its own colour and says the video won't work
   there, and why ("This video won't work for YouTube · Bumper (6 s). It's 30.4 seconds long, …"), so selecting every
   placement of a platform shows exactly which formats the video doesn't fit.
-- **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis, so
-  crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
+- **The first analysis needs no account.** A visitor gets an anonymous session only when they start an analysis or save a
+  preset, so crawlers create no users, and their history, quota and live updates work as for anyone. An anonymous session gets one
   analysis; then the settings panel asks the visitor to sign up instead of naming a date. The header offers only Sign In
   (its dialog links to sign-up) and no count, which only accounts show: signing in or signing up moves the analyses and
   runs to the account at once and deletes the anonymous user. The anonymous placeholder email never reaches the UI
