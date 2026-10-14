@@ -362,14 +362,21 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         flex-shrink: 0;
     `,
 
+    /* The title gives way to the preset buttons beside it: on a phone (from 320px, with the preset mark showing) the
+       row is narrower than the title and the buttons together, so the title shrinks a step and wraps rather than push
+       them out of the panel. */
     panelTitle: css`
-        flex-shrink: 0;
+        min-width: 0;
         margin: 0;
         font-family: ${HEADING_FONT_STACK};
         color: ${token.colorText};
         font-size: 1.35rem;
         font-weight: 700;
         letter-spacing: -0.01em;
+
+        @media (max-width: 575.98px) {
+            font-size: 1.15rem;
+        }
     `,
 
     settingsScroll: css`

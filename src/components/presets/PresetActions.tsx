@@ -26,7 +26,7 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
     const isSelected = appliedPreset !== null && isSameSettings(settings, appliedPreset.settings)
 
     return (
-        <div className="d-flex align-items-center gap-1">
+        <div className="d-flex flex-shrink-0 align-items-center gap-1">
             {isSelected && (
                 <Tooltip title={`Preset: ${appliedPreset.name}`}>
                     {/* As tall as the buttons beside it, so all three tooltips open at the same height. */}
