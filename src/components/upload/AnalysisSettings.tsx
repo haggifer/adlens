@@ -264,11 +264,9 @@ export function AnalysisSettings({
         onAppliedPresetChange(preset.id)
     }
 
-    // The preset was saved from the panel's settings, so it is the one they now run with.
-    const handlePresetSaved = (preset: Preset) => {
-        isDefaultSettled.current = true
-        onAppliedPresetChange(preset.id)
-    }
+    // Saved from the panel's settings, maybe edited in the dialog first: the panel takes the preset as saved, so it shows
+    // as applied and a run counts towards it.
+    const handlePresetSaved = handleApplyPreset
 
     const settleDefaultPreset = useEffectEvent(() => {
         if (isDefaultSettled.current) {

@@ -165,6 +165,10 @@ const run = async (user: UserEvent) => {
 // Label queries: once the preset modal's styles have loaded, role queries resolve computed styles for seconds.
 const getSelectedIcon = (preset: Preset) => screen.queryByLabelText(`Preset: ${preset.name}`)
 
+const getRunButtonByText = () => screen.getByText('Run Analysis').closest('button') as HTMLElement
+
+const getSaveButtonByText = () => screen.getByText('Save').closest('button') as HTMLElement
+
 const getMarketsSelect = () => screen.getAllByRole('combobox')[2]
 
 // A chosen option shows twice, as a tag and in the open list, so the list entry is picked by its class.
@@ -757,6 +761,33 @@ describe('AnalysisSettings', () => {
             expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: saved.id }))
         })
 
+        it('takes the settings a preset was saved with, so it shows as applied and the run counts', async () => {
+            const saved = buildPreset({
+                id: 'preset-3',
+                name: 'Sample Meta UK',
+                settings: { ...SAMPLE_RUN_SETTINGS, markets: [Market.UK] },
+            })
+
+            // The API answers with the settings the dialog sent: here, the panel's with a market added there.
+            jest.mocked(createPreset).mockResolvedValue(saved)
+            const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
+
+            await user.click(screen.getByLabelText('Save as preset'))
+            await user.type(await screen.findByLabelText('Name'), saved.name)
+            jest.mocked(listPresets).mockResolvedValue([PRESET, saved])
+            await user.click(getSaveButtonByText())
+
+            expect(await screen.findByLabelText(`Preset: ${saved.name}`)).toBeInTheDocument()
+            expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
+
+            await user.click(getRunButtonByText())
+
+            await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
+            expect(createSampleJob).toHaveBeenCalledWith(
+                expect.objectContaining({ settings: saved.settings, presetId: saved.id }),
+            )
+        })
+
         it('sends no preset when none was applied', async () => {
             const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
 
@@ -858,15 +889,15 @@ describe('AnalysisSettings', () => {
                     jest.mocked(createPreset).mockReturnValue(new Promise((resolve) => (finishSave = resolve)))
                     const { user, rerender } = renderSettings(signedOutAuth(), FILE_SOURCE)
 
-                    await user.click(screen.getByRole('button', { name: 'Save as preset' }))
+                    await user.click(screen.getByLabelText('Save as preset'))
                     await user.type(await screen.findByLabelText('Name'), saved.name)
-                    await user.click(screen.getByRole('button', { name: 'Save' }))
+                    await user.click(getSaveButtonByText())
                     await waitFor(() => expect(createPreset).toHaveBeenCalled())
                     rerender(<Panel source={FILE_SOURCE} />)
                     await waitFor(() => expect(listPresets).toHaveBeenCalled())
 
-                    expect(screen.getByRole('dialog')).toBeInTheDocument()
-                    expect(runButton()).toBeInTheDocument()
+                    expect(screen.getByLabelText('Name')).toBeInTheDocument()
+                    expect(getRunButtonByText()).toBeInTheDocument()
 
                     await act(async () => finishSave(saved))
                     await act(async () => loadPresets([saved]))
