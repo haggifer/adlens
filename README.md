@@ -152,8 +152,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
   dynamically.
-- **Phones and tablets get the same pages, restacked.** Below 768px the header's navigation, account menu and theme
-  switch move into a menu drawer; below 992px the video and its panel stack. Stacked players take the video's own
+- **Phones and tablets get the same pages, restacked.** Below 992px the header's navigation, account menu and theme
+  switch move into a menu drawer, and the video and its panel stack. Stacked players take the video's own
   aspect ratio (measured by the API, or read from the file before upload) rather than a fixed box, and touch screens
   get 44px tap targets and 16px form fields, so iOS doesn't zoom into a focused field. Below 768px, controls are also a
   step larger than antd's defaults (36px, via antd's CSS variables in `globals.css`) to avoid mis-taps; desktop keeps
