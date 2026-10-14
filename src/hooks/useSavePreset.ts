@@ -23,7 +23,8 @@ export function useSavePreset(): UseSavePresetResult {
     const { mutateAsync, isPending } = useMutation({
         mutationFn: savePresetRequest,
         // By prefix: the save may have just started an anonymous session, whose id the pre-save user id wouldn't match.
-        onSuccess: () => void queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
+        // Returned, so the save settles only once the list holds the saved preset.
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
         onError: (error) => refreshPresetsWhenGone(queryClient, error),
     })
 
