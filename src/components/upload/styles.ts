@@ -1,8 +1,11 @@
 import { HEADING_FONT_STACK } from '@/fonts'
+import type { GlobalToken } from 'antd'
 import { createStyles } from 'antd-style'
 
-// One neutral drop shadow in both schemes, faint at rest and bolder while a file is dragged over. Dark uses fixed greys
-// (a shadow has to be lighter than the near-black backdrop to show); light derives its tint from the text colour.
+// One neutral drop shadow in both schemes, faint at rest and bolder while a file is dragged over. Dark uses solid greys
+// (a shadow has to be lighter than the near-black backdrop to show): the border grey at rest, and while dragging the
+// tertiary text grey, the lightest neutral the dark palette has short of text itself. Light derives its tint from the
+// text colour.
 const FRAME_SHADOW_SHAPE = '0 6px 29px -2px'
 
 // 400px: below it the settings panel and the drop zone stop fitting; the page scrolls rather than squeeze them.
@@ -11,11 +14,11 @@ const WORKSPACE_MIN_HEIGHT = '25rem'
 // 500px: on a tall screen the square drop zone would otherwise grow past its column's width into a pillar.
 const WORKSPACE_MAX_HEIGHT = '31.25rem'
 
-const buildFrameShadow = (textColor: string, isDark: boolean) =>
-    `${FRAME_SHADOW_SHAPE} ${isDark ? '#404040' : `color-mix(in srgb, ${textColor} 14%, transparent)`}`
+const buildFrameShadow = (token: GlobalToken, isDark: boolean) =>
+    `${FRAME_SHADOW_SHAPE} ${isDark ? token.colorBorder : `color-mix(in srgb, ${token.colorText} 14%, transparent)`}`
 
-const buildFrameDragShadow = (textColor: string, isDark: boolean) =>
-    `${FRAME_SHADOW_SHAPE} ${isDark ? '#777' : `color-mix(in srgb, ${textColor} 30%, transparent)`}`
+const buildFrameDragShadow = (token: GlobalToken, isDark: boolean) =>
+    `${FRAME_SHADOW_SHAPE} ${isDark ? token.colorTextTertiary : `color-mix(in srgb, ${token.colorText} 30%, transparent)`}`
 
 export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
     /* Side by side, the page fills the screen without scrolling until the workspace would drop below
@@ -150,7 +153,8 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         width: auto;
         max-width: var(--col-w);
         flex-shrink: 0;
-        border: 1.5px solid ${isDarkMode ? '#777' : token.colorPrimaryHover};
+        /* Dark: the dark palette's border greys vanish against the tinted near-black frame; the tertiary text grey shows. */
+        border: 1.5px solid ${isDarkMode ? token.colorTextTertiary : token.colorPrimaryHover};
         border-radius: 0.5rem;
         /* Light: the palest tint that still reads as teal (at ~3% it reads as white). antd's colorPrimaryBg is a muted
            grey-teal for this primary, so the tint is mixed from the primary itself. */
@@ -160,7 +164,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
                 : `color-mix(in srgb, ${token.colorPrimary} 8%, ${token.colorBgContainer})`
         };
         overflow: hidden;
-        box-shadow: ${buildFrameShadow(token.colorText, isDarkMode)};
+        box-shadow: ${buildFrameShadow(token, isDarkMode)};
         transition: box-shadow 0.2s ease;
 
         /* Stacked, the drop zone is only as tall as its content plus even padding: a full-width square would be
@@ -177,7 +181,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         }
 
         &[data-dragging='true'] {
-            box-shadow: ${buildFrameDragShadow(token.colorText, isDarkMode)};
+            box-shadow: ${buildFrameDragShadow(token, isDarkMode)};
         }
 
         &[data-video='true'] {
