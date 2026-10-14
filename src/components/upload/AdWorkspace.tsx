@@ -85,9 +85,11 @@ export function AdWorkspace() {
     }
 
     // The sample's settings are what the panel shows now, so they, not the ones from before it, carry to the next file.
+    // They replace the applied preset's too, so it no longer describes them and a run mustn't name it.
     const handleSelectSample = (sample: Sample) => {
         replaceSource({ kind: 'sample', sample })
         setSettings(getSampleSettings(sample))
+        setAppliedPresetId(null)
         setIsSamplesOpen(false)
     }
 

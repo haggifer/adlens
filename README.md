@@ -144,7 +144,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   reach them, as `next/font` already does.
 - **The settings and the applied preset carry over to a replaced video**, held by the page, not the address: presets
   are how settings are kept, and a reload starts from the default preset (or none). A sample still brings its own
-  settings, and those, as the panel last showed them, carry over to the file that replaces it.
+  settings, without the preset applied before it, and those settings, as the panel last showed them, carry over to
+  the file that replaces it.
 - **Presets save analysis settings under a name** (up to 20 per user, names unique ignoring case, Unicode form and
   runs of spaces: the API's rule, which `preset-name.ts` repeats). A preset counts as used when an analysis starts with
   its settings unchanged; the API does the counting. `/presets` needs no `PrivateRoute`: without a session it shows the

@@ -297,7 +297,7 @@ describe('AdWorkspace', () => {
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: PRESET.id }))
     })
 
-    it('gives a file that replaces a sample the sample’s settings, not the ones from before it', async () => {
+    it('gives a file that replaces a sample the sample’s settings and no preset, not those from before it', async () => {
         const sample = buildSample()
 
         jest.mocked(listPresets).mockResolvedValue([PRESET])
@@ -322,6 +322,8 @@ describe('AdWorkspace', () => {
 
         await waitFor(() => expect(createJob).toHaveBeenCalled())
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ settings: getSampleSettings(sample) }))
+        // The preset applied before the sample no longer describes the settings.
+        expect(jest.mocked(createJob).mock.calls[0][0].presetId).toBeUndefined()
     })
 
     // The metadata check makes and releases URLs of its own, so each test asks that none is left unreleased.
