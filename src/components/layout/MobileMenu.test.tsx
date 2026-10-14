@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/test/render'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { MobileMenu } from './MobileMenu'
-import { formatQuotaDate } from './quota-label'
+import { describeNextFree } from './quota-label'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
@@ -176,14 +176,13 @@ describe('MobileMenu', () => {
     })
 
     describe('for a member', () => {
-        it('says when the analyses reset after the count', async () => {
-            mockQuota = { used: 1, limit: 3, nextFreeAt: '2026-10-16T09:30:00.000Z' }
+        it('says when one more analysis frees up after the count', async () => {
+            const quota: Quota = { used: 1, limit: 3, nextFreeAt: '2026-10-16T09:30:00.000Z' }
 
+            mockQuota = quota
             const { menu } = await openMenu(memberAuth())
 
-            expect(
-                menu.getByText(`2/3 analyses left (resets at ${formatQuotaDate('2026-10-16T09:30:00.000Z')})`),
-            ).toBeInTheDocument()
+            expect(menu.getByText(`2/3 analyses left · ${describeNextFree(quota)}`)).toBeInTheDocument()
         })
 
         it('shows the email but not the name a Google or GitHub sign-in brought, the account page, and Sign Out', async () => {

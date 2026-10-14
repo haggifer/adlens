@@ -5,7 +5,7 @@ import { renderWithProviders } from '@/test/render'
 import { screen, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { Header } from './Header'
-import { formatQuotaDate } from './quota-label'
+import { describeNextFree } from './quota-label'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 let mockQuota: Quota | undefined
@@ -17,7 +17,7 @@ jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, se
 
 const QUOTA: Quota = { used: 1, limit: 3, nextFreeAt: null }
 
-const RESET_AT = '2026-10-16T09:30:00.000Z'
+const NEXT_FREE_AT = '2026-10-16T09:30:00.000Z'
 
 const renderHeader = (auth: AuthContextValue, quota?: Quota) => {
     mockUseAuth.mockReturnValue(auth)
@@ -114,15 +114,16 @@ describe('Header', () => {
         expect(screen.queryByText(/analyses left/)).not.toBeInTheDocument()
     })
 
-    it('says when the analyses reset in a tooltip on the count', async () => {
-        const { user } = renderHeader(memberAuth(), { used: 1, limit: 3, nextFreeAt: RESET_AT })
+    it('says when one more analysis frees up, in a tooltip on the count', async () => {
+        const quota: Quota = { used: 1, limit: 3, nextFreeAt: NEXT_FREE_AT }
+        const { user } = renderHeader(memberAuth(), quota)
 
         await user.hover(screen.getByText('2/3 analyses left'))
 
-        expect(await screen.findByRole('tooltip')).toHaveTextContent(`Resets at ${formatQuotaDate(RESET_AT)}`)
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(describeNextFree(quota) ?? '')
     })
 
-    it('shows no reset tooltip while no analysis counts', async () => {
+    it('shows no tooltip while no analysis counts', async () => {
         const { user } = renderHeader(memberAuth(), { used: 0, limit: 3, nextFreeAt: null })
 
         await user.hover(screen.getByText('3/3 analyses left'))

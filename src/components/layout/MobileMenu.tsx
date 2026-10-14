@@ -3,7 +3,7 @@
 import { isConfirmedKind } from '@/auth/account-kind'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
-import { formatQuotaLeft, getQuotaResetDate } from '@/components/layout/quota-label'
+import { describeNextFree, formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
@@ -85,7 +85,7 @@ export function MobileMenu() {
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
     const visibleLinks = MENU_LINKS.filter((link) => isLinkAllowed(link.access, isSignedIn, isEmailConfirmed))
-    const quotaResetDate = quota ? getQuotaResetDate(quota) : null
+    const nextFree = quota ? describeNextFree(quota) : null
 
     const handleContact = () => {
         handleClose()
@@ -155,7 +155,7 @@ export function MobileMenu() {
                             <>
                                 <span className={styles.drawerUserQuota}>
                                     {formatQuotaLeft(quota)}
-                                    {quotaResetDate && ` (resets at ${quotaResetDate})`}
+                                    {nextFree && ` · ${nextFree}`}
                                 </span>
                                 <Divider style={{ marginBlock: '1.25rem' }} />
                             </>

@@ -1,4 +1,4 @@
-import { formatQuotaDate, formatQuotaLeft, getQuotaResetDate } from './quota-label'
+import { describeNextFree, formatQuotaDate, formatQuotaLeft } from './quota-label'
 
 describe('formatQuotaLeft', () => {
     it('shows the analyses left out of the limit', () => {
@@ -17,19 +17,27 @@ describe('formatQuotaLeft', () => {
     })
 })
 
-describe('getQuotaResetDate', () => {
-    it('gives the moment the oldest counted analysis stops counting', () => {
-        const quota = { used: 1, limit: 3, nextFreeAt: '2026-10-16T09:30:00.000Z' }
+describe('describeNextFree', () => {
+    const NEXT_FREE_AT = '2026-10-16T09:30:00.000Z'
 
-        expect(getQuotaResetDate(quota)).toBe(formatQuotaDate('2026-10-16T09:30:00.000Z'))
+    it('says one more analysis frees up when the oldest counted one stops counting', () => {
+        expect(describeNextFree({ used: 1, limit: 3, nextFreeAt: NEXT_FREE_AT })).toBe(
+            `One more analysis frees up on ${formatQuotaDate(NEXT_FREE_AT)}`,
+        )
+    })
+
+    it('names it the next analysis once none is left', () => {
+        expect(describeNextFree({ used: 3, limit: 3, nextFreeAt: NEXT_FREE_AT })).toBe(
+            `Your next analysis frees up on ${formatQuotaDate(NEXT_FREE_AT)}`,
+        )
     })
 
     it('is null while no analysis counts', () => {
-        expect(getQuotaResetDate({ used: 0, limit: 3, nextFreeAt: null })).toBeNull()
+        expect(describeNextFree({ used: 0, limit: 3, nextFreeAt: null })).toBeNull()
     })
 
     it('is null for an admin, whose runs are never capped', () => {
-        expect(getQuotaResetDate({ used: 4, limit: null, nextFreeAt: '2026-10-16T09:30:00.000Z' })).toBeNull()
+        expect(describeNextFree({ used: 4, limit: null, nextFreeAt: NEXT_FREE_AT })).toBeNull()
     })
 })
 

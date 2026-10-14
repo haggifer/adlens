@@ -176,7 +176,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   analysis would be admitted (for a visitor without a session too, judged as the anonymous user a first run creates)
   and keeps the answer in the query cache per user, refreshed after every run, refusal, sign-in and sign-out, and when
   a watched analysis fails (a failed run isn't counted; the API refunds it just after the failure, so it's asked again
-  2 seconds later). An answer overrides what the cached quota implies. A refusal disables Run and says why above it. A
+  2 seconds later), and with the quota just after the quota's `nextFreeAt`, when an analysis frees up on the rolling
+  7-day window (one timer, set by the header; the header and phone menu name that moment). An answer overrides what the cached quota implies. A refusal disables Run and says why above it. A
   refusal from creating the job is the fallback: it disables Run the same way until a newer answer replaces it. The
   home page asks on load, and when the API can't answer at all (unreachable or failing, after the usual retries) it
   shows "AdLens is briefly unavailable" with Try again in place of the upload and settings: no analysis could start, so

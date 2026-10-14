@@ -4,16 +4,17 @@ import { AccountKind } from '@/auth/types'
 import { Logo } from '@/components/brand/Logo'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
-import { formatQuotaLeft, getQuotaResetDate } from '@/components/layout/quota-label'
+import { describeNextFree, formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { useQuota } from '@/hooks/useQuota'
+import { useRefreshAtNextFree } from '@/hooks/useRefreshAtNextFree'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { Divider, Tooltip, type TooltipProps } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useStyles } from './styles'
 
-// Focus too, so a keyboard reaches the reset date the label's tooltip holds.
+// Focus too, so a keyboard reaches the date the label's tooltip holds.
 const QUOTA_TOOLTIP_TRIGGER: TooltipProps['trigger'] = ['hover', 'focus']
 
 // History lists a session's own analyses; every other page is for anyone, Presets included: without a session it shows
@@ -37,7 +38,10 @@ export function Header() {
     // Only an account shows its count: an anonymous session's single analysis is what the settings panel explains.
     const hasAccount = isSignedIn && kind !== AccountKind.Anonymous
     const navLinks = NAV_LINKS.filter((link) => isSignedIn || !link.isSessionOnly)
-    const quotaResetDate = quota ? getQuotaResetDate(quota) : null
+    const nextFree = quota ? describeNextFree(quota) : null
+
+    // The header is on every page, so its one timer serves the settings panel's Run as well.
+    useRefreshAtNextFree(quota?.nextFreeAt)
 
     return (
         <header className={styles.header}>
@@ -65,12 +69,8 @@ export function Header() {
                         Sign In button stays in the bar because it is the one action a signed-out visitor needs. */}
                     {hasAccount && quota && (
                         <span className={cx(styles.headerGroup, styles.desktopOnly)}>
-                            <Tooltip
-                                title={quotaResetDate && `Resets at ${quotaResetDate}`}
-                                trigger={QUOTA_TOOLTIP_TRIGGER}
-                                placement="bottom"
-                            >
-                                <span className={styles.quotaLabel} tabIndex={quotaResetDate ? 0 : undefined}>
+                            <Tooltip title={nextFree} trigger={QUOTA_TOOLTIP_TRIGGER} placement="bottom">
+                                <span className={styles.quotaLabel} tabIndex={nextFree ? 0 : undefined}>
                                     {formatQuotaLeft(quota)}
                                 </span>
                             </Tooltip>

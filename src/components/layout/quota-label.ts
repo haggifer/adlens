@@ -24,6 +24,14 @@ export const formatQuotaDate = (isoDate: string): string => {
     return `${read('month')} ${read('day')} ${read('hour')}:${read('minute')}`
 }
 
-// When the oldest counted analysis stops counting; null while none counts, and for an admin (no limit).
-export const getQuotaResetDate = ({ limit, nextFreeAt }: Quota): string | null =>
-    limit === null || nextFreeAt === null ? null : formatQuotaDate(nextFreeAt)
+// The window is rolling: at nextFreeAt the oldest counted analysis stops counting, which frees one analysis, not the
+// whole allowance. Null while none counts, and for an admin (no limit).
+export const describeNextFree = ({ used, limit, nextFreeAt }: Quota): string | null => {
+    if (limit === null || nextFreeAt === null) {
+        return null
+    }
+
+    const date = formatQuotaDate(nextFreeAt)
+
+    return used >= limit ? `Your next analysis frees up on ${date}` : `One more analysis frees up on ${date}`
+}
