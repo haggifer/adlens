@@ -59,7 +59,8 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 
 - `NEXT_PUBLIC_API_BASE_URL` — origin of the AdLens API (`https://api.useadlens.com` in production).
 - `NEXT_PUBLIC_SITE_URL` — origin of this app (`https://www.useadlens.com` in production). Used for page metadata;
-  the links in emails are built by the API from its `WEB_ORIGIN`.
+  the links in emails are built by the API from its `WEB_ORIGIN`. Unset, it is `http://localhost:3000`; a production
+  build fails without it rather than name localhost as the pages' canonical address.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: the Turnstile widget's site key. Unset, it is Cloudflare's always-pass test key
   `1x00000000000000000000AA`, which works only with the API's test secret; `2x00000000000000000000AB` always fails.
   A production build (`VERCEL_ENV=production`) fails without it rather than ship the test key.

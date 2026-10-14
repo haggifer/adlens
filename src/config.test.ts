@@ -1,5 +1,6 @@
 const SITE_KEY = '0x4AAAAAAAsitekey'
 const TEST_SITE_KEY = '1x00000000000000000000AA'
+const SITE_URL = 'https://www.useadlens.com'
 
 // config.ts parses the environment once, on import, so each case imports a fresh copy under its own environment.
 const importConfig = async (env: NodeJS.ProcessEnv): Promise<unknown> => {
@@ -29,9 +30,10 @@ describe('config', () => {
             NODE_ENV: 'production' as const,
             VERCEL_ENV: 'production',
             NEXT_PUBLIC_TURNSTILE_SITE_KEY: SITE_KEY,
+            NEXT_PUBLIC_SITE_URL: SITE_URL,
         }
 
-        expect(await importConfig(env)).toMatchObject({ turnstileSiteKey: SITE_KEY })
+        expect(await importConfig(env)).toMatchObject({ turnstileSiteKey: SITE_KEY, siteUrl: SITE_URL })
     })
 
     it('points at the local API and site when nothing is configured', async () => {
@@ -49,8 +51,18 @@ describe('config', () => {
     })
 
     it('fails a production build without the site key instead of shipping the test key', async () => {
-        await expect(importConfig({ NODE_ENV: 'production', VERCEL_ENV: 'production' })).rejects.toThrow(
-            'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
-        )
+        await expect(
+            importConfig({ NODE_ENV: 'production', VERCEL_ENV: 'production', NEXT_PUBLIC_SITE_URL: SITE_URL }),
+        ).rejects.toThrow('NEXT_PUBLIC_TURNSTILE_SITE_KEY')
+    })
+
+    it('fails a production build without the site URL instead of pointing pages at localhost', async () => {
+        await expect(
+            importConfig({
+                NODE_ENV: 'production',
+                VERCEL_ENV: 'production',
+                NEXT_PUBLIC_TURNSTILE_SITE_KEY: SITE_KEY,
+            }),
+        ).rejects.toThrow('NEXT_PUBLIC_SITE_URL')
     })
 })

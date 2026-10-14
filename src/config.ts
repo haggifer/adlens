@@ -10,10 +10,16 @@ const configSchema = z.object({
 })
 
 // VERCEL_ENV isn't NEXT_PUBLIC_, so it is never inlined and reads as unset in the browser. It is set while Vercel
-// builds, and `next build` runs this module in Node to render the pages, so a production build without the key fails
-// there instead of shipping the always-pass test key.
-if (process.env.VERCEL_ENV === 'production' && !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
-    throw new Error('NEXT_PUBLIC_TURNSTILE_SITE_KEY is required for a production build')
+// builds, and `next build` runs this module in Node to render the pages, so a production build without these fails
+// there instead of shipping the always-pass test key, or canonical addresses and link previews pointing at localhost.
+if (process.env.VERCEL_ENV === 'production') {
+    if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+        throw new Error('NEXT_PUBLIC_TURNSTILE_SITE_KEY is required for a production build')
+    }
+
+    if (!process.env.NEXT_PUBLIC_SITE_URL) {
+        throw new Error('NEXT_PUBLIC_SITE_URL is required for a production build')
+    }
 }
 
 // Public settings, inlined at build time. Each NEXT_PUBLIC_ variable must be referenced literally for Next to inline it.
