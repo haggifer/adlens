@@ -35,6 +35,10 @@ npm test             # Jest + React Testing Library
   whether the session ended.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency.
+- Contract changes: the API's request schemas are strict, so a request field added in `adlens-shared` ships API first
+  (wait for its `/health` to answer), then the web. A rollback goes in reverse: the web first, then the API. The web
+  must tolerate a new response field being absent (responses are cast, not validated) until the API that sends it is
+  live.
 - The platform, placement and market options (`src/labels.ts`, over the adlens-shared enums) must match the ruleset.
   Check them **only when the maintainer publishes a new ruleset version**: a sync summary then lists which option
   reaches each rule platform and every placement and region in use. Label an option so users can see which rules it
