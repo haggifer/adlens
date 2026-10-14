@@ -2,7 +2,7 @@
 
 import { verifyEmail } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
-import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { type AuthError, describeConfirmError, describeError, isMailboxTaken, runAuthRequest } from '@/auth/errors'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { Button, Result, Spin } from 'antd'
@@ -51,7 +51,7 @@ export function ConfirmEmail({ token }: IProps) {
     const hasAccount = isSignedIn && !isAnonymous
     const isUnconfirmed = hasAccount && !isEmailConfirmed
     const sessionKey = hasAccount && user ? user.id : NO_ACCOUNT
-    const failure = linkError ? describeError(linkError) : INVALID_LINK
+    const failure = linkError ? describeConfirmError(linkError) : INVALID_LINK
 
     const handleOpenOwnConfirmation = () => {
         setView('confirm')
@@ -73,7 +73,8 @@ export function ConfirmEmail({ token }: IProps) {
             )
         }
 
-        if (isUnconfirmed) {
+        // A new link would be refused the same way.
+        if (isUnconfirmed && !isMailboxTaken(linkError)) {
             return (
                 <Result
                     status="warning"

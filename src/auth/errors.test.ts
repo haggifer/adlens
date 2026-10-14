@@ -1,4 +1,11 @@
-import { describeError, isNetworkError, isRateLimited, runAuthQuery, runAuthRequest } from '@/auth/errors'
+import {
+    describeConfirmError,
+    describeError,
+    isNetworkError,
+    isRateLimited,
+    runAuthQuery,
+    runAuthRequest,
+} from '@/auth/errors'
 
 const GENERIC_COPY = 'Something went wrong. Please try again.'
 const RATE_LIMITED_COPY = 'Too many attempts. Wait a minute and try again.'
@@ -48,6 +55,21 @@ describe('describeError', () => {
         expect(describeError({ code: 'constructor' })).toBe(GENERIC_COPY)
         expect(describeError({ code: 'toString' })).toBe(GENERIC_COPY)
         expect(describeError({ code: '__proto__' })).toBe(GENERIC_COPY)
+    })
+})
+
+describe('describeConfirmError', () => {
+    it('says another account already confirmed the mailbox, where sign-up would say the address is taken', () => {
+        expect(describeConfirmError({ status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
+            'Another AdLens account has already confirmed this mailbox. Sign in to that account instead.',
+        )
+    })
+
+    it('describes every other answer as describeError does', () => {
+        expect(describeConfirmError({ code: 'TOKEN_EXPIRED' })).toBe(describeError({ code: 'TOKEN_EXPIRED' }))
+        expect(describeConfirmError({ status: 429, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
+            describeError({ status: 429 }),
+        )
     })
 })
 

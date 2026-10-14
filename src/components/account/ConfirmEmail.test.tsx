@@ -1,6 +1,6 @@
 import { verifyEmail } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { describeError } from '@/auth/errors'
+import { describeConfirmError, describeError } from '@/auth/errors'
 import { announceSessionChange, refreshSession } from '@/auth/session'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
@@ -98,6 +98,17 @@ describe('ConfirmEmail', () => {
         await user.click(screen.getByRole('button', { name: 'Confirm email' }))
 
         expect(useAuthModalStore.getState().view).toBe('confirm')
+    })
+
+    it('tells an account whose mailbox another account already confirmed to sign in to that one, with no new link', async () => {
+        const mailboxTaken = { status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL', message: 'Raw server text' }
+
+        answerOnce(mailboxTaken)
+        renderConfirmEmail(TOKEN)
+
+        expect(await screen.findByText(describeConfirmError(mailboxTaken))).toBeInTheDocument()
+        expect(screen.queryByText(describeError(mailboxTaken))).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Confirm email' })).not.toBeInTheDocument()
     })
 
     it('treats a 403 with another code as an ordinary failure', async () => {

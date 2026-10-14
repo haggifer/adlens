@@ -65,6 +65,20 @@ export const describeError = (error: AuthError | null): string => {
     return 'Something went wrong. Please try again.'
 }
 
+// Confirming an email answers USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL when another account already confirmed the same
+// mailbox (an alias such as ann+x@ included): unlike at sign-up, this account exists and is signed in, so the other one
+// is the way in.
+export const isMailboxTaken = (error: AuthError | null): boolean =>
+    error?.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL'
+
+export const describeConfirmError = (error: AuthError | null): string => {
+    if (isMailboxTaken(error) && !isRateLimited(error)) {
+        return 'Another AdLens account has already confirmed this mailbox. Sign in to that account instead.'
+    }
+
+    return describeError(error)
+}
+
 // Better Auth returns server-side failures as `{ error }` but throws when the request never reaches the API;
 // this folds both into the returned error.
 export const runAuthQuery = async <T>(
