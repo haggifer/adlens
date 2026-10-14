@@ -3,6 +3,7 @@
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { useJobs } from '@/hooks/useJobs'
 import { formatPlatforms, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '@/labels'
+import { TagFilled } from '@ant-design/icons'
 import type { Job } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
@@ -31,6 +32,14 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
                     {renderStatus(job)}
                     <span>{formatCreatedAt(job)}</span>
                 </div>
+                {/* Below lg the Preset column is gone too, so the preset gets its own line. */}
+                {job.presetName && (
+                    <div className={styles.compactPreset}>
+                        <Tag color="cyan" icon={<TagFilled aria-hidden />} title={job.presetName}>
+                            {job.presetName}
+                        </Tag>
+                    </div>
+                )}
             </div>
         ),
     },

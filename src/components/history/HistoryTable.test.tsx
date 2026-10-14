@@ -68,7 +68,7 @@ describe('HistoryTable', () => {
             const row = await rowOf(JOB.file.name)
 
             expect(screen.getByRole('columnheader', { name: 'Preset' })).toBeInTheDocument()
-            expect(within(row).getByText('Meta US')).toBeInTheDocument()
+            expect(within(row).getByText('Meta US', { selector: 'td' })).toBeInTheDocument()
         })
 
         it('shows a dash for a run counted for no preset', async () => {
@@ -76,6 +76,25 @@ describe('HistoryTable', () => {
 
             expect(within(await rowOf(JOB.file.name)).getByText('—')).toBeInTheDocument()
         })
+    })
+
+    // Below lg the Preset column is gone, so the row carries the preset as a tag on a line of its own.
+    it('tags the row with the preset a run was counted for', async () => {
+        jest.mocked(listJobs).mockResolvedValue(page([buildJob({ presetName: 'Meta US' })]))
+        renderTable()
+
+        const tag = within(await rowOf(JOB.file.name))
+            .getByText('Meta US')
+            .closest('.ant-tag')
+
+        expect(tag).toHaveClass('ant-tag-cyan')
+        expect(tag?.querySelector('.anticon-tag')).not.toBeNull()
+    })
+
+    it('leaves out the preset tag for a run counted for no preset', async () => {
+        renderTable()
+
+        expect((await rowOf(JOB.file.name)).querySelector('.ant-tag-cyan')).toBeNull()
     })
 
     it('tags an analysis of a sample ad', async () => {
