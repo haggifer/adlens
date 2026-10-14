@@ -18,8 +18,8 @@ import {
     type Preset,
     PRESET_NAME_MAX_LENGTH,
     RequestErrorCode,
-    savePresetInputSchema,
 } from 'adlens-shared'
+import { PRESET_NAME_REQUIRED_COPY, PRESET_NAME_TOO_LONG_COPY } from './preset-name'
 import { PresetModal } from './PresetModal'
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: jest.fn() }))
@@ -37,8 +37,6 @@ const EDITED = buildPreset({ id: 'preset-1', name: 'Launch week', settings: SETT
 const OTHER = buildPreset({ id: 'preset-2', name: 'Meta US' })
 
 const getOverwritePrompt = (name: string) => `A preset named “${name}” already exists. Overwrite it?`
-
-const getNameMessage = (name: string) => savePresetInputSchema.shape.name.safeParse(name).error?.issues[0].message ?? ''
 
 interface RenderOptions {
     preset?: Preset
@@ -260,7 +258,7 @@ describe('PresetModal', () => {
         await enterName(user, '   ')
         await clickSave(user)
 
-        expect(await screen.findByText(getNameMessage(''))).toBeInTheDocument()
+        expect(await screen.findByText(PRESET_NAME_REQUIRED_COPY)).toBeInTheDocument()
         expect(createPreset).not.toHaveBeenCalled()
     })
 
@@ -272,7 +270,7 @@ describe('PresetModal', () => {
         fireEvent.change(screen.getByLabelText('Name'), { target: { value: tooLong } })
         await clickSave(user)
 
-        expect(await screen.findByText(getNameMessage(tooLong))).toBeInTheDocument()
+        expect(await screen.findByText(PRESET_NAME_TOO_LONG_COPY)).toBeInTheDocument()
         expect(createPreset).not.toHaveBeenCalled()
     })
 })

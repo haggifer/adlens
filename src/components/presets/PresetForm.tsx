@@ -20,7 +20,7 @@ import { Alert, App, Button, Checkbox, Input, Popconfirm } from 'antd'
 import { type FormEvent, useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { isSameName } from './preset-name'
+import { describePresetNameIssue, isSameName } from './preset-name'
 
 const presetFormSchema = savePresetInputSchema.omit({ overwrite: true })
 
@@ -80,7 +80,7 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<PresetFormInput, unknown, PresetFormValues>({
-        resolver: zodResolver(presetFormSchema),
+        resolver: zodResolver(presetFormSchema, { error: describePresetNameIssue }),
         defaultValues: getDefaultValues(preset, initialSettings),
     })
 
