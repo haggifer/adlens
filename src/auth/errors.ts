@@ -79,6 +79,15 @@ export const describeConfirmError = (error: AuthError | null): string => {
     return describeError(error)
 }
 
+// A password reset answers INVALID_TOKEN for an expired link as well as a used or mistyped one, so the copy covers both.
+export const describeResetError = (error: AuthError | null): string => {
+    if (error?.code === 'INVALID_TOKEN' && !isRateLimited(error)) {
+        return 'This link has expired or has already been used. Request a new one.'
+    }
+
+    return describeError(error)
+}
+
 // Better Auth returns server-side failures as `{ error }` but throws when the request never reaches the API;
 // this folds both into the returned error.
 export const runAuthQuery = async <T>(

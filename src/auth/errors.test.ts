@@ -1,6 +1,7 @@
 import {
     describeConfirmError,
     describeError,
+    describeResetError,
     isNetworkError,
     isRateLimited,
     runAuthQuery,
@@ -70,6 +71,18 @@ describe('describeConfirmError', () => {
         expect(describeConfirmError({ status: 429, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
             describeError({ status: 429 }),
         )
+    })
+})
+
+describe('describeResetError', () => {
+    it('says the link expired or was used, since a reset answers both with INVALID_TOKEN', () => {
+        expect(describeResetError({ status: 400, code: 'INVALID_TOKEN' })).toBe(
+            'This link has expired or has already been used. Request a new one.',
+        )
+    })
+
+    it('describes every other answer as describeError does', () => {
+        expect(describeResetError({ code: 'PASSWORD_TOO_SHORT' })).toBe(describeError({ code: 'PASSWORD_TOO_SHORT' }))
     })
 })
 

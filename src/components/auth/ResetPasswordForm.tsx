@@ -1,8 +1,9 @@
 'use client'
 
 import { resetPassword } from '@/auth/authClient'
-import { describeError, runAuthRequest } from '@/auth/errors'
+import { describeResetError, runAuthRequest } from '@/auth/errors'
 import { NEW_PASSWORD_HINT, newPasswordFieldsSchema } from '@/auth/schemas'
+import { announceSessionChange, refreshSession } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -44,10 +45,13 @@ export function ResetPasswordForm() {
         const error = await runAuthRequest(() => resetPassword({ newPassword: password, token }))
 
         if (error) {
-            setFormError(describeError(error))
+            setFormError(describeResetError(error))
             return
         }
 
+        // The reset signs the account out everywhere, this browser included if it was signed in: every tab catches up.
+        refreshSession()
+        announceSessionChange()
         setIsDone(true)
     }
 

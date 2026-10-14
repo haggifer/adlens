@@ -27,7 +27,7 @@ npm test             # Jest + React Testing Library
   send a token yourself.
 - API failures become `ApiRequestError` with a stable code, and the user sees the copy from `src/api/errors.ts`. Never
   show raw server or axios messages. Tests take that copy from its owner too (`describeRequestError`, `describeError`,
-  `describeConfirmError`, `describeContactError`), never retyped: only the owner's own test pins the wording. Better Auth calls go through `runAuthRequest` or `runAuthQuery` in `src/auth/errors.ts`,
+  `describeConfirmError`, `describeResetError`, `describeContactError`), never retyped: only the owner's own test pins the wording. Better Auth calls go through `runAuthRequest` or `runAuthQuery` in `src/auth/errors.ts`,
   which also turn network failures into an error.
 - Per-user query keys include the user id, and sign-out clears the query cache, so one user's data never shows for another.
   It clears it only once Better Auth confirms the sign-out: `useAuth().signOut` rejects with an `AuthError`
