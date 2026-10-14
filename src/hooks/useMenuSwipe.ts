@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { type SwipeEventData, useSwipeable } from 'react-swipeable'
 
 export interface UseMenuSwipeResult {
@@ -17,7 +17,7 @@ const FLICK_VELOCITY_PX_PER_MS = 0.5
 const SETTLE_TRANSITION = 'transform 0.2s ease-out'
 
 // Swipes that start here belong to the element: typing and sliders, the video player's controls, and anything shown
-// over the page (a modal, the image viewer).
+// over the page (a modal, the image viewer, and antd's popups, which render in <body> outside any modal they open from).
 const OWN_SWIPE_SELECTOR = [
     'input',
     'textarea',
@@ -29,9 +29,23 @@ const OWN_SWIPE_SELECTOR = [
     '[aria-modal="true"]',
     '.ant-modal-wrap',
     '.ant-image-preview-root',
+    '.ant-select-dropdown',
+    '.ant-popover',
+    '.ant-dropdown',
 ].join(', ')
 
-const isMenuShown = () => window.matchMedia(MENU_QUERY).matches
+const getIsMenuShown = () => window.matchMedia(MENU_QUERY).matches
+
+// The server renders no menu swipe; the client takes over at hydration.
+const getIsMenuShownOnServer = () => false
+
+const subscribeToMenuQuery = (onChange: () => void) => {
+    const query = window.matchMedia(MENU_QUERY)
+
+    query.addEventListener('change', onChange)
+
+    return () => query.removeEventListener('change', onChange)
+}
 
 const scrollsHorizontally = (element: Element) =>
     element.scrollWidth > element.clientWidth && ['auto', 'scroll'].includes(getComputedStyle(element).overflowX)
@@ -71,17 +85,19 @@ const isCloseSwipe = ({ deltaX, dir, velocity }: SwipeEventData, panelWidth: num
 // swipe right drags it out with the finger, then closes it or snaps it back. The panel is moved directly, not through
 // state, so a drag doesn't re-render the menu on every touch move.
 export function useMenuSwipe(isOpen: boolean, onOpen: () => void, onClose: () => void): UseMenuSwipeResult {
+    const isMenuShown = useSyncExternalStore(subscribeToMenuQuery, getIsMenuShown, getIsMenuShownOnServer)
+
     const panel = useRef<HTMLElement | null>(null)
     // Decided by a gesture's first move: a mostly vertical one scrolls the page or the menu and is left alone.
     const isHorizontal = useRef(false)
-    // Also decided by the first move: the gesture belongs to something else, or the menu isn't shown.
+    // Also decided by the first move: the gesture belongs to something else.
     const isIgnored = useRef(false)
 
     const { ref: attachSwipe } = useSwipeable({
         onSwiping: ({ first, absX, absY, deltaX, event }) => {
             if (first) {
                 isHorizontal.current = absX > absY
-                isIgnored.current = !isMenuShown() || (!isOpen && hasOwnSwipe(event.target))
+                isIgnored.current = !isOpen && hasOwnSwipe(event.target)
             }
 
             if (!isHorizontal.current || isIgnored.current) {
@@ -120,14 +136,17 @@ export function useMenuSwipe(isOpen: boolean, onOpen: () => void, onClose: () =>
 
             movePanel(panel.current, '', SETTLE_TRANSITION)
         },
-        // Not passive, so a horizontal swipe can be claimed above; a vertical one still scrolls.
+        // Listening only where the menu is shown: wider, nothing on the page waits on a touch handler. There it isn't
+        // passive, so a horizontal swipe can be claimed above; a vertical one still scrolls.
+        trackTouch: isMenuShown,
         touchEventOptions: { passive: false },
     })
 
+    // react-swipeable ignores a null ref, so the listeners leave the page by moving to a detached element.
     useEffect(() => {
         attachSwipe(document.documentElement)
 
-        return () => attachSwipe(null)
+        return () => attachSwipe(document.createElement('div'))
     }, [attachSwipe])
 
     // Cleared on opening rather than once closed: a menu reopened before its closing slide ends never finishes closing,

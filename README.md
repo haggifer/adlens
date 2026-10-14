@@ -28,7 +28,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
 - Direct-to-GCS uploads via V4 signed URLs, with progress
 - **Vidstack** player for the uploaded and replayed video
 - **react-swipeable** to open the phone menu with a swipe left anywhere on the page and close it with a swipe right
-  (`useMenuSwipe`)
+  (`useMenuSwipe`); it listens only while the menu is shown (below 992px), and leaves swipes that start in a field,
+  the player, a dialog or an antd popup to them
 - **Jest + React Testing Library** for tests
 - Deployed on **Vercel**
 
