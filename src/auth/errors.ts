@@ -1,3 +1,6 @@
+import { describeRequestError } from '@/api/errors'
+import { RequestErrorCode } from 'adlens-shared'
+
 export interface AuthError {
     code?: string
     message?: string
@@ -22,7 +25,8 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     TOKEN_EXPIRED: 'This link has expired. Request a new one.',
     SESSION_EXPIRED: 'You were signed out. Sign in again.',
     EMAIL_NOT_SENT: 'We couldn’t send the email. Try again in a few minutes.',
-    DISPOSABLE_EMAIL: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
+    // One code in adlens-shared, so its copy has one owner.
+    [RequestErrorCode.DisposableEmail]: describeRequestError(RequestErrorCode.DisposableEmail),
     // Sign-up or sign-in succeeded, but the anonymous history couldn't be moved to the account.
     ACCOUNT_LINK_FAILED:
         'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',

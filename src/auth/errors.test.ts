@@ -1,3 +1,4 @@
+import { describeRequestError } from '@/api/errors'
 import {
     describeConfirmError,
     describeError,
@@ -7,14 +8,15 @@ import {
     runAuthQuery,
     runAuthRequest,
 } from '@/auth/errors'
+import { RequestErrorCode } from 'adlens-shared'
 
 const GENERIC_COPY = 'Something went wrong. Please try again.'
 const RATE_LIMITED_COPY = 'Too many attempts. Wait a minute and try again.'
 
 describe('describeError', () => {
     it('shows the copy for a known Better Auth code', () => {
-        expect(describeError({ code: 'DISPOSABLE_EMAIL' })).toBe(
-            'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
+        expect(describeError({ code: RequestErrorCode.DisposableEmail })).toBe(
+            describeRequestError(RequestErrorCode.DisposableEmail),
         )
         expect(describeError({ status: 500, code: 'ACCOUNT_LINK_FAILED' })).toBe(
             'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
