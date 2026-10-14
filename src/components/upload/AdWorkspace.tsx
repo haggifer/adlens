@@ -52,6 +52,8 @@ export function AdWorkspace() {
     const [source, setSource] = useState<AnalysisSource | null>(null)
     // The source a pick finishing later must release: a handler from an earlier render would see a stale one.
     const sourceRef = useRef<AnalysisSource | null>(null)
+    // A pick still being read when the page is left finishes after the cleanup below; its copy is then never kept.
+    const isMountedRef = useRef(false)
     const [isSamplesOpen, setIsSamplesOpen] = useState(false)
     const [isRunning, setIsRunning] = useState(false)
     const [isReadingVideo, setIsReadingVideo] = useState(false)
@@ -74,8 +76,13 @@ export function AdWorkspace() {
         setSource(next)
     }
 
-    const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) =>
+    const handleSelectFile = (file: File, { contentType, width, height }: AcceptedVideo) => {
+        if (!isMountedRef.current) {
+            return
+        }
+
         replaceSource({ kind: 'file', file, contentType, url: URL.createObjectURL(file), width, height })
+    }
 
     // The sample's settings are what the panel shows now, so they, not the ones from before it, carry to the next file.
     const handleSelectSample = (sample: Sample) => {
@@ -132,7 +139,14 @@ export function AdWorkspace() {
 
     // A run leaves for its analysis with a client-side navigation, so without this the copy (up to the upload limit)
     // would stay in memory until the tab reloads.
-    useEffect(() => () => releasePreview(sourceRef.current), [])
+    useEffect(() => {
+        isMountedRef.current = true
+
+        return () => {
+            isMountedRef.current = false
+            releasePreview(sourceRef.current)
+        }
+    }, [])
 
     return (
         <div className={styles.page}>

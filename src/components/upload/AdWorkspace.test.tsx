@@ -337,6 +337,20 @@ describe('AdWorkspace', () => {
         getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))
     })
 
+    it('keeps no copy of a pick that finishes after the page was left', async () => {
+        const snapshot = deferred<File>()
+        const file = buildFile('launch.mp4')
+
+        jest.mocked(readFileSnapshot).mockReturnValueOnce(snapshot.promise)
+        const { user, unmount } = renderWorkspace()
+
+        await user.upload(fileInput(), file)
+        unmount()
+        await act(async () => snapshot.resolve(file))
+
+        getCreatedUrls().forEach((url) => expect(URL.revokeObjectURL).toHaveBeenCalledWith(url))
+    })
+
     it('reads one replacement at a time with Run disabled, and releases every replaced video', async () => {
         const replacement = deferred<File>()
         const secondFile = buildFile('second-cut.mp4')
