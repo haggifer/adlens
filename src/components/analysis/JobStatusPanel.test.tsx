@@ -22,6 +22,14 @@ describe('JobStatusPanel', () => {
         expect(screen.getByRole('img', { name: 'notification', hidden: true })).toBeInTheDocument()
     })
 
+    it('marks the finished steps with a solid circle, and only them', () => {
+        render(<JobStatusPanel job={buildJob({ status: JobStatus.Analyzing })} />)
+
+        const icons = [...document.querySelectorAll<HTMLElement>('.ant-steps-item-icon')]
+
+        expect(icons.map((icon) => icon.style.background !== '')).toEqual([true, true, false])
+    })
+
     it('says when it can’t reach AdLens, so a stalled step isn’t taken for a slow one', () => {
         render(<JobStatusPanel job={buildJob({ status: JobStatus.Queued })} isDisconnected />)
 

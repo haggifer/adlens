@@ -3,7 +3,9 @@
 import { describeJobError, describeJobErrorTitle } from '@/api/errors'
 import { type Job, JobStatus } from 'adlens-shared'
 import { Alert, Button, Result, Steps } from 'antd'
+import { useTheme } from 'antd-style'
 import { useRouter } from 'next/navigation'
+import type { CSSProperties } from 'react'
 import { AnalysisAnimation } from './AnalysisAnimation'
 import { useStyles } from './styles'
 
@@ -13,10 +15,13 @@ const PROGRESS_STEPS = [
     { status: JobStatus.Analyzing, title: 'Analyzing the ad' },
 ]
 
-const getStepItems = (current: number) =>
+// antd fills a finished step's circle with colorPrimaryBg, a grey-teal for this primary that the check barely stands
+// out from; a solid teal circle with a white check reads as done in both themes. Inline, so it beats antd's own rules.
+const getStepItems = (current: number, finishedIconStyle: CSSProperties) =>
     PROGRESS_STEPS.map((step, index) => ({
         title: step.title,
         icon: index === current ? <AnalysisAnimation /> : undefined,
+        styles: index < current ? { icon: finishedIconStyle } : undefined,
     }))
 
 interface IProps {
@@ -27,10 +32,12 @@ interface IProps {
 
 export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     const { styles, cx } = useStyles()
+    const token = useTheme()
     const router = useRouter()
 
     const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
-    const stepItems = getStepItems(current)
+    const finishedIconStyle = { background: token.colorPrimary, color: token.colorTextLightSolid }
+    const stepItems = getStepItems(current, finishedIconStyle)
     const newAnalysisButton = (
         <Button type="primary" onClick={() => router.push('/')}>
             Start a new analysis
