@@ -2,46 +2,60 @@
 
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { useJobs } from '@/hooks/useJobs'
+import { usePresets } from '@/hooks/usePresets'
 import { formatPlatforms, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '@/labels'
 import { TagFilled } from '@ant-design/icons'
-import type { Job } from 'adlens-shared'
+import type { Job, Preset } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MouseEvent } from 'react'
+import { MouseEvent, useMemo } from 'react'
 import { useStyles } from './styles'
 
 const formatCreatedAt = (job: Job) => new Date(job.createdAt).toLocaleString()
 
 const renderStatus = (job: Job) => <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>
 
-const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumnsType<Job> => [
+const toNamesById = (presets: Preset[]) => new Map(presets.map((preset) => [preset.id, preset.name]))
+
+// A preset deleted since, or one left behind at sign-in, names no run.
+const getPresetName = (job: Job, presetNames: Map<string, string>) =>
+    (job.presetId && presetNames.get(job.presetId)) ?? null
+
+const getColumns = (
+    styles: ReturnType<typeof useStyles>['styles'],
+    presetNames: Map<string, string>,
+): TableColumnsType<Job> => [
     {
         title: 'Video',
         key: 'file',
-        render: (_, job) => (
-            <div className={styles.videoCell}>
-                <div className={styles.videoName}>
-                    <Link href={`/analyses/${job.id}`} className={styles.videoLink} title={job.file.name}>
-                        {job.file.name}
-                    </Link>
-                    {job.sampleId && <Tag color="processing">Sample</Tag>}
-                </div>
-                {/* Phones drop the Status and Created columns, so the row carries them under the name. */}
-                <div className={styles.compactMeta}>
-                    {renderStatus(job)}
-                    <span>{formatCreatedAt(job)}</span>
-                </div>
-                {/* Below lg the Preset column is gone too, so the preset gets its own line. */}
-                {job.presetName && (
-                    <div className={styles.compactPreset}>
-                        <Tag color="cyan" icon={<TagFilled aria-hidden />} title={job.presetName}>
-                            {job.presetName}
-                        </Tag>
+        render: (_, job) => {
+            const presetName = getPresetName(job, presetNames)
+
+            return (
+                <div className={styles.videoCell}>
+                    <div className={styles.videoName}>
+                        <Link href={`/analyses/${job.id}`} className={styles.videoLink} title={job.file.name}>
+                            {job.file.name}
+                        </Link>
+                        {job.sampleId && <Tag color="processing">Sample</Tag>}
                     </div>
-                )}
-            </div>
-        ),
+                    {/* Phones drop the Status and Created columns, so the row carries them under the name. */}
+                    <div className={styles.compactMeta}>
+                        {renderStatus(job)}
+                        <span>{formatCreatedAt(job)}</span>
+                    </div>
+                    {/* Below lg the Preset column is gone too, so the preset gets its own line. */}
+                    {presetName && (
+                        <div className={styles.compactPreset}>
+                            <Tag color="cyan" icon={<TagFilled aria-hidden />} title={presetName}>
+                                {presetName}
+                            </Tag>
+                        </div>
+                    )}
+                </div>
+            )
+        },
     },
     {
         title: 'Platforms',
@@ -57,7 +71,7 @@ const getColumns = (styles: ReturnType<typeof useStyles>['styles']): TableColumn
         width: '9rem',
         responsive: ['lg'],
         ellipsis: true,
-        render: (_, job) => job.presetName ?? '—',
+        render: (_, job) => getPresetName(job, presetNames) ?? '—',
     },
     {
         title: 'Status',
@@ -88,6 +102,9 @@ export function HistoryTable() {
     const router = useRouter()
 
     const { jobs, isLoading, error, hasMore, isLoadingMore, loadMore } = useJobs()
+    const { presets } = usePresets()
+
+    const presetNames = useMemo(() => toNamesById(presets), [presets])
 
     // The whole row opens the analysis. Clicks on its link or its Delete button are left to them, so a row never
     // navigates twice or opens when deleting.
@@ -105,7 +122,7 @@ export function HistoryTable() {
             {error && <Alert type="error" showIcon title={error.message} />}
             <Table<Job>
                 rowKey="id"
-                columns={getColumns(styles)}
+                columns={getColumns(styles, presetNames)}
                 tableLayout="fixed"
                 rowClassName={() => styles.row}
                 onRow={(job) => ({ onClick: (event) => handleRowClick(event, job) })}

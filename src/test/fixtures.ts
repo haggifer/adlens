@@ -18,7 +18,7 @@ export const buildJob = (overrides: Partial<Job> = {}): Job => ({
     status: JobStatus.Analyzed,
     settings: { platforms: [], placements: [], markets: [] },
     file: { name: 'summer-ad.mp4', contentType: VideoMimeType.Mp4, size: 1000 },
-    presetName: null,
+    presetId: null,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
     ...overrides,

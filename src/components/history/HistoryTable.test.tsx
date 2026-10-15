@@ -1,8 +1,9 @@
 import { ApiRequestError } from '@/api/errors'
 import { listJobs } from '@/api/jobs'
+import { listPresets } from '@/api/presets'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
-import { buildJob } from '@/test/fixtures'
+import { buildJob, buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor, within } from '@testing-library/react'
 import { type Job, type JobListResponse, RequestErrorCode } from 'adlens-shared'
@@ -14,8 +15,11 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/api/jobs', () => ({ deleteJob: jest.fn(async () => undefined), listJobs: jest.fn() }))
+jest.mock('@/api/presets', () => ({ listPresets: jest.fn() }))
 
 const JOB = buildJob()
+const PRESET = buildPreset({ id: 'preset-1', name: 'Meta US' })
+const COUNTED_JOB = buildJob({ presetId: PRESET.id })
 
 const withFileName = (id: string, name: string) => buildJob({ id, file: { ...JOB.file, name } })
 
@@ -47,6 +51,7 @@ describe('HistoryTable', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         jest.mocked(listJobs).mockResolvedValue(page([JOB]))
+        jest.mocked(listPresets).mockResolvedValue([PRESET])
     })
 
     describe('on a wide screen', () => {
@@ -62,7 +67,7 @@ describe('HistoryTable', () => {
         })
 
         it('shows the preset a run was counted for in the Preset column', async () => {
-            jest.mocked(listJobs).mockResolvedValue(page([buildJob({ presetName: 'Meta US' })]))
+            jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
             renderTable()
 
             const row = await rowOf(JOB.file.name)
@@ -80,7 +85,7 @@ describe('HistoryTable', () => {
 
     // Below lg the Preset column is gone, so the row carries the preset as a tag on a line of its own.
     it('tags the row with the preset a run was counted for', async () => {
-        jest.mocked(listJobs).mockResolvedValue(page([buildJob({ presetName: 'Meta US' })]))
+        jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
         renderTable()
 
         const tag = within(await rowOf(JOB.file.name))
@@ -93,6 +98,24 @@ describe('HistoryTable', () => {
 
     it('leaves out the preset tag for a run counted for no preset', async () => {
         renderTable()
+
+        expect((await rowOf(JOB.file.name)).querySelector('.ant-tag-cyan')).toBeNull()
+    })
+
+    it("names the preset by its current name, so a renamed preset's runs follow it", async () => {
+        jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
+        jest.mocked(listPresets).mockResolvedValue([{ ...PRESET, name: 'Meta US and EU' }])
+        renderTable()
+
+        expect(await within(await rowOf(JOB.file.name)).findByText('Meta US and EU')).toBeInTheDocument()
+    })
+
+    it('leaves out the preset tag when the preset is gone', async () => {
+        jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
+        jest.mocked(listPresets).mockResolvedValue([])
+        renderTable()
+
+        await waitForLoaded()
 
         expect((await rowOf(JOB.file.name)).querySelector('.ant-tag-cyan')).toBeNull()
     })
