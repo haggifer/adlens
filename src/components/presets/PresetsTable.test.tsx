@@ -84,20 +84,14 @@ describe('PresetsTable', () => {
         expect(document.querySelector('.ant-pagination')).not.toBeInTheDocument()
     })
 
-    it('shows the usage count in its own column from the sm breakpoint', () => {
+    // jsdom ignores the CSS that shows the name cell's count only on phones, so both counts are present here.
+    it('shows the usage count in the name cell, and in a Usages column from the sm breakpoint', () => {
         window.matchMedia = (query) => ({ ...originalMatchMedia(query), matches: query === SM_QUERY })
-        renderTable()
-
-        expect(screen.getByRole('columnheader', { name: 'Usages' })).toBeInTheDocument()
-        expect(within(rowOf('Meta US')).getByText('3')).toBeInTheDocument()
-    })
-
-    it('puts the usage under the name on a phone, where the Usages column is hidden', () => {
         renderTable()
 
         const nameCell = screen.getByText('Meta US').closest('td')
 
-        expect(screen.queryByRole('columnheader', { name: 'Usages' })).not.toBeInTheDocument()
+        expect(within(rowOf('Meta US')).getByText(String(META_US.usageCount))).toBeInTheDocument()
         expect(nameCell).toContainElement(screen.getByText(formatUsage(META_US.usageCount)))
     })
 

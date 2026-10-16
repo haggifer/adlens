@@ -151,7 +151,7 @@ describe('AccountMenu', () => {
     })
 
     describe('for an anonymous visitor', () => {
-        it('offers Sign In, which also moves the history, and no separate sign-up button', async () => {
+        it('offers Sign In and no separate sign-up button', async () => {
             const { user } = renderMenu(anonymousAuth())
 
             expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()

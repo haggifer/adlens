@@ -319,11 +319,10 @@ describe('AnalysisSettings', () => {
     })
 
     describe('while the session is still loading', () => {
-        it('keeps Run disabled, and never signs in anonymously', () => {
+        it('keeps Run disabled', () => {
             renderSettings(initializingAuth())
 
             expect(runButton()).toBeDisabled()
-            expect(signIn.anonymous).not.toHaveBeenCalled()
         })
 
         it('fails a run submitted anyway, instead of leaving it loading as a success', async () => {

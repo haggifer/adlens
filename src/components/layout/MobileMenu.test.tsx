@@ -145,7 +145,7 @@ describe('MobileMenu', () => {
             expect(menu.queryByText(/@/)).not.toBeInTheDocument()
         })
 
-        it('opens sign-in, which also moves the history', async () => {
+        it('opens sign-in', async () => {
             const { user, menu } = await openMenu(anonymousAuth())
 
             await user.click(menu.getByRole('button', { name: 'Sign In' }))
