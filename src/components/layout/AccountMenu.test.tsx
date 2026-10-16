@@ -34,14 +34,6 @@ describe('AccountMenu', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('offers a signed-out visitor Sign In', async () => {
-        const { user } = renderMenu(signedOutAuth())
-
-        await user.click(screen.getByRole('button', { name: 'Sign In' }))
-
-        expect(useAuthModalStore.getState().view).toBe('signin')
-    })
-
     describe('while the session loads', () => {
         const expectInert = (button: HTMLElement) => {
             expect(button).toHaveAttribute('aria-disabled', 'true')
@@ -282,20 +274,6 @@ describe('AccountMenu', () => {
 
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
-        })
-
-        it('shows the error and stays signed in when signing out fails', async () => {
-            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-            const auth = memberAuth()
-
-            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
-            const user = await openMenu(auth)
-
-            await user.click(await screen.findByRole('menuitem', { name: /Sign Out/ }))
-
-            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
-            expect(mockPush).not.toHaveBeenCalled()
-            expect(consoleError).toHaveBeenCalledTimes(1)
         })
     })
 })

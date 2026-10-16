@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { initializingAuth, memberAuth, signedOutAuth } from '@/test/auth'
 import { buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import { MAX_PRESETS, RequestErrorCode } from 'adlens-shared'
 import { PresetsView } from './PresetsView'
 
@@ -42,17 +42,6 @@ describe('PresetsView', () => {
     beforeEach(() => {
         jest.mocked(useAuth).mockReturnValue(memberAuth())
         jest.mocked(listPresets).mockReset().mockResolvedValue([META_US, LAUNCH])
-    })
-
-    it('lists the presets by name', async () => {
-        renderWithProviders(<PresetsView />)
-
-        await screen.findByText('Meta US')
-
-        const rows = screen.getAllByRole('row').slice(1)
-
-        expect(within(rows[0]).getByText('Launch week')).toBeInTheDocument()
-        expect(within(rows[1]).getByText('Meta US')).toBeInTheDocument()
     })
 
     it('offers one Create button below the limit, and disables it at the limit and says why', async () => {

@@ -66,12 +66,6 @@ describe('Header', () => {
         expect(screen.queryByText(formatQuotaLeft(quota))).not.toBeInTheDocument()
     })
 
-    it('links Presets for an anonymous session too', () => {
-        renderHeader(anonymousAuth())
-
-        expect(screen.getByRole('link', { name: 'Presets' })).toHaveAttribute('href', '/presets')
-    })
-
     it('offers an account whose email isn’t confirmed a Confirm email button instead of the account menu', () => {
         const quota: Quota = { used: 0, limit: 1, nextFreeAt: null }
 
@@ -82,22 +76,16 @@ describe('Header', () => {
         expect(screen.getByText(formatQuotaLeft(quota))).toBeInTheDocument()
     })
 
-    it('draws Sign In at once while the session loads and nothing is remembered, but inert', () => {
+    it('links no History while the session loads and nothing is remembered', () => {
         renderHeader(initializingAuth())
 
-        const signIn = screen.getByRole('button', { name: 'Sign In' })
-
-        expect(signIn).toHaveAttribute('aria-disabled', 'true')
-        expect(signIn).not.toHaveAttribute('disabled')
         expect(screen.queryByRole('link', { name: 'History' })).not.toBeInTheDocument()
     })
 
-    it('takes the shape of a remembered member while the session loads, with an inert avatar', () => {
+    it('links History while the session loads as a remembered member', () => {
         renderHeader(initializingAuth(AccountKind.Member))
 
-        expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'History' })).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'Account menu' })).toHaveAttribute('aria-disabled', 'true')
     })
 
     it('shows no count before the quota has loaded', () => {

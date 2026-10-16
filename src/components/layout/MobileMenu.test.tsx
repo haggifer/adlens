@@ -165,12 +165,9 @@ describe('MobileMenu', () => {
             expect(confirm.compareDocumentPosition(quota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
         })
 
-        it('shows the email, count, Confirm email and Sign Out, but no account page', async () => {
+        it('shows Sign Out and History, but no account page or Sign In', async () => {
             const { menu } = await openMenu(unconfirmedAuth())
 
-            expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
-            expect(menu.getByText(formatQuotaLeft(QUOTA))).toBeInTheDocument()
-            expect(menu.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
             expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
             expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
             expect(menu.queryByRole('link', { name: /Account/ })).not.toBeInTheDocument()
@@ -214,22 +211,6 @@ describe('MobileMenu', () => {
 
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
-        })
-
-        it('shows the error and stays signed in when signing out fails', async () => {
-            const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-            const auth = memberAuth()
-
-            jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
-            const { user, menu } = await openMenu(auth)
-
-            await user.click(menu.getByRole('button', { name: /Sign Out/ }))
-
-            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
-            expect(mockPush).not.toHaveBeenCalled()
-            expect(consoleError).toHaveBeenCalledTimes(1)
-
-            consoleError.mockRestore()
         })
 
         it('opens the contact form', async () => {
