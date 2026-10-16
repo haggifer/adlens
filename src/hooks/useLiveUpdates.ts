@@ -1,20 +1,27 @@
+import { ApiRequestError } from '@/api/errors'
 import { getLiveToken } from '@/api/live'
 import { useAuth } from '@/auth/AuthContext'
 import { useLiveStore } from '@/contexts/stores/liveStore'
+import { admissionKey } from '@/hooks/useAdmission'
 import { jobKey } from '@/hooks/useJob'
 import { PRESETS_KEY } from '@/hooks/usePresets'
+import { quotaKey } from '@/hooks/useQuota'
 import { type QueryClient, type QueryKey, useQueryClient } from '@tanstack/react-query'
-import type { AuthOptions, ChannelStateChange, InboundMessage } from 'ably'
-import { getLiveChannel, LiveEvent, liveJobEventSchema, type LiveTokenRequest } from 'adlens-shared'
+import type { AuthOptions, ChannelStateChange, ConnectionStateChange, ErrorInfo, InboundMessage } from 'ably'
+import { getLiveChannel, LiveEvent, liveJobEventSchema, RequestErrorCode } from 'adlens-shared'
 import { useEffect } from 'react'
 
 type AuthCallback = NonNullable<AuthOptions['authCallback']>
 
-const LOST_STATES = new Set(['disconnected', 'suspended', 'failed'])
+// Ably treats a 403 from the auth callback as final and stops connecting, where any other error is retried with its own
+// back-off: an API without live updates (no key, or one that predates the token route) is told apart from one that
+// can't be reached right now. Ably accepts a plain object with an ErrorInfo's fields.
+const LIVE_OFF = { code: 40300, statusCode: 403, message: 'Live updates are off' } as ErrorInfo
 
-// A read already on its way answers with the change too, so it isn't started again.
-const refetch = (queryClient: QueryClient, queryKey: QueryKey) =>
-    void queryClient.invalidateQueries({ queryKey }, { cancelRefetch: false })
+const isLiveOff = (err: unknown) => err instanceof ApiRequestError && err.code === RequestErrorCode.NotFound
+
+// A read already on its way may have started before the change, so it is started again.
+const refetch = (queryClient: QueryClient, queryKey: QueryKey) => void queryClient.invalidateQueries({ queryKey })
 
 const refetchAll = (queryClient: QueryClient, userId: string) => {
     refetch(queryClient, [PRESETS_KEY, userId])
@@ -22,6 +29,8 @@ const refetchAll = (queryClient: QueryClient, userId: string) => {
     refetch(queryClient, ['jobs', userId])
 }
 
+// A run is charged when it is queued and refunded when it fails, so the header's count and whether Run is allowed
+// follow its job.
 const handleMessage = (queryClient: QueryClient, userId: string, message: InboundMessage) => {
     switch (message.name) {
         case LiveEvent.Presets:
@@ -36,53 +45,61 @@ const handleMessage = (queryClient: QueryClient, userId: string, message: Inboun
             }
 
             refetch(queryClient, ['jobs', userId])
+            refetch(queryClient, quotaKey(userId))
+            refetch(queryClient, admissionKey(userId))
         }
     }
 }
 
-// Ably asks again before each token expires. Its first ask gets the token request already fetched to decide whether to
-// connect at all.
-const createAuthCallback = (first: LiveTokenRequest): AuthCallback => {
-    let pending: LiveTokenRequest | null = first
+// Ably asks for the first token and again before each one expires.
+const fetchToken: AuthCallback = (_params, callback) => {
+    getLiveToken().then(
+        (tokenRequest) => (tokenRequest ? callback(null, tokenRequest) : callback(LIVE_OFF, null)),
+        (err: unknown) => callback(isLiveOff(err) ? LIVE_OFF : String(err), null),
+    )
+}
 
-    return (_params, callback) => {
-        const tokenRequest = pending
-
-        pending = null
-
-        if (tokenRequest) {
-            callback(null, tokenRequest)
+// Lost while Ably tries again, not while it is only connecting: an outage cycles through both. `failed` means live
+// updates are off (or Ably refused this tab for good), and the tab's reads keep it current as before.
+const handleConnectionChange = (
+    change: ConnectionStateChange,
+    onConnectionLost: (isLost: boolean) => void,
+    close: () => void,
+) => {
+    switch (change.current) {
+        case 'connected':
+            onConnectionLost(false)
 
             return
-        }
+        case 'disconnected':
+        case 'suspended':
+            onConnectionLost(true)
 
-        getLiveToken().then(
-            (next) => callback(next ? null : 'Live updates are off', next),
-            (err: unknown) => callback(err instanceof Error ? err.message : String(err), null),
-        )
+            return
+        case 'failed':
+            onConnectionLost(false)
+            close()
     }
 }
 
-// Answers how to close the channel, or null when live updates are off or can't start (an API without them, a network
-// failure): the tab then relies on its reads. Ably's client loads only here, so a page never waits for it.
+// Answers how to close the channel, or null when the tab left before Ably's client loaded (it loads only here, so a
+// page never waits for it) or it couldn't load.
 const openLiveChannel = async (
     userId: string,
     queryClient: QueryClient,
     onConnectionLost: (isLost: boolean) => void,
+    isCancelled: () => boolean,
 ): Promise<(() => void) | null> => {
     try {
-        const tokenRequest = await getLiveToken()
+        const { BaseRealtime, FetchRequest, WebSocketTransport } = await import('ably/modular')
 
-        if (!tokenRequest) {
+        if (isCancelled()) {
             return null
         }
 
-        const { BaseRealtime, FetchRequest, WebSocketTransport } = await import('ably/modular')
-        const client = new BaseRealtime({
-            authCallback: createAuthCallback(tokenRequest),
-            plugins: { FetchRequest, WebSocketTransport },
-        })
+        const client = new BaseRealtime({ authCallback: fetchToken, plugins: { FetchRequest, WebSocketTransport } })
         const channel = client.channels.get(getLiveChannel(userId))
+        const close = () => client.close()
         let hasAttached = false
 
         // After a long enough drop Ably can't replay what was sent meanwhile, and says so: everything is read again.
@@ -96,12 +113,12 @@ const openLiveChannel = async (
             hasAttached = true
         }
 
-        client.connection.on((change) => onConnectionLost(LOST_STATES.has(change.current)))
+        client.connection.on((change) => handleConnectionChange(change, onConnectionLost, close))
         channel.on('attached', handleContinuity)
         channel.on('update', handleContinuity)
         channel.subscribe((message) => handleMessage(queryClient, userId, message)).catch(() => undefined)
 
-        return () => client.close()
+        return close
     } catch {
         return null
     }
@@ -124,7 +141,7 @@ export function useLiveUpdates(): void {
         let close: (() => void) | null = null
         let isCancelled = false
 
-        void openLiveChannel(userId, queryClient, setIsConnectionLost).then((closeChannel) => {
+        void openLiveChannel(userId, queryClient, setIsConnectionLost, () => isCancelled).then((closeChannel) => {
             if (isCancelled) {
                 closeChannel?.()
             } else {

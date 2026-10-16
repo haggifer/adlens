@@ -16,7 +16,7 @@ export interface UseAdmissionResult {
     retry: () => void
 }
 
-const admissionKey = (userId: string | undefined) => ['admission', userId ?? 'visitor']
+export const admissionKey = (userId: string | undefined) => ['admission', userId ?? 'visitor']
 
 // Asks the API in advance whether a new analysis would be admitted, for a visitor without a session too, so Run can be
 // disabled before a refusal. Kept in the query cache per user: a run, a sign-in or a sign-out refreshes it.

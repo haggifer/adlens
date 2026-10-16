@@ -11,8 +11,8 @@ export interface UseJobResult {
     job: Job | undefined
     isLoading: boolean
     error: ApiRequestError | null
-    // The page can't reach the API about a running job (its live connection or its last read failed): the status
-    // shown may be out of date.
+    // News of a running job may be late (its live connection dropped, or its last read failed): the status shown may be
+    // out of date.
     isDisconnected: boolean
 }
 

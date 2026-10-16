@@ -7,7 +7,7 @@ export interface UseQuotaResult {
     quota: Quota | undefined
 }
 
-const quotaKey = (userId: string | undefined) => ['quota', userId]
+export const quotaKey = (userId: string | undefined) => ['quota', userId]
 
 export function useQuota(): UseQuotaResult {
     const { user } = useAuth()

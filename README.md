@@ -111,17 +111,20 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 [API README](https://github.com/haggifer/adlens-api#design-decisions).
 
 - **Every analysis has its own page** (`/analyses/[id]`), so a result survives a reload and can be linked. While a
-  running job's live connection or its last read can't reach the API, the progress panel says so, so a step that
-  can't move isn't taken for a slow one. An abandoned job never changes again, and the API expires it only when its
+  running job's live connection is down or its last read failed, the progress panel says so, so a step that can't
+  move isn't taken for a slow one. An abandoned job never changes again, and the API expires it only when its
   owner reads their jobs, so the page also reads a running job every 10 seconds: whatever went wrong shows within 10
   seconds of the API knowing it.
 - **Live updates are signals, not data** (`src/hooks/useLiveUpdates.ts`, mounted once in `Providers.tsx`). While
   someone is signed in (anonymous sessions included), the tab subscribes to its user's Ably channel with a token from
-  `GET /v1/live/token`, and each `presets` or `job` message reads the matching queries again through the API, which
-  stays the one place that decides what a user may see. Ably holds the connection, so an open tab keeps no API
+  `GET /v1/live/token`, and each `presets` or `job` message reads the matching queries again through the API (a `job`
+  message also the quota and admission, since a run is charged when queued and refunded when it fails), which stays
+  the one place that decides what a user may see. Only updates are announced: a job created, deleted or moved to the
+  account at sign-in shows on the next read. Ably holds the connection, so an open tab keeps no API
   instance running, and presets stay current across tabs and devices too. After a drop long enough that Ably can't
-  replay what was sent meanwhile, everything is read again. When the API has no Ably key, or can't be asked, the tab
-  connects nowhere and relies on its reads.
+  replay what was sent meanwhile, everything is read again. Ably asks for every token itself and retries one the API
+  can't give right now; when the API has no Ably key (or no token route) the connection stops for good and the tab
+  relies on its reads.
 - **A picked video is copied into memory once, right after the pick** (`src/storage/file-snapshot.ts`), and the
   metadata check, the preview and the upload all use the copy. Chrome checks a picked file's modification time on every
   later read and upload and fails them once it has moved (`net::ERR_UPLOAD_FILE_CHANGED`), which on Android happens to

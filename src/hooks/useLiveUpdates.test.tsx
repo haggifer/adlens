@@ -1,13 +1,17 @@
+import { ApiRequestError } from '@/api/errors'
 import { getLiveToken } from '@/api/live'
-import type { AuthContextValue } from '@/auth/AuthContext'
+import type { AuthContextValue, AuthUser } from '@/auth/AuthContext'
 import { useLiveStore } from '@/contexts/stores/liveStore'
 import { MEMBER_USER, memberAuth, signedOutAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
+import { QueryObserver } from '@tanstack/react-query'
 import { act, waitFor } from '@testing-library/react'
-import { getLiveChannel, LiveEvent, type LiveTokenRequest } from 'adlens-shared'
+import { getLiveChannel, LiveEvent, type LiveTokenRequest, RequestErrorCode } from 'adlens-shared'
+import { admissionKey } from './useAdmission'
 import { jobKey } from './useJob'
 import { useLiveUpdates } from './useLiveUpdates'
 import { PRESETS_KEY } from './usePresets'
+import { quotaKey } from './useQuota'
 
 type Handler = (payload: unknown) => void
 type AuthCallback = (params: unknown, callback: (error: unknown, token: unknown) => void) => void
@@ -75,6 +79,8 @@ const TOKEN_REQUEST: LiveTokenRequest = {
     mac: 'mac',
 }
 
+const OTHER_USER: AuthUser = { id: 'member-2', email: 'bo@example.com', name: 'Bo' }
+
 const Probe = () => {
     useLiveUpdates()
 
@@ -92,7 +98,15 @@ const connect = async (auth: AuthContextValue = memberAuth()) => {
     return { ...rendered, invalidate, client: mockClients[0] }
 }
 
-const refetched = (queryKey: unknown[]) => [{ queryKey }, { cancelRefetch: false }]
+// What the auth callback hands Ably for one answer of the token route.
+const askForToken = async (client: FakeClient) => {
+    const callback = jest.fn()
+
+    client.options.authCallback({}, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
+
+    return callback.mock.calls[0]
+}
 
 describe('useLiveUpdates', () => {
     beforeEach(() => {
@@ -112,46 +126,101 @@ describe('useLiveUpdates', () => {
         expect(client.close).toHaveBeenCalled()
     })
 
+    it("moves to the new user's channel when another user signs in", async () => {
+        const { client, rerender } = await connect()
+
+        mockUseAuth.mockReturnValue({ ...memberAuth(), user: OTHER_USER })
+        rerender(<Probe />)
+
+        await waitFor(() => expect(mockClients).toHaveLength(2))
+        expect(client.close).toHaveBeenCalled()
+        expect(mockClients[1].channelName).toBe(getLiveChannel(OTHER_USER.id))
+    })
+
+    it('opens nothing when the tab is left before Ably has loaded', async () => {
+        mockUseAuth.mockReturnValue(memberAuth())
+
+        const { unmount } = renderWithProviders(<Probe />)
+
+        unmount()
+        await act(async () => undefined)
+
+        expect(mockClients).toHaveLength(0)
+    })
+
+    it('opens nothing while signed out', async () => {
+        mockUseAuth.mockReturnValue(signedOutAuth())
+        renderWithProviders(<Probe />)
+
+        await act(async () => undefined)
+
+        expect(mockClients).toHaveLength(0)
+    })
+
     it("reads the presets again when they've changed", async () => {
         const { client, invalidate } = await connect()
 
         act(() => client.onMessage?.({ name: LiveEvent.Presets }))
 
-        expect(invalidate.mock.calls).toEqual([refetched([PRESETS_KEY, MEMBER_USER.id])])
+        expect(invalidate.mock.calls).toEqual([[{ queryKey: [PRESETS_KEY, MEMBER_USER.id] }]])
     })
 
-    it('reads the changed job and the job list again', async () => {
+    it('reads the changed job, the job list, the quota and the admission again', async () => {
         const { client, invalidate } = await connect()
 
         act(() => client.onMessage?.({ name: LiveEvent.Job, data: { id: 'job-1' } }))
 
         expect(invalidate.mock.calls).toEqual([
-            refetched(jobKey(MEMBER_USER.id, 'job-1')),
-            refetched(['jobs', MEMBER_USER.id]),
+            [{ queryKey: jobKey(MEMBER_USER.id, 'job-1') }],
+            [{ queryKey: ['jobs', MEMBER_USER.id] }],
+            [{ queryKey: quotaKey(MEMBER_USER.id) }],
+            [{ queryKey: admissionKey(MEMBER_USER.id) }],
         ])
     })
 
-    it('reads everything again when Ably could not keep what was sent during a drop, but not on the first attach', async () => {
-        const { client, invalidate } = await connect()
+    it('restarts a read already on its way, which may have started before the change', async () => {
+        const { client, queryClient } = await connect()
+        let reads = 0
 
-        act(() => client.channelHandlers.get('attached')?.({ resumed: false }))
-        act(() => client.channelHandlers.get('attached')?.({ resumed: true }))
+        // An observed query that has data, as every query a tab shows does: only then is a read restarted.
+        queryClient.setQueryData([PRESETS_KEY, MEMBER_USER.id], 0)
+        const observer = new QueryObserver(queryClient, {
+            queryKey: [PRESETS_KEY, MEMBER_USER.id],
+            queryFn: () => new Promise((resolve) => setTimeout(() => resolve(++reads), 10)),
+        })
+        const unsubscribe = observer.subscribe(() => undefined)
 
-        expect(invalidate).not.toHaveBeenCalled()
+        act(() => client.onMessage?.({ name: LiveEvent.Presets }))
 
-        act(() => client.channelHandlers.get('attached')?.({ resumed: false }))
-
-        expect(invalidate.mock.calls).toEqual([
-            refetched([PRESETS_KEY, MEMBER_USER.id]),
-            refetched(['job', MEMBER_USER.id]),
-            refetched(['jobs', MEMBER_USER.id]),
-        ])
+        await waitFor(() => expect(queryClient.getQueryData([PRESETS_KEY, MEMBER_USER.id])).toBe(2))
+        unsubscribe()
     })
 
-    it('says when the connection is lost, until it is back', async () => {
+    it.each(['attached', 'update'])(
+        'reads everything again after a %s that lost what was sent meanwhile, but not on the first attach',
+        async (event) => {
+            const { client, invalidate } = await connect()
+
+            act(() => client.channelHandlers.get('attached')?.({ resumed: false }))
+            act(() => client.channelHandlers.get(event)?.({ resumed: true }))
+
+            expect(invalidate).not.toHaveBeenCalled()
+
+            act(() => client.channelHandlers.get(event)?.({ resumed: false }))
+
+            expect(invalidate.mock.calls).toEqual([
+                [{ queryKey: [PRESETS_KEY, MEMBER_USER.id] }],
+                [{ queryKey: ['job', MEMBER_USER.id] }],
+                [{ queryKey: ['jobs', MEMBER_USER.id] }],
+            ])
+        },
+    )
+
+    it('says the connection is lost while Ably tries again, until it is connected', async () => {
         const { client } = await connect()
 
         act(() => client.onConnection?.({ current: 'disconnected' }))
+        act(() => client.onConnection?.({ current: 'connecting' }))
 
         expect(useLiveStore.getState().isConnectionLost).toBe(true)
 
@@ -160,41 +229,41 @@ describe('useLiveUpdates', () => {
         expect(useLiveStore.getState().isConnectionLost).toBe(false)
     })
 
-    it('gives Ably the token request it already has first, then asks the API for each new one', async () => {
+    it('closes and stops warning once the connection has failed for good', async () => {
         const { client } = await connect()
-        const callback = jest.fn()
 
-        client.options.authCallback({}, callback)
+        act(() => client.onConnection?.({ current: 'suspended' }))
+        act(() => client.onConnection?.({ current: 'failed' }))
 
-        expect(callback).toHaveBeenCalledWith(null, TOKEN_REQUEST)
-        expect(getLiveToken).toHaveBeenCalledTimes(1)
+        expect(useLiveStore.getState().isConnectionLost).toBe(false)
+        expect(client.close).toHaveBeenCalled()
+    })
 
-        client.options.authCallback({}, callback)
+    it('gives Ably each token request the API signs', async () => {
+        const { client } = await connect()
 
-        await waitFor(() => expect(callback).toHaveBeenCalledTimes(2))
-        expect(getLiveToken).toHaveBeenCalledTimes(2)
+        expect(await askForToken(client)).toEqual([null, TOKEN_REQUEST])
     })
 
     it.each([
-        ['live updates are off', () => jest.mocked(getLiveToken).mockResolvedValue(null)],
-        ['the API cannot be reached', () => jest.mocked(getLiveToken).mockRejectedValue(new Error('Network Error'))],
-    ])('connects nowhere when %s', async (_reason, arrange) => {
+        ['the API has no Ably key', () => jest.mocked(getLiveToken).mockResolvedValue(null)],
+        [
+            'the API has no token route',
+            () => jest.mocked(getLiveToken).mockRejectedValue(new ApiRequestError(RequestErrorCode.NotFound)),
+        ],
+    ])('tells Ably to stop for good when %s', async (_reason, arrange) => {
+        const { client } = await connect()
+
         arrange()
-        mockUseAuth.mockReturnValue(memberAuth())
-        renderWithProviders(<Probe />)
 
-        await waitFor(() => expect(getLiveToken).toHaveBeenCalled())
-        await act(async () => undefined)
-
-        expect(mockClients).toHaveLength(0)
+        expect(await askForToken(client)).toEqual([expect.objectContaining({ statusCode: 403 }), null])
     })
 
-    it('asks for nothing while signed out', async () => {
-        mockUseAuth.mockReturnValue(signedOutAuth())
-        renderWithProviders(<Probe />)
+    it('lets Ably try again when the API cannot be reached', async () => {
+        const { client } = await connect()
 
-        await act(async () => undefined)
+        jest.mocked(getLiveToken).mockRejectedValue(new Error('Network Error'))
 
-        expect(getLiveToken).not.toHaveBeenCalled()
+        expect(await askForToken(client)).toEqual([expect.any(String), null])
     })
 })
