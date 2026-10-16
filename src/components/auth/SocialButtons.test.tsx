@@ -1,7 +1,7 @@
 import { signIn } from '@/auth/authClient'
 import { describeError } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
-import { postSocialSignInOutcome, takeRedirectSignIn } from '@/auth/social-sign-in'
+import { postSocialSignInOutcome, SOCIAL_SIGN_IN_DONE_PATH, takeRedirectSignIn } from '@/auth/social-sign-in'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { renderWithProviders } from '@/test/render'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
@@ -13,7 +13,7 @@ jest.mock('@/auth/authClient', () => ({
 jest.mock('@/auth/session', () => ({ refreshSession: jest.fn() }))
 
 const MOCK_PROVIDER_URL = 'https://accounts.google.com/o/oauth2/auth?state=abc'
-const DONE_URL = `${window.location.origin}/auth/done`
+const DONE_URL = `${window.location.origin}${SOCIAL_SIGN_IN_DONE_PATH}`
 
 const googleButton = () => screen.getByRole('button', { name: /continue with google/i })
 

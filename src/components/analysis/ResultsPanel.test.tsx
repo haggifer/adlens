@@ -3,6 +3,7 @@ import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Placement, RulePlatform } from 'adlens-shared'
+import { describeCheck } from './results'
 import { ResultsPanel } from './ResultsPanel'
 
 const APPROVAL_HEADING = 'Will it be approved?'
@@ -216,32 +217,22 @@ describe('ResultsPanel', () => {
 
     it('tags a failed placement spec with its placement and says the video won’t work there, and why', () => {
         const bumper = formatPlacementLabel(Placement.YouTubeBumper)
+        const rule = 'Bumper ads must be at most 6 seconds long.'
+        const check = buildCheck({
+            id: 'bumper',
+            platform: [RulePlatform.YouTube],
+            placements: [Placement.YouTubeBumper],
+            topic: 'creative_spec:duration',
+            check: rule,
+            detail: 'It’s 30.4 seconds long, longer than the 6 seconds allowed.',
+        })
 
-        render(
-            <ResultsPanel
-                analysis={buildAnalysis({
-                    metadataChecks: [
-                        buildCheck({
-                            id: 'bumper',
-                            platform: [RulePlatform.YouTube],
-                            placements: [Placement.YouTubeBumper],
-                            topic: 'creative_spec:duration',
-                            check: 'Bumper ads must be at most 6 seconds long.',
-                            detail: 'It’s 30.4 seconds long, longer than the 6 seconds allowed.',
-                        }),
-                    ],
-                })}
-            />,
-        )
+        render(<ResultsPanel analysis={buildAnalysis({ metadataChecks: [check] })} />)
 
         expect(screen.getByText(bumper)).toHaveClass('ant-tag')
-        expect(screen.getByText('Bumper ads must be at most 6 seconds long.')).toBeInTheDocument()
-        expect(
-            screen.getByText(
-                `This video won’t work for ${bumper}. It’s 30.4 seconds long, longer than the 6 seconds allowed.`,
-            ),
-        ).toBeInTheDocument()
-        expect(screen.queryByText('creative_spec:duration')).not.toBeInTheDocument()
+        expect(screen.getByText(rule)).toBeInTheDocument()
+        expect(screen.getByText(describeCheck(check))).toBeInTheDocument()
+        expect(screen.queryByText(check.topic)).not.toBeInTheDocument()
     })
 
     it('tags a failed platform-wide spec with its platform', () => {

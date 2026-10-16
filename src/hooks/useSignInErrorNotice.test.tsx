@@ -1,4 +1,5 @@
 import { describeError } from '@/auth/errors'
+import { SOCIAL_SIGN_IN_DONE_PATH } from '@/auth/social-sign-in'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
 import { useSignInErrorNotice } from './useSignInErrorNotice'
@@ -55,7 +56,7 @@ describe('useSignInErrorNotice', () => {
 
     it('leaves the social sign-in popup’s landing page to report its own error', () => {
         leaveForSignIn()
-        renderAt('error=access_denied', '/auth/done')
+        renderAt('error=access_denied', SOCIAL_SIGN_IN_DONE_PATH)
 
         expect(screen.queryByText(CANCELLED_COPY)).not.toBeInTheDocument()
         expect(mockReplace).not.toHaveBeenCalled()
