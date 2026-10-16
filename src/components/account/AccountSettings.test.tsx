@@ -1,5 +1,5 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
-import { listAccounts, revokeOtherSessions } from '@/auth/authClient'
+import { changePassword, listAccounts, revokeOtherSessions } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { describeError } from '@/auth/errors'
 import { initializingAuth, MEMBER_USER, memberAuth } from '@/test/auth'
@@ -26,6 +26,10 @@ const linkAccounts = (...providerIds: string[]) =>
         data: providerIds.map((providerId) => ({ providerId })),
         error: null,
     } as never)
+
+const CURRENT_PASSWORD = 'correct horse battery staple'
+
+const NEW_PASSWORD = 'a-new-password-123'
 
 const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Other devices', 'Delete account']
 
@@ -153,12 +157,23 @@ describe('AccountSettings', () => {
         expect(screen.queryByText('Rate limit exceeded')).not.toBeInTheDocument()
     })
 
-    it('labels the change-password fields', async () => {
+    it('changes the password, signing out the other devices, and clears the form', async () => {
         linkAccounts('credential')
-        renderSettings()
+        const { user } = renderSettings()
 
-        expect(await screen.findByLabelText('Current password')).toBeInTheDocument()
-        expect(screen.getByLabelText('New password')).toBeInTheDocument()
-        expect(screen.getByLabelText('Confirm new password')).toBeInTheDocument()
+        await user.type(await screen.findByLabelText('Current password'), CURRENT_PASSWORD)
+        await user.type(screen.getByLabelText('New password'), NEW_PASSWORD)
+        await user.type(screen.getByLabelText('Confirm new password'), NEW_PASSWORD)
+        await user.click(screen.getByRole('button', { name: 'Change password' }))
+
+        expect(await screen.findByText('Password changed')).toBeInTheDocument()
+        expect(changePassword).toHaveBeenCalledWith({
+            currentPassword: CURRENT_PASSWORD,
+            newPassword: NEW_PASSWORD,
+            revokeOtherSessions: true,
+        })
+        expect(screen.getByLabelText('Current password')).toHaveValue('')
+        expect(screen.getByLabelText('New password')).toHaveValue('')
+        expect(screen.getByLabelText('Confirm new password')).toHaveValue('')
     })
 })
