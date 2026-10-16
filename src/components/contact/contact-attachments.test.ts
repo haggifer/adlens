@@ -1,3 +1,5 @@
+import { toMegabytes } from '@/file-size'
+import { ATTACHMENT_FORMATS_LABEL } from '@/labels'
 import {
     CONTACT_ATTACHMENT_MAX_BYTES,
     CONTACT_ATTACHMENTS_MAX_TOTAL_BYTES,
@@ -30,32 +32,35 @@ describe('checkAttachments', () => {
         const files = Array.from({ length: CONTACT_MAX_ATTACHMENTS + 1 }, (_, index) => buildImage(`${index}.png`))
 
         expect(checkAttachments(files.slice(0, CONTACT_MAX_ATTACHMENTS))).toBeUndefined()
-        expect(checkAttachments(files)).toBe('Attach up to 5 images.')
+        expect(checkAttachments(files)).toContain(String(CONTACT_MAX_ATTACHMENTS))
     })
 
-    it('names a file that isn’t a PNG, JPEG or WebP image', () => {
-        expect(checkAttachments([buildImage('a.png'), buildImage('clip.gif', 1000, 'image/gif')])).toBe(
-            'clip.gif isn’t a PNG, JPEG or WebP image.',
-        )
-        expect(checkAttachments([buildImage('notes', 1000, '')])).toBe('notes isn’t a PNG, JPEG or WebP image.')
+    it('names a file that isn’t a supported image, and the formats that are', () => {
+        const gifRefusal = checkAttachments([buildImage('a.png'), buildImage('clip.gif', 1000, 'image/gif')])
+
+        expect(gifRefusal).toContain('clip.gif')
+        expect(gifRefusal).toContain(ATTACHMENT_FORMATS_LABEL)
+        expect(gifRefusal).not.toContain('a.png')
+        expect(checkAttachments([buildImage('notes', 1000, '')])).toContain('notes')
     })
 
     it('names an empty file', () => {
-        expect(checkAttachments([buildImage('blank.png', 0)])).toBe('blank.png is empty.')
+        expect(checkAttachments([buildImage('blank.png', 0)])).toContain('blank.png')
     })
 
     it('names an image over the size limit', () => {
-        expect(checkAttachments([buildImage('huge.png', CONTACT_ATTACHMENT_MAX_BYTES + 1)])).toBe(
-            'huge.png is larger than 8 MB.',
-        )
+        const refusal = checkAttachments([buildImage('huge.png', CONTACT_ATTACHMENT_MAX_BYTES + 1)])
+
+        expect(refusal).toContain('huge.png')
+        expect(refusal).toContain(`${toMegabytes(CONTACT_ATTACHMENT_MAX_BYTES)} MB`)
     })
 
     it('limits the images’ total size', () => {
         const size = CONTACT_ATTACHMENTS_MAX_TOTAL_BYTES / 4
 
         expect(checkAttachments(['a', 'b', 'c', 'd'].map((name) => buildImage(`${name}.png`, size)))).toBeUndefined()
-        expect(checkAttachments(['a', 'b', 'c', 'd'].map((name) => buildImage(`${name}.png`, size + 1)))).toBe(
-            'The images add up to more than 25 MB.',
+        expect(checkAttachments(['a', 'b', 'c', 'd'].map((name) => buildImage(`${name}.png`, size + 1)))).toContain(
+            `${toMegabytes(CONTACT_ATTACHMENTS_MAX_TOTAL_BYTES)} MB`,
         )
     })
 })

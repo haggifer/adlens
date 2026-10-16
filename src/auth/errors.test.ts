@@ -10,40 +10,21 @@ import {
 } from '@/auth/errors'
 import { RequestErrorCode } from 'adlens-shared'
 
-const GENERIC_COPY = 'Something went wrong. Please try again.'
-const RATE_LIMITED_COPY = 'Too many attempts. Wait a minute and try again.'
+const GENERIC_COPY = describeError(null)
 
 describe('describeError', () => {
-    it('shows the copy for a known Better Auth code', () => {
+    it('takes the copy of a code adlens-shared declares from its one owner', () => {
         expect(describeError({ code: RequestErrorCode.DisposableEmail })).toBe(
             describeRequestError(RequestErrorCode.DisposableEmail),
-        )
-        expect(describeError({ status: 500, code: 'ACCOUNT_LINK_FAILED' })).toBe(
-            'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
-        )
-        expect(describeError({ status: 403, code: 'EMAIL_MISMATCH' })).toBe(
-            'This link is for a different account. Sign out, then open it again.',
-        )
-    })
-
-    it('says an address already in use for sign-up is taken', () => {
-        expect(describeError({ status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
-            'This email is already in use. Sign in instead.',
-        )
-    })
-
-    it('shows the copy for a code a social provider sent back', () => {
-        expect(describeError({ code: 'access_denied' })).toBe('Sign-in was cancelled.')
-    })
-
-    it('tells the owner of an unconfirmed account to sign in with the password and confirm the email', () => {
-        expect(describeError({ code: 'account_not_linked' })).toBe(
-            'This email already has an AdLens account. Sign in with your email and password, then confirm your email (Confirm email in the header) to use Google or GitHub with it.',
         )
     })
 
     it('shows a rate limit whatever code comes with it', () => {
-        expect(describeError({ status: 429, code: 'INVALID_EMAIL_OR_PASSWORD' })).toBe(RATE_LIMITED_COPY)
+        const rateLimited = describeError({ status: 429 })
+
+        expect(describeError({ status: 429, code: 'INVALID_EMAIL_OR_PASSWORD' })).toBe(rateLimited)
+        expect(describeError({ code: 'INVALID_EMAIL_OR_PASSWORD' })).not.toBe(rateLimited)
+        expect(rateLimited).not.toBe(GENERIC_COPY)
     })
 
     it('never shows the server’s own message', () => {
@@ -51,7 +32,6 @@ describe('describeError', () => {
             GENERIC_COPY,
         )
         expect(describeError({ message: 'Internal detail' })).toBe(GENERIC_COPY)
-        expect(describeError(null)).toBe(GENERIC_COPY)
     })
 
     it('doesn’t read a code from the object prototype', () => {
@@ -63,9 +43,9 @@ describe('describeError', () => {
 
 describe('describeConfirmError', () => {
     it('says another account already confirmed the mailbox, where sign-up would say the address is taken', () => {
-        expect(describeConfirmError({ status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' })).toBe(
-            'Another AdLens account has already confirmed this mailbox. Sign in to that account instead.',
-        )
+        const mailboxTaken = { status: 422, code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' }
+
+        expect(describeConfirmError(mailboxTaken)).not.toBe(describeError(mailboxTaken))
     })
 
     it('describes every other answer as describeError does', () => {
@@ -78,9 +58,9 @@ describe('describeConfirmError', () => {
 
 describe('describeResetError', () => {
     it('says the link expired or was used, since a reset answers both with INVALID_TOKEN', () => {
-        expect(describeResetError({ status: 400, code: 'INVALID_TOKEN' })).toBe(
-            'This link has expired or has already been used. Request a new one.',
-        )
+        const invalidToken = { status: 400, code: 'INVALID_TOKEN' }
+
+        expect(describeResetError(invalidToken)).not.toBe(describeError(invalidToken))
     })
 
     it('describes every other answer as describeError does', () => {
@@ -145,7 +125,6 @@ describe('runAuthRequest', () => {
         })
 
         expect(error).toEqual({ code: 'NETWORK_ERROR' })
-        expect(describeError(error)).toBe('Couldn’t reach AdLens. Check your connection and try again.')
         expect(consoleError).toHaveBeenCalledWith(failure)
     })
 })

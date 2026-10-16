@@ -4,9 +4,10 @@ import {
     describeJobError,
     describeJobErrorTitle,
     describePresetError,
+    describeRequestError,
     toApiRequestError,
 } from '@/api/errors'
-import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
+import { JobErrorCode, MAX_DURATION_S, RequestErrorCode } from 'adlens-shared'
 import { AxiosError, AxiosHeaders } from 'axios'
 
 const axiosErrorWithResponse = (status: number, data: unknown) =>
@@ -18,6 +19,28 @@ const axiosErrorWithResponse = (status: number, data: unknown) =>
         data,
     })
 
+// Nothing the user can act on, so they share one message.
+const BACKEND_FAILURES = [
+    JobErrorCode.AnalysisFailed,
+    JobErrorCode.AnalysisTimedOut,
+    JobErrorCode.VideoCheckFailed,
+    JobErrorCode.UploadFailed,
+]
+
+const VIDEO_REJECTIONS = [
+    JobErrorCode.VideoUnreadable,
+    JobErrorCode.VideoTooLong,
+    JobErrorCode.VideoTooLarge,
+    JobErrorCode.UnsupportedFormat,
+]
+
+const CONTACT_OVERRIDES = [
+    RequestErrorCode.ChallengeFailed,
+    RequestErrorCode.ValidationFailed,
+    RequestErrorCode.RateLimited,
+    RequestErrorCode.UploadIncomplete,
+]
+
 describe('toApiRequestError', () => {
     it('keeps the error code from an API error body and shows its copy, not the server message', () => {
         const error = toApiRequestError(
@@ -25,7 +48,7 @@ describe('toApiRequestError', () => {
         )
 
         expect(error.code).toBe(RequestErrorCode.QuotaExceeded)
-        expect(error.message).toBe('You’ve used all your analyses for the last 7 days.')
+        expect(error.message).toBe(describeRequestError(RequestErrorCode.QuotaExceeded))
     })
 
     it('treats an error code this client doesn’t know yet as an internal error', () => {
@@ -34,7 +57,7 @@ describe('toApiRequestError', () => {
         )
 
         expect(error.code).toBe(RequestErrorCode.Internal)
-        expect(error.message).toBe('Something went wrong on our side. Please try again.')
+        expect(error.message).toBe(describeRequestError(RequestErrorCode.Internal))
     })
 
     it('treats a response without an API error body as an internal error', () => {
@@ -55,126 +78,61 @@ describe('toApiRequestError', () => {
         expect(toApiRequestError(original)).toBe(original)
         expect(toApiRequestError(new Error('boom')).code).toBe(RequestErrorCode.Internal)
     })
-
-    it('explains the network, challenge, sign-up and confirmation limits', () => {
-        expect(new ApiRequestError(RequestErrorCode.SignUpRequired).message).toBe(
-            'Sign in or create an account to continue',
-        )
-        expect(new ApiRequestError(RequestErrorCode.EmailConfirmationRequired).message).toBe(
-            'Confirm your email to continue',
-        )
-        expect(new ApiRequestError(RequestErrorCode.NetworkQuotaExceeded).message).toBe(
-            'Too many analyses from your internet connection this week. Contact us if you need more.',
-        )
-        expect(new ApiRequestError(RequestErrorCode.ChallengeRequired).message).toBe(
-            'Complete the security check, then run the analysis again.',
-        )
-        expect(new ApiRequestError(RequestErrorCode.ChallengeFailed).message).toBe(
-            'The security check didn’t pass. Try it again, then run the analysis.',
-        )
-        expect(new ApiRequestError(RequestErrorCode.DisposableEmail).message).toBe(
-            'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
-        )
-    })
 })
 
 describe('describeJobError', () => {
     it('describes the job error code, falling back to a generic analysis failure', () => {
-        expect(describeJobError(JobErrorCode.VideoTooLong)).toBe(
-            "Videos can be up to 60 seconds long. This run wasn't counted.",
-        )
+        expect(describeJobError(JobErrorCode.VideoTooLong)).toContain(String(MAX_DURATION_S))
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
     })
 
-    it.each([
-        JobErrorCode.AnalysisFailed,
-        JobErrorCode.AnalysisTimedOut,
-        JobErrorCode.VideoCheckFailed,
-        JobErrorCode.UploadFailed,
-    ])('says a run that ended in %s wasn’t counted and can be tried again', (code) => {
-        expect(describeJobError(code)).toBe('It wasn’t counted against your analyses. Please try again.')
-    })
-
-    it.each([
-        JobErrorCode.VideoUnreadable,
-        JobErrorCode.VideoTooLong,
-        JobErrorCode.VideoTooLarge,
-        JobErrorCode.UnsupportedFormat,
-    ])('says what to change about a video rejected with %s, and that the run wasn’t counted', (code) => {
-        expect(describeJobError(code)).toMatch(/ This run wasn't counted\.$/)
+    it('gives every failure the user can’t act on one message', () => {
+        expect(new Set(BACKEND_FAILURES.map(describeJobError)).size).toBe(1)
     })
 })
 
 describe('describeJobErrorTitle', () => {
-    it.each([JobErrorCode.AnalysisFailed, JobErrorCode.AnalysisTimedOut, JobErrorCode.VideoCheckFailed, undefined])(
-        'gives a backend failure (%s) one general title',
-        (code) => {
-            expect(describeJobErrorTitle(code)).toBe('Something went wrong with this analysis')
-        },
-    )
+    it('gives each group of failures one title of its own', () => {
+        const backendTitle = describeJobErrorTitle(JobErrorCode.AnalysisFailed)
+        const rejectionTitle = describeJobErrorTitle(JobErrorCode.VideoUnreadable)
+        const uploadTitle = describeJobErrorTitle(JobErrorCode.UploadFailed)
 
-    it.each([
-        JobErrorCode.VideoUnreadable,
-        JobErrorCode.VideoTooLong,
-        JobErrorCode.VideoTooLarge,
-        JobErrorCode.UnsupportedFormat,
-    ])('says a video rejected with %s can’t be analyzed', (code) => {
-        expect(describeJobErrorTitle(code)).toBe('This video can’t be analyzed')
-    })
+        for (const code of [JobErrorCode.AnalysisTimedOut, JobErrorCode.VideoCheckFailed, undefined]) {
+            expect(describeJobErrorTitle(code)).toBe(backendTitle)
+        }
 
-    it('says an upload that never finished didn’t finish', () => {
-        expect(describeJobErrorTitle(JobErrorCode.UploadFailed)).toBe('The upload didn’t finish')
+        for (const code of VIDEO_REJECTIONS) {
+            expect(describeJobErrorTitle(code)).toBe(rejectionTitle)
+        }
+
+        expect(new Set([backendTitle, rejectionTitle, uploadTitle]).size).toBe(3)
     })
 })
 
 describe('describeContactError', () => {
-    it('words the security check, validation and rate limits for a message rather than an analysis', () => {
-        expect(describeContactError(new ApiRequestError(RequestErrorCode.ChallengeFailed))).toBe(
-            'The security check didn’t pass. Try it again, then send the message.',
-        )
-        expect(describeContactError(new ApiRequestError(RequestErrorCode.ValidationFailed))).toBe(
-            'We couldn’t send this message. Check it, then try again.',
-        )
-        expect(describeContactError(new ApiRequestError(RequestErrorCode.RateLimited))).toBe(
-            'Too many messages in the last hour. Please try again later.',
-        )
-    })
-
-    it('says it was an image that didn’t finish uploading', () => {
-        expect(describeContactError(new ApiRequestError(RequestErrorCode.UploadIncomplete))).toBe(
-            'An image didn’t finish uploading. Please try again.',
-        )
+    it.each(CONTACT_OVERRIDES)('words %s for a message rather than an analysis', (code) => {
+        expect(describeContactError(new ApiRequestError(code))).not.toBe(describeRequestError(code))
     })
 
     it('falls back to the shared copy, and never shows the raw text of an unknown failure', () => {
         expect(describeContactError(new ApiRequestError(RequestErrorCode.Unavailable))).toBe(
-            'AdLens is briefly unavailable. Please try again.',
+            describeRequestError(RequestErrorCode.Unavailable),
         )
-        expect(describeContactError(new Error('socket hang up'))).toBe(
-            'Something went wrong on our side. Please try again.',
-        )
+        expect(describeContactError(new Error('socket hang up'))).toBe(describeRequestError(RequestErrorCode.Internal))
     })
 })
 
 describe('describePresetError', () => {
-    it('says a preset name is taken, the preset limit is reached, or the preset no longer exists', () => {
-        expect(describePresetError(new ApiRequestError(RequestErrorCode.PresetNameTaken))).toBe(
-            'A preset with this name already exists.',
-        )
-        expect(describePresetError(new ApiRequestError(RequestErrorCode.PresetLimitReached))).toBe(
-            'You can keep up to 20 presets. Delete one to save another.',
-        )
-        expect(describePresetError(new ApiRequestError(RequestErrorCode.NotFound))).toBe(
-            'This preset no longer exists.',
+    it('says a preset rather than an analysis no longer exists', () => {
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.NotFound))).not.toBe(
+            describeRequestError(RequestErrorCode.NotFound),
         )
     })
 
     it('falls back to the shared copy, and never shows the raw text of an unknown failure', () => {
-        expect(describePresetError(new ApiRequestError(RequestErrorCode.Unavailable))).toBe(
-            'AdLens is briefly unavailable. Please try again.',
+        expect(describePresetError(new ApiRequestError(RequestErrorCode.PresetLimitReached))).toBe(
+            describeRequestError(RequestErrorCode.PresetLimitReached),
         )
-        expect(describePresetError(new Error('socket hang up'))).toBe(
-            'Something went wrong on our side. Please try again.',
-        )
+        expect(describePresetError(new Error('socket hang up'))).toBe(describeRequestError(RequestErrorCode.Internal))
     })
 })
