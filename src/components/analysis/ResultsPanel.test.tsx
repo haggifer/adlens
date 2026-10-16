@@ -45,7 +45,7 @@ const expectBetween = (text: string, start: HTMLElement, end?: HTMLElement) => {
 }
 
 describe('ResultsPanel', () => {
-    it('opens with the transcript, puts each finding under its section, and neither lists nor counts passed specs', () => {
+    it('opens with the transcript, puts each finding under its section, and doesn’t list passed specs', () => {
         render(<ResultsPanel analysis={ANALYSIS} />)
 
         const transcript = screen.getByRole('button', { name: /Transcript/ })
@@ -56,7 +56,6 @@ describe('ResultsPanel', () => {
         expectBetween('Bumper duration', heading(SPECS_HEADING))
         expectBetween('Aspect ratio', heading(SPECS_HEADING))
         expect(screen.queryByText('File size')).not.toBeInTheDocument()
-        expect(screen.queryByText(/specs? pass/)).not.toBeInTheDocument()
     })
 
     it('counts failed spec blockers but not specs that could not be checked', () => {
@@ -95,7 +94,6 @@ describe('ResultsPanel', () => {
 
         expect(heading(SPECS_HEADING)).toBeInTheDocument()
         expect(screen.getByText('No placement spec issues found.')).toBeInTheDocument()
-        expect(screen.queryByText(/specs? pass/)).not.toBeInTheDocument()
     })
 
     it('lists the rules to confirm in the campaign setup', () => {

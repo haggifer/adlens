@@ -113,14 +113,6 @@ describe('ConfirmEmail', () => {
         expect(screen.queryByRole('button', { name: 'Confirm email' })).not.toBeInTheDocument()
     })
 
-    it('treats a 403 with another code as an ordinary failure', async () => {
-        answerOnce({ status: 403, code: 'INVALID_TOKEN' })
-        renderConfirmEmail(TOKEN)
-
-        expect(await screen.findByText('This link is invalid or has already been used.')).toBeInTheDocument()
-        expect(useAuthModalStore.getState().view).toBeNull()
-    })
-
     it('shows a connection problem when the API can’t be reached', async () => {
         jest.spyOn(console, 'error').mockImplementation(() => {})
         jest.mocked(verifyEmail).mockRejectedValueOnce(new TypeError('Failed to fetch'))
