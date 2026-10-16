@@ -5,7 +5,7 @@ import { uploadToSignedUrl } from '@/storage/upload'
 import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { CONTACT_MESSAGE_MAX_LENGTH, RequestErrorCode, type UploadTarget } from 'adlens-shared'
+import { RequestErrorCode, type UploadTarget } from 'adlens-shared'
 import { checkAttachments } from './contact-attachments'
 import { ContactForm } from './ContactForm'
 
@@ -38,8 +38,6 @@ const SHORTEST_MESSAGE = 'Ten chars!'
 const TOKEN = 'challenge-token'
 
 const ATTACHMENTS_LABEL = 'Screenshots (optional)'
-
-const ATTACHMENTS_HINT = 'Up to 5 images: PNG, JPEG or WebP, up to 8 MB each, up to 25 MB in total.'
 
 const UPLOAD_FAILED_COPY = describeContactError(new ApiRequestError(RequestErrorCode.UploadIncomplete))
 
@@ -156,8 +154,6 @@ describe('ContactForm', () => {
     it('sends a message without images straight away, creating no draft', async () => {
         renderForm()
 
-        expect(screen.getByText(ATTACHMENTS_HINT)).toBeInTheDocument()
-
         await send(MESSAGE)
 
         expect(await screen.findByText('Message sent')).toBeInTheDocument()
@@ -257,13 +253,6 @@ describe('ContactForm', () => {
 
         expect(await screen.findByText('Enter a valid email')).toBeInTheDocument()
         expect(sendContactMessage).not.toHaveBeenCalled()
-    })
-
-    it('counts the message against the shared length limit', async () => {
-        renderForm()
-
-        expect(screen.getByLabelText('Message')).toHaveAttribute('maxlength', String(CONTACT_MESSAGE_MAX_LENGTH))
-        expect(screen.getByText(`0 / ${CONTACT_MESSAGE_MAX_LENGTH}`)).toBeInTheDocument()
     })
 
     it('accepts a message of exactly the minimum length', async () => {

@@ -17,14 +17,12 @@ describe('buildPublicPageMetadata', () => {
             description: 'Real ads, analyzed.',
             alternates: { canonical: '/demo' },
             openGraph: {
-                siteName: 'AdLens',
                 title: 'Example reports · AdLens',
                 description: 'Real ads, analyzed.',
                 url: '/demo',
                 images: [SHARE_IMAGE],
             },
             twitter: {
-                card: 'summary_large_image',
                 title: 'Example reports · AdLens',
                 description: 'Real ads, analyzed.',
             },

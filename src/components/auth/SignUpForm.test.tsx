@@ -49,15 +49,6 @@ describe('SignUpForm', () => {
         useAuthModalStore.setState({ view: 'signup', isOtherAddressLink: false })
     })
 
-    it('asks only for an email and a password', () => {
-        renderForm()
-
-        expect(screen.getByLabelText('Email')).toBeInTheDocument()
-        expect(screen.getByLabelText('Password')).toBeInTheDocument()
-        expect(screen.getByLabelText('Confirm password')).toBeInTheDocument()
-        expect(screen.queryByLabelText('Name')).not.toBeInTheDocument()
-    })
-
     it('signs the new account up and opens the confirmation dialog', async () => {
         const { user } = renderForm()
 

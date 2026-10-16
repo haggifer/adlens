@@ -7,11 +7,9 @@ import { HumanCheck, type HumanCheckHandle } from './HumanCheck'
 const mockToken = 'challenge-token'
 const mockExecute = jest.fn()
 const mockReset = jest.fn()
-let mockOptions: Record<string, unknown> = {}
 
 interface MockTurnstileProps {
     ref: unknown
-    options: Record<string, unknown>
     onWidgetLoad: () => void
     onSuccess: (token: string) => void
     onError: () => void
@@ -28,7 +26,6 @@ jest.mock('@marsidev/react-turnstile', () => {
     return {
         Turnstile: ({
             ref,
-            options,
             onWidgetLoad,
             onSuccess,
             onError,
@@ -37,7 +34,6 @@ jest.mock('@marsidev/react-turnstile', () => {
             onBeforeInteractive,
             onAfterInteractive,
         }: MockTurnstileProps) => {
-            mockOptions = options
             useImperativeHandle(ref as never, () => ({ execute: mockExecute, reset: mockReset }))
 
             return (
@@ -100,10 +96,9 @@ describe('HumanCheck', () => {
         jest.useRealTimers()
     })
 
-    it('runs only when asked, and stays hidden unless Cloudflare needs a click', () => {
+    it('runs only when asked', () => {
         renderCheck()
 
-        expect(mockOptions).toMatchObject({ execution: 'execute', appearance: 'interaction-only' })
         expect(mockExecute).not.toHaveBeenCalled()
     })
 

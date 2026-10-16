@@ -1,10 +1,15 @@
-import { getSocialSignInDoneUrl, postSocialSignInOutcome, subscribeSocialSignInOutcome } from '@/auth/social-sign-in'
+import {
+    getSocialSignInDoneUrl,
+    postSocialSignInOutcome,
+    SOCIAL_SIGN_IN_DONE_PATH,
+    subscribeSocialSignInOutcome,
+} from '@/auth/social-sign-in'
 import type { SocialSignInOutcome } from '@/auth/types'
 import { waitFor } from '@testing-library/react'
 
 describe('social sign-in channel', () => {
     it('sends the popup back to a page on this app’s own origin', () => {
-        expect(getSocialSignInDoneUrl()).toBe(`${window.location.origin}/auth/done`)
+        expect(getSocialSignInDoneUrl()).toBe(`${window.location.origin}${SOCIAL_SIGN_IN_DONE_PATH}`)
     })
 
     it('delivers the popup’s outcome to a listening tab', async () => {

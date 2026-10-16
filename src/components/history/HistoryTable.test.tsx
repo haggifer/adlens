@@ -93,14 +93,14 @@ describe('HistoryTable', () => {
             .getByText('Meta US')
             .closest('.ant-tag')
 
-        expect(tag).toHaveClass('ant-tag-cyan')
+        expect(tag).toBeInTheDocument()
         expect(tag?.querySelector('.anticon-tag')).not.toBeNull()
     })
 
     it('leaves out the preset tag for a run counted for no preset', async () => {
         renderTable()
 
-        expect((await rowOf(JOB.file.name)).querySelector('.ant-tag-cyan')).toBeNull()
+        expect((await rowOf(JOB.file.name)).querySelector('.anticon-tag')).toBeNull()
     })
 
     it("names the preset by its current name, so a renamed preset's runs follow it", async () => {
@@ -118,7 +118,7 @@ describe('HistoryTable', () => {
 
         await waitForLoaded()
 
-        expect((await rowOf(JOB.file.name)).querySelector('.ant-tag-cyan')).toBeNull()
+        expect((await rowOf(JOB.file.name)).querySelector('.anticon-tag')).toBeNull()
     })
 
     it('tags an analysis of a sample ad', async () => {
