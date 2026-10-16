@@ -161,9 +161,13 @@ describe('AccountSettings', () => {
         linkAccounts('credential')
         const { user } = renderSettings()
 
-        await user.type(await screen.findByLabelText('Current password'), CURRENT_PASSWORD)
-        await user.type(screen.getByLabelText('New password'), NEW_PASSWORD)
-        await user.type(screen.getByLabelText('Confirm new password'), NEW_PASSWORD)
+        // Pasted rather than typed: typing each character re-renders the form, slow under a full parallel run.
+        await user.click(await screen.findByLabelText('Current password'))
+        await user.paste(CURRENT_PASSWORD)
+        await user.click(screen.getByLabelText('New password'))
+        await user.paste(NEW_PASSWORD)
+        await user.click(screen.getByLabelText('Confirm new password'))
+        await user.paste(NEW_PASSWORD)
         await user.click(screen.getByRole('button', { name: 'Change password' }))
 
         expect(await screen.findByText('Password changed')).toBeInTheDocument()

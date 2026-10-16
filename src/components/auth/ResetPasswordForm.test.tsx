@@ -12,9 +12,12 @@ jest.mock('@/auth/session', () => ({ announceSessionChange: jest.fn(), refreshSe
 
 const NEW_PASSWORD = 'a-new-password-123'
 
+// Pasted rather than typed: typing each character re-renders the form, which timed out under a full parallel run.
 const submitNewPassword = async (user: UserEvent) => {
-    await user.type(screen.getByLabelText('New password'), NEW_PASSWORD)
-    await user.type(screen.getByLabelText('Confirm new password'), NEW_PASSWORD)
+    await user.click(screen.getByLabelText('New password'))
+    await user.paste(NEW_PASSWORD)
+    await user.click(screen.getByLabelText('Confirm new password'))
+    await user.paste(NEW_PASSWORD)
     await user.click(screen.getByRole('button', { name: 'Set new password' }))
 }
 
