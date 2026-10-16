@@ -70,6 +70,17 @@ const enterName = async (user: UserEvent, name: string) => {
 
 const clickSave = (user: UserEvent) => user.click(screen.getByRole('button', { name: 'Save' }))
 
+const MARKETS_SELECT_INDEX = 2
+
+// A chosen option shows twice, as a tag and in the open list, so the list entry is picked by its class.
+const pickMarket = async (user: UserEvent, market: Market) => {
+    await user.click(screen.getAllByRole('combobox')[MARKETS_SELECT_INDEX])
+
+    const matches = await screen.findAllByTitle(MARKET_LABELS[market])
+
+    await user.click(matches.find((match) => match.classList.contains('ant-select-item-option')) ?? matches[0])
+}
+
 // The modal has a Cancel of its own.
 const getPopconfirmCancel = () => {
     const buttons = screen.getAllByRole('button', { name: 'Cancel' })
@@ -98,6 +109,15 @@ describe('PresetModal', () => {
         expect(screen.getByTitle(formatPlacementLabel(Placement.MetaFeed))).toBeInTheDocument()
         expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
         expect(screen.getByRole('checkbox', { name: 'Make default' })).toBeChecked()
+    })
+
+    it('never changes the settings it was opened with', async () => {
+        const initialSettings = { ...SETTINGS, markets: [...SETTINGS.markets] }
+        const { user } = renderModal({ initialSettings })
+
+        await pickMarket(user, Market.US)
+
+        expect(initialSettings).toEqual(SETTINGS)
     })
 
     it('starts Make default unchecked for a new preset', () => {

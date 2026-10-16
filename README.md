@@ -158,6 +158,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   runs of spaces: the API's rule, which `preset-name.ts` repeats). A preset counts as used when an analysis starts with
   its settings unchanged; the API does the counting. `/presets` needs no `PrivateRoute`: without a session it shows the
   empty state, and saving the first preset starts an anonymous session, as a first analysis does.
+- **Save as preset never changes the analysis settings.** Its dialog starts from a copy of the panel's settings. A
+  preset saved with them unchanged is applied (marked, and counted when the run starts); one whose settings were edited
+  in the dialog is only saved, and the panel keeps its settings and applied preset.
 - **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders

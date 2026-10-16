@@ -761,31 +761,38 @@ describe('AnalysisSettings', () => {
             expect(createSampleJob).toHaveBeenCalledWith(expect.objectContaining({ presetId: saved.id }))
         })
 
-        it('takes the settings a preset was saved with, so it shows as applied and the run counts', async () => {
-            const saved = buildPreset({
-                id: 'preset-3',
-                name: 'Sample Meta UK',
-                settings: { ...SAMPLE_RUN_SETTINGS, markets: [Market.UK] },
-            })
+        it('only saves a preset whose settings were changed in the dialog, keeping the panel as it was', async () => {
+            const settings = { ...SAMPLE_RUN_SETTINGS, markets: [...SAMPLE_RUN_SETTINGS.markets, Market.UK] }
+            const saved = buildPreset({ id: 'preset-3', name: 'Sample Meta UK', settings })
 
-            // The API answers with the settings the dialog sent: here, the panel's with a market added there.
             jest.mocked(createPreset).mockResolvedValue(saved)
             const { user } = renderSettings(memberAuth(), SAMPLE_SOURCE)
 
             await user.click(screen.getByLabelText('Save as preset'))
-            await user.type(await screen.findByLabelText('Name'), saved.name)
+
+            const dialog = within(await screen.findByRole('dialog'))
+
+            await user.type(dialog.getByLabelText('Name'), saved.name)
+            await toggleOption(user, dialog.getAllByRole('combobox')[2], MARKET_LABELS[Market.UK])
             jest.mocked(listPresets).mockResolvedValue([PRESET, saved])
             await user.click(getSaveButtonByText())
 
-            expect(await screen.findByLabelText(`Preset: ${saved.name}`)).toBeInTheDocument()
-            expect(screen.getByTitle(MARKET_LABELS[Market.UK])).toBeInTheDocument()
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+            expect(createPreset).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    settings: expect.objectContaining({ markets: expect.arrayContaining([Market.UK]) }),
+                }),
+            )
+            expect(getSelectedIcon(saved)).not.toBeInTheDocument()
+            expect(screen.queryByTitle(MARKET_LABELS[Market.UK])).not.toBeInTheDocument()
 
             await user.click(getRunButtonByText())
 
             await waitFor(() => expect(createSampleJob).toHaveBeenCalled())
-            expect(createSampleJob).toHaveBeenCalledWith(
-                expect.objectContaining({ settings: saved.settings, presetId: saved.id }),
-            )
+            expect(jest.mocked(createSampleJob).mock.calls[0][0]).toMatchObject({
+                settings: SAMPLE_RUN_SETTINGS,
+                presetId: undefined,
+            })
         })
 
         it('sends no preset when none was applied', async () => {

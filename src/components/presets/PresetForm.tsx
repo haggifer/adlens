@@ -32,9 +32,20 @@ const NAME_INPUT_ID = 'preset-name'
 
 const EMPTY_SETTINGS: AnalysisSettingsInput = { platforms: [], placements: [], markets: [] }
 
+// A copy, so the form never holds the arrays of the settings it started from (the panel's, or a cached preset's).
+const copySettings = ({
+    platforms = [],
+    placements = [],
+    markets = [],
+}: AnalysisSettingsInput): AnalysisSettingsInput => ({
+    platforms: [...platforms],
+    placements: [...placements],
+    markets: [...markets],
+})
+
 const getDefaultValues = (preset?: Preset, initialSettings?: AnalysisSettingsInput): PresetFormInput => ({
     name: preset?.name ?? '',
-    settings: preset?.settings ?? initialSettings ?? EMPTY_SETTINGS,
+    settings: copySettings(preset?.settings ?? initialSettings ?? EMPTY_SETTINGS),
     isDefault: preset?.isDefault ?? false,
 })
 
