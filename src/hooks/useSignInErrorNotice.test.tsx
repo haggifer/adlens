@@ -61,12 +61,6 @@ describe('useSignInErrorNotice', () => {
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
-    it('does nothing without an error', () => {
-        renderAt('tab=all')
-
-        expect(mockReplace).not.toHaveBeenCalled()
-    })
-
     it('ignores an error in a link this tab didn’t leave for a sign-in from', () => {
         renderAt('error=access_denied')
 
@@ -74,10 +68,11 @@ describe('useSignInErrorNotice', () => {
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
-    it('forgets the sign-in once a page has loaded after it, so a later link with an error shows nothing', () => {
+    it('does nothing back from a sign-in without an error, and forgets the sign-in so a later link with one shows nothing', () => {
         leaveForSignIn()
         renderAt('tab=all')
 
+        expect(mockReplace).not.toHaveBeenCalled()
         expect(sessionStorage.getItem('adlens.redirect-sign-in')).toBeNull()
     })
 })

@@ -197,7 +197,16 @@ describe('ResultsPanel', () => {
         expect(onSeek).toHaveBeenCalledWith(12.4)
     })
 
-    it('shows the transcript on request, or says there was no speech', async () => {
+    it('shows the transcript on request', async () => {
+        render(<ResultsPanel analysis={buildAnalysis({ transcript: 'Buy now while stocks last' })} />)
+
+        await userEvent.click(screen.getByRole('button', { name: /Transcript/ }))
+
+        expect(await screen.findByText('Buy now while stocks last')).toBeInTheDocument()
+        expect(screen.queryByText('No speech detected.')).not.toBeInTheDocument()
+    })
+
+    it('says there was no speech when the transcript is empty', async () => {
         render(<ResultsPanel analysis={buildAnalysis({ transcript: '' })} />)
 
         await userEvent.click(screen.getByRole('button', { name: /Transcript/ }))

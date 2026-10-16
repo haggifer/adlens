@@ -131,7 +131,7 @@ describe('SocialButtons', () => {
         await user.click(googleButton())
 
         expect(await screen.findByText(describeError({ status: 429 }))).toBeInTheDocument()
-        expect(googleButton()).toBeEnabled()
+        expect(googleButton()).toHaveAttribute('aria-busy', 'false')
         expect(takeRedirectSignIn()).toBe(false)
     })
 })

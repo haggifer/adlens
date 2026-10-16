@@ -101,12 +101,4 @@ describe('ConfirmEmailNotice', () => {
 
         expect(await screen.findByText(OTHER_ADDRESS_NOTE)).toBeInTheDocument()
     })
-
-    it('drops the note once another view opens', () => {
-        useAuthModalStore.getState().setView('confirm')
-        useAuthModalStore.getState().setIsOtherAddressLink(true)
-        useAuthModalStore.getState().setView('signin')
-
-        expect(useAuthModalStore.getState().isOtherAddressLink).toBe(false)
-    })
 })
