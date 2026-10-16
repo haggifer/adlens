@@ -45,6 +45,8 @@ class FakeXhr {
 
 const FILE_BYTES = 'abcd'
 
+const STORAGE_REFUSAL = '<?xml version="1.0"?><Error><Code>SignatureDoesNotMatch</Code></Error>'
+
 const TARGET = {
     url: 'https://storage.googleapis.com/bucket/video?X-Goog-Signature=abc',
     headers: { 'Content-Type': 'video/mp4', 'x-goog-content-length-range': '4,4' },
@@ -92,13 +94,17 @@ describe('uploadToSignedUrl', () => {
         expect(onProgress).not.toHaveBeenCalled()
     })
 
-    it.each([199, 300, 403])('rejects with UPLOAD_INCOMPLETE when storage answers %i', async (status) => {
-        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
+    it.each([199, 300, 403])(
+        'rejects with UPLOAD_INCOMPLETE when storage answers %i, logging the status and Cloud Storage’s error code',
+        async (status) => {
+            const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
 
-        FakeXhr.last.respond(status)
+            FakeXhr.last.respond(status, STORAGE_REFUSAL)
 
-        await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
-    })
+            await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
+            expect(consoleError).toHaveBeenCalledWith('Upload refused by storage:', status, 'SignatureDoesNotMatch')
+        },
+    )
 
     it('accepts any 2xx answer', async () => {
         const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
@@ -108,29 +114,12 @@ describe('uploadToSignedUrl', () => {
         await expect(upload).resolves.toBeUndefined()
     })
 
-    it('rejects with UPLOAD_INCOMPLETE when the connection drops', async () => {
+    it('rejects with UPLOAD_INCOMPLETE when the connection drops, logging that storage never answered', async () => {
         const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
 
         FakeXhr.last.failNetwork()
 
         await expect(upload).rejects.toEqual(new ApiRequestError(RequestErrorCode.UploadIncomplete))
-    })
-
-    it('logs the status and Cloud Storage’s error code when storage refuses the upload', async () => {
-        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
-
-        FakeXhr.last.respond(403, '<?xml version="1.0"?><Error><Code>SignatureDoesNotMatch</Code></Error>')
-
-        await expect(upload).rejects.toBeInstanceOf(ApiRequestError)
-        expect(consoleError).toHaveBeenCalledWith('Upload refused by storage:', 403, 'SignatureDoesNotMatch')
-    })
-
-    it('logs that the upload never got an answer when the connection drops', async () => {
-        const upload = uploadToSignedUrl({ target: TARGET, file: new File([FILE_BYTES], 'ad.mp4') })
-
-        FakeXhr.last.failNetwork()
-
-        await expect(upload).rejects.toBeInstanceOf(ApiRequestError)
         expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Upload failed before storage answered'))
     })
 })

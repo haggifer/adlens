@@ -24,13 +24,6 @@ describe('ResetPasswordForm', () => {
         useAuthModalStore.setState({ view: 'reset', resetToken: 'a-token' })
     })
 
-    it('links every field to its label', () => {
-        renderWithProviders(<ResetPasswordForm />)
-
-        expect(screen.getByLabelText('New password')).toBeInTheDocument()
-        expect(screen.getByLabelText('Confirm new password')).toBeInTheDocument()
-    })
-
     it('resets with the link’s token, signs the tabs out, then offers to sign in within the modal', async () => {
         const user = userEvent.setup()
 

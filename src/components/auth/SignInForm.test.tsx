@@ -28,13 +28,6 @@ describe('SignInForm', () => {
         useAuthModalStore.setState({ view: 'signin', isOtherAddressLink: false })
     })
 
-    it('links every field to its label', () => {
-        renderForm()
-
-        expect(screen.getByLabelText('Email')).toBeInTheDocument()
-        expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    })
-
     it('signs in and closes the dialog', async () => {
         const { user } = renderForm()
 

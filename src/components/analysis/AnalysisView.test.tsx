@@ -94,23 +94,18 @@ describe('AnalysisView', () => {
             expect(useJobVideo).not.toHaveBeenCalledWith('job-1', true)
         })
 
-        it('says why it failed and whether the run was counted', () => {
-            renderView(FAILED_JOB)
+        it.each([
+            JobErrorCode.AnalysisTimedOut,
+            JobErrorCode.VideoCheckFailed,
+            JobErrorCode.UploadFailed,
+            JobErrorCode.VideoTooLong,
+        ])('explains a run that ended in %s', (errorCode) => {
+            renderView(buildJob({ status: JobStatus.Error, errorCode }))
 
-            expect(screen.getByText(describeJobErrorTitle(JobErrorCode.AnalysisTimedOut))).toBeInTheDocument()
-            expect(screen.getByText(describeJobError(JobErrorCode.AnalysisTimedOut))).toBeInTheDocument()
+            expect(screen.getByText(describeJobErrorTitle(errorCode))).toBeInTheDocument()
+            expect(screen.getByText(describeJobError(errorCode))).toBeInTheDocument()
+            expect(screen.queryByRole('region', PLAYER)).not.toBeInTheDocument()
         })
-
-        it.each([JobErrorCode.VideoCheckFailed, JobErrorCode.UploadFailed, JobErrorCode.VideoTooLong])(
-            'explains a run that ended in %s',
-            (errorCode) => {
-                renderView(buildJob({ status: JobStatus.Error, errorCode }))
-
-                expect(screen.getByText(describeJobErrorTitle(errorCode))).toBeInTheDocument()
-                expect(screen.getByText(describeJobError(errorCode))).toBeInTheDocument()
-                expect(screen.queryByRole('region', PLAYER)).not.toBeInTheDocument()
-            },
-        )
 
         it('offers to analyze another video', async () => {
             const { user } = renderView(FAILED_JOB)

@@ -85,13 +85,12 @@ describe('HistoryTable', () => {
     })
 
     // Below lg the Preset column is gone, so the row carries the preset as a tag on a line of its own.
-    it('tags the row with the preset a run was counted for', async () => {
+    it("tags the row with the preset a run was counted for, by its current name so a renamed preset's runs follow it", async () => {
         jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
+        jest.mocked(listPresets).mockResolvedValue([{ ...PRESET, name: 'Meta US and EU' }])
         renderTable()
 
-        const tag = within(await rowOf(JOB.file.name))
-            .getByText('Meta US')
-            .closest('.ant-tag')
+        const tag = (await within(await rowOf(JOB.file.name)).findByText('Meta US and EU')).closest('.ant-tag')
 
         expect(tag).toBeInTheDocument()
         expect(tag?.querySelector('.anticon-tag')).not.toBeNull()
@@ -101,14 +100,6 @@ describe('HistoryTable', () => {
         renderTable()
 
         expect((await rowOf(JOB.file.name)).querySelector('.anticon-tag')).toBeNull()
-    })
-
-    it("names the preset by its current name, so a renamed preset's runs follow it", async () => {
-        jest.mocked(listJobs).mockResolvedValue(page([COUNTED_JOB]))
-        jest.mocked(listPresets).mockResolvedValue([{ ...PRESET, name: 'Meta US and EU' }])
-        renderTable()
-
-        expect(await within(await rowOf(JOB.file.name)).findByText('Meta US and EU')).toBeInTheDocument()
     })
 
     it('leaves out the preset tag when the preset is gone', async () => {
@@ -170,18 +161,11 @@ describe('HistoryTable', () => {
         expect(mockPush).toHaveBeenCalledWith('/')
     })
 
-    it('shows the copy for a failed load, not the server’s message', async () => {
+    it('shows the copy for a failed load, without claiming there are no analyses', async () => {
         jest.mocked(listJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
         renderTable()
 
         expect(await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
-    })
-
-    it('does not claim there are no analyses when the list failed to load', async () => {
-        jest.mocked(listJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
-        renderTable()
-
-        await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))
         await waitForLoaded()
 
         expect(screen.queryByText('No analyses yet')).not.toBeInTheDocument()

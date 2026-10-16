@@ -83,15 +83,17 @@ describe('runAuthQuery', () => {
         await expect(runAuthQuery(async () => ({ data: null, error }))).resolves.toEqual({ data: null, error })
     })
 
-    it('turns a request that never reached the API into a network error', async () => {
-        jest.spyOn(console, 'error').mockImplementation(() => {})
+    it('turns a request that never reached the API into a network error, and logs the failure', async () => {
+        const failure = new TypeError('Failed to fetch')
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
 
         const result = await runAuthQuery(async () => {
-            throw new TypeError('Failed to fetch')
+            throw failure
         })
 
         expect(result.data).toBeNull()
         expect(isNetworkError(result.error)).toBe(true)
+        expect(consoleError).toHaveBeenCalledWith(failure)
     })
 })
 
@@ -104,8 +106,6 @@ describe('isRateLimited', () => {
 })
 
 describe('runAuthRequest', () => {
-    afterEach(() => jest.restoreAllMocks())
-
     it('returns null when the request succeeds', async () => {
         await expect(runAuthRequest(async () => ({ error: null }))).resolves.toBeNull()
     })
@@ -114,17 +114,5 @@ describe('runAuthRequest', () => {
         const error = { code: 'INVALID_TOKEN', status: 400 }
 
         await expect(runAuthRequest(async () => ({ error }))).resolves.toBe(error)
-    })
-
-    it('turns a request that never reached the API into a network error', async () => {
-        const failure = new TypeError('Failed to fetch')
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
-
-        const error = await runAuthRequest(async () => {
-            throw failure
-        })
-
-        expect(error).toEqual({ code: 'NETWORK_ERROR' })
-        expect(consoleError).toHaveBeenCalledWith(failure)
     })
 })

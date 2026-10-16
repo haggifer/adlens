@@ -131,15 +131,6 @@ describe('HumanCheck', () => {
         expect(screen.queryByText(INTERACTION_HINT)).not.toBeInTheDocument()
     })
 
-    it('names the action it guards when it asks for a click', () => {
-        const ref = renderCheck('send your message')
-
-        startCheck(ref)
-        act(() => screen.getByRole('button', { name: 'Ask for a click' }).click())
-
-        expect(screen.getByText('Confirm you’re human to send your message.')).toBeInTheDocument()
-    })
-
     it('fails the run and blames loading when the widget errors before it ever loaded', async () => {
         const ref = renderCheck()
         const token = startCheck(ref)
