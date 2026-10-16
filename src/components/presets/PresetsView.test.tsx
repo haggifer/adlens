@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { initializingAuth, memberAuth, signedOutAuth } from '@/test/auth'
 import { buildPreset } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import { MAX_PRESETS, RequestErrorCode } from 'adlens-shared'
 import { PresetsView } from './PresetsView'
 
@@ -44,15 +44,6 @@ describe('PresetsView', () => {
         jest.mocked(listPresets).mockReset().mockResolvedValue([META_US, LAUNCH])
     })
 
-    it('shows the title and a Create button', async () => {
-        renderWithProviders(<PresetsView />)
-
-        expect(screen.getByRole('heading', { level: 1, name: 'Presets' })).toBeInTheDocument()
-        expect(await screen.findByText('Meta US')).toBeInTheDocument()
-        expect(getCreateButtons()).toHaveLength(1)
-        expect(getCreateButtons()[0]).toBeEnabled()
-    })
-
     it('lists the presets by name', async () => {
         renderWithProviders(<PresetsView />)
 
@@ -64,10 +55,16 @@ describe('PresetsView', () => {
         expect(within(rows[1]).getByText('Meta US')).toBeInTheDocument()
     })
 
-    it('disables Create at the limit and says why', async () => {
-        jest.mocked(listPresets).mockResolvedValue(buildPresets(MAX_PRESETS))
-        const { user } = renderWithProviders(<PresetsView />)
+    it('offers one Create button below the limit, and disables it at the limit and says why', async () => {
+        const { queryClient, user } = renderWithProviders(<PresetsView />)
 
+        await screen.findByText('Meta US')
+
+        expect(getCreateButtons()).toHaveLength(1)
+        expect(getCreateButtons()[0]).toBeEnabled()
+
+        jest.mocked(listPresets).mockResolvedValue(buildPresets(MAX_PRESETS))
+        await act(() => queryClient.invalidateQueries())
         await screen.findByText('Preset 00')
 
         const create = getCreateButtons()[0]

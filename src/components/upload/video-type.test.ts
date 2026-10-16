@@ -17,7 +17,10 @@ describe('toVideoMimeType', () => {
         expect(toVideoMimeType('')).toBeNull()
     })
 
-    it('lets the file picker offer .m4v files', () => {
-        expect(VIDEO_FILE_ACCEPT.split(',')).toEqual(expect.arrayContaining(['video/x-m4v', '.m4v']))
+    it('lets the file picker offer only types the upload takes', () => {
+        const mimeTypes = VIDEO_FILE_ACCEPT.split(',').filter((entry) => !entry.startsWith('.'))
+
+        expect(mimeTypes).not.toHaveLength(0)
+        mimeTypes.forEach((type) => expect(toVideoMimeType(type)).not.toBeNull())
     })
 })

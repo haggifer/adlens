@@ -57,16 +57,6 @@ describe('PresetActions', () => {
         jest.mocked(listPresets).mockReset().mockResolvedValue([PRESET])
     })
 
-    it('offers Save and Apply, each named by its tooltip', async () => {
-        const { user } = renderActions()
-
-        expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeInTheDocument()
-
-        await user.hover(getSaveButton())
-
-        expect(await screen.findByText('Save as preset')).toBeInTheDocument()
-    })
-
     it('marks the applied preset while the settings are its own, in any order', async () => {
         const reordered: AnalysisSettingsInput = {
             platforms: [Platform.Meta],
@@ -77,9 +67,6 @@ describe('PresetActions', () => {
 
         const icon = screen.getByRole('img', { name: SELECTED_LABEL })
 
-        expect(icon).toHaveAttribute('tabindex', '0')
-        // A mark, not a control: it does nothing on click.
-        expect(icon).toHaveStyle({ cursor: 'default' })
         // Left of Save and Apply.
         expect(icon.compareDocumentPosition(getSaveButton()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 

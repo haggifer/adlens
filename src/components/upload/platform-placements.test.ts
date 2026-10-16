@@ -1,4 +1,4 @@
-import { Placement, Platform } from 'adlens-shared'
+import { Placement, PLACEMENT_PLATFORM, Platform } from 'adlens-shared'
 import {
     getPlatformPlacements,
     toPlacementsForPlatforms,
@@ -6,12 +6,16 @@ import {
     withPlatformPlacements,
 } from './platform-placements'
 
-const META_PLACEMENTS = [Placement.MetaFeed, Placement.MetaReels, Placement.MetaStories]
+const META_PLACEMENTS = getPlatformPlacements(Platform.Meta)
 
 describe('platform placements', () => {
-    it('lists each platform’s placements', () => {
-        expect(getPlatformPlacements(Platform.Meta)).toEqual(META_PLACEMENTS)
-        expect(getPlatformPlacements(Platform.TikTok)).toEqual([Placement.TikTokInFeed])
+    it('lists every placement once, under its own platform', () => {
+        const listed = Object.values(Platform).flatMap((platform) =>
+            getPlatformPlacements(platform).map((placement) => ({ placement, platform })),
+        )
+
+        expect(listed.map(({ placement }) => placement).sort()).toEqual(Object.values(Placement).sort())
+        listed.forEach(({ placement, platform }) => expect(PLACEMENT_PLATFORM[placement]).toBe(platform))
     })
 
     it('selects every placement of a newly selected platform and keeps the others as they were', () => {

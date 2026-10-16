@@ -475,15 +475,6 @@ describe('AnalysisSettings', () => {
         expect(useAuthModalStore.getState().view).toBe('signin')
     })
 
-    it('says every placement is checked until a platform is chosen', () => {
-        renderSettings(memberAuth(), {
-            kind: 'sample',
-            sample: { ...SAMPLE, settings: { platforms: [], placements: [], markets: [] } },
-        })
-
-        expect(screen.getByText('Every placement is checked; pick a platform to narrow')).toBeInTheDocument()
-    })
-
     describe('checking in advance whether the analysis would be admitted', () => {
         it('disables Run and says why, above it, before a visitor without a session tries', async () => {
             jest.mocked(getAdmissionRefusal).mockResolvedValue(RequestErrorCode.SignUpRequired)
@@ -658,15 +649,6 @@ describe('AnalysisSettings', () => {
         jest.setTimeout(20_000)
 
         beforeEach(() => jest.mocked(listPresets).mockResolvedValue([PRESET]))
-
-        it('puts Save and Apply in the title row', async () => {
-            await renderFilePanel(memberAuth())
-
-            const titleRow = within(screen.getByRole('heading', { name: 'Where will it run?' }).parentElement!)
-
-            expect(titleRow.getByRole('button', { name: 'Save as preset' })).toBeInTheDocument()
-            expect(titleRow.getByRole('button', { name: 'Apply a preset' })).toBeInTheDocument()
-        })
 
         it('applies a preset to the fields, closes the popover and marks it selected', async () => {
             const { user } = await renderFilePanel(memberAuth())

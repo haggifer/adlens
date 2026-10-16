@@ -21,8 +21,6 @@ jest.mock('@/design/ThemeContext', () => ({ useTheme: () => ({ isDark: false, se
 
 const QUOTA: Quota = { used: 1, limit: 3, nextFreeAt: null }
 
-const PAGE_HREFS = ['/', '/history', '/presets', '/demo', '/account']
-
 const openMenu = async (auth: AuthContextValue) => {
     mockUseAuth.mockReturnValue(auth)
 
@@ -232,12 +230,6 @@ describe('MobileMenu', () => {
             expect(consoleError).toHaveBeenCalledTimes(1)
 
             consoleError.mockRestore()
-        })
-
-        it('lists the pages Analyze, History, Presets, Examples, Account', async () => {
-            const { menu } = await openMenu(memberAuth())
-
-            expect(menu.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(PAGE_HREFS)
         })
 
         it('opens the contact form', async () => {

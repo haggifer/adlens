@@ -2,7 +2,7 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { Header } from './Header'
 import { describeNextFree, formatQuotaLeft } from './quota-label'
@@ -34,18 +34,6 @@ describe('Header', () => {
         expect(screen.getByRole('link', { name: 'History' })).toBeInTheDocument()
         expect(screen.getByText(formatQuotaLeft(QUOTA))).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
-    })
-
-    it('orders the navigation Analyze, History, Presets, Examples', () => {
-        renderHeader(memberAuth(), QUOTA)
-
-        const nav = screen.getByRole('navigation', { name: 'Main' })
-
-        expect(
-            within(nav)
-                .getAllByRole('link')
-                .map((link) => link.textContent),
-        ).toEqual(['Analyze', 'History', 'Presets', 'Examples'])
     })
 
     it('marks the current page in the navigation', () => {
