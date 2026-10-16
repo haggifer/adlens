@@ -142,6 +142,7 @@ We may need to share your personal information in the following situations:
     - MongoDB Atlas (Belgium): our database
     - Vercel: hosting of our website
     - Resend (Ireland): sending account emails, such as email confirmation and password reset, and delivering the messages you send through our Contact form
+    - Ably (United Kingdom): telling your other open AdLens tabs and devices that your presets or analyses changed, so they show the change. Ably receives your account's identifier in the name of the channel your browser listens on, and your IP address and browser details when it connects. The messages say only what changed, never its content
     - Cloudflare: the Turnstile check on the analysis and Contact forms, which tells people from bots. To do so, Cloudflare processes your IP address and signals from your browser under its [Turnstile Privacy Addendum](https://www.cloudflare.com/turnstile-privacy-policy/).
 
     Some of these providers may process your information outside your country, including in the United States.
@@ -158,6 +159,8 @@ We use cookies only to keep you signed in, to keep the free analysis without an 
 - **adlens_free_run**: set by our API whenever an analysis is started in this browser. It holds the identifier of the account that started it, so this browser gets one analysis before an email address is confirmed, even if you sign in and out, and expires after 400 days.
 - **adlens_scheme**: remembers whether you chose the light or dark theme. It is set only when you switch the theme, and expires after one year.
 - **adlens_account_kind**: remembers whether this browser was last using AdLens without an account or signed in, so the page header can show the right buttons while it loads. It holds no identifier, is removed when you sign out, and expires after one year.
+
+While you use AdLens, the library we use to connect to Ably may remember in your browser's local storage which kind of connection works (`ably-transport-preference`). It holds no identifier.
 
 The Turnstile check runs in a frame served by Cloudflare. Anything it keeps in your browser belongs to Cloudflare and is used only to tell people from bots, as its Turnstile Privacy Addendum describes.
 
