@@ -33,8 +33,11 @@ const renderTable = (auth: AuthContextValue = memberAuth()) => {
 }
 
 // While loading, antd shows the empty state under a spinner that blocks clicks.
+// The table and its presets load in about 650 ms alone, past the default 1 s wait under a full parallel run.
 const waitForLoaded = () =>
-    waitFor(() => expect(screen.getByRole('table').closest('[aria-busy]')).toHaveAttribute('aria-busy', 'false'))
+    waitFor(() => expect(screen.getByRole('table').closest('[aria-busy]')).toHaveAttribute('aria-busy', 'false'), {
+        timeout: 3000,
+    })
 
 // Via the file-name cell rather than findByRole('row', { name }): computing every row's accessible name in an antd table
 // takes seconds, enough to time out under a full test run.
