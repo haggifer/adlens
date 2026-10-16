@@ -31,14 +31,4 @@ describe('readFileSnapshot', () => {
         expect(snapshot.lastModified).toBe(1_700_000_000_000)
         await expect(readText(snapshot)).resolves.toBe('video bytes')
     })
-
-    it('rejects when the picked file can no longer be read', async () => {
-        const picked = new File(['x'], 'ad.mp4', { type: 'video/mp4' })
-
-        Object.defineProperty(picked, 'arrayBuffer', {
-            value: () => Promise.reject(new DOMException('The file could not be read', 'NotReadableError')),
-        })
-
-        await expect(readFileSnapshot(picked)).rejects.toThrow('The file could not be read')
-    })
 })

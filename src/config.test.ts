@@ -47,7 +47,7 @@ describe('config', () => {
     it('rejects an API origin that isn’t a URL', async () => {
         await expect(
             importConfig({ NODE_ENV: 'development', NEXT_PUBLIC_API_BASE_URL: 'api.useadlens.com' }),
-        ).rejects.toThrow('Invalid URL')
+        ).rejects.toThrow('apiBaseUrl')
     })
 
     it('fails a production build without the site key instead of shipping the test key', async () => {

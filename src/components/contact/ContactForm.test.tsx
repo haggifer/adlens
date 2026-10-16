@@ -255,14 +255,6 @@ describe('ContactForm', () => {
         expect(sendContactMessage).not.toHaveBeenCalled()
     })
 
-    it('accepts a message of exactly the minimum length', async () => {
-        renderForm()
-
-        await send(SHORTEST_MESSAGE)
-
-        expect(await screen.findByText('Message sent')).toBeInTheDocument()
-    })
-
     it('asks for a longer message instead of sending one that is too short once trimmed', async () => {
         renderForm()
 

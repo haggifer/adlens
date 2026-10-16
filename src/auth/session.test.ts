@@ -1,21 +1,20 @@
 import { announceSessionChange } from '@/auth/session'
+import { getGlobalBroadcastChannel } from 'better-auth/client'
 
 jest.mock('@/auth/authClient', () => ({ authClient: { $store: { notify: jest.fn() } } }))
 
-// Better Auth's cross-tab channel: a localStorage entry that other tabs see as a storage event.
-const CHANNEL_KEY = 'better-auth.message'
-
 describe('announceSessionChange', () => {
-    afterEach(() => localStorage.clear())
+    afterEach(() => jest.restoreAllMocks())
 
     it('tells other tabs through Better Auth’s channel that the session changed, so they fetch it again', () => {
+        const post = jest.spyOn(getGlobalBroadcastChannel(), 'post')
+
         announceSessionChange()
 
-        expect(JSON.parse(localStorage.getItem(CHANNEL_KEY) ?? '{}')).toEqual({
+        expect(post).toHaveBeenCalledWith({
             event: 'session',
             data: { trigger: 'updateUser' },
             clientId: expect.any(String),
-            timestamp: expect.any(Number),
         })
     })
 })
