@@ -5,6 +5,7 @@ import { createPreset, listPresets } from '@/api/presets'
 import { authClient, signIn } from '@/auth/authClient'
 import { refreshSession } from '@/auth/session'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { formatQuotaDate } from '@/components/layout/quota-label'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import type { UseQuotaResult } from '@/hooks/useQuota'
@@ -97,6 +98,8 @@ const CONFIRMATION_REQUIRED_COPY = describeRequestError(RequestErrorCode.EmailCo
 
 const SIGN_UP_REQUIRED_COPY = describeRequestError(RequestErrorCode.SignUpRequired)
 
+const NEXT_FREE_AT = '2026-10-08T09:30:00.000Z'
+
 const PRESET: Preset = buildPreset({
     id: 'preset-1',
     name: 'Meta UK',
@@ -154,6 +157,9 @@ const renderFilePanel = async (auth: AuthContextValue) => {
 
     return result
 }
+
+// The date sits inside the sentence that names it, so it is looked for within an element's own text.
+const queryNextFreeDate = () => screen.queryByText((text) => text.includes(formatQuotaDate(NEXT_FREE_AT)))
 
 const isAboveRun = (element: Element) =>
     Boolean(element.compareDocumentPosition(runButton()) & Node.DOCUMENT_POSITION_FOLLOWING)
@@ -295,9 +301,7 @@ describe('AnalysisSettings', () => {
 
             await run(user)
 
-            expect(
-                await screen.findByText('The security check didn’t pass. Try it again, then run the analysis.'),
-            ).toBeInTheDocument()
+            expect(await screen.findByText(describeRequestError(RequestErrorCode.ChallengeFailed))).toBeInTheDocument()
             expect(authClient.getSession).not.toHaveBeenCalled()
             expect(signIn.anonymous).not.toHaveBeenCalled()
             expect(createSampleJob).not.toHaveBeenCalled()
@@ -309,7 +313,7 @@ describe('AnalysisSettings', () => {
 
             await run(user)
 
-            expect(await screen.findByText('Too many attempts. Wait a moment and try again.')).toBeInTheDocument()
+            expect(await screen.findByText(describeRequestError(RequestErrorCode.RateLimited))).toBeInTheDocument()
             expect(createSampleJob).not.toHaveBeenCalled()
         })
     })
@@ -447,23 +451,23 @@ describe('AnalysisSettings', () => {
         })
 
         it('asks to confirm the email once its analysis is used, instead of naming a date', () => {
-            mockQuota = { used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+            mockQuota = { used: 1, limit: 1, nextFreeAt: NEXT_FREE_AT }
             renderSettings(unconfirmedAuth())
 
             expect(screen.getByText(CONFIRMATION_REQUIRED_COPY)).toBeInTheDocument()
             expect(screen.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
-            expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
+            expect(queryNextFreeDate()).not.toBeInTheDocument()
             expect(runButton()).toBeDisabled()
         })
     })
 
     it('asks an anonymous visitor to sign up once their analysis is used, instead of naming a date', async () => {
-        mockQuota = { used: 1, limit: 1, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+        mockQuota = { used: 1, limit: 1, nextFreeAt: NEXT_FREE_AT }
         jest.mocked(getAdmissionRefusal).mockResolvedValue(RequestErrorCode.SignUpRequired)
         const { user } = renderSettings(anonymousAuth())
 
         expect(screen.getByText(SIGN_UP_REQUIRED_COPY)).toBeInTheDocument()
-        expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
+        expect(queryNextFreeDate()).not.toBeInTheDocument()
         expect(runButton()).toBeDisabled()
 
         await user.click(screen.getByRole('button', { name: 'Sign In' }))
@@ -514,13 +518,13 @@ describe('AnalysisSettings', () => {
         })
 
         it('lets Run go when the API admits the analysis, though the cached quota looks used up', async () => {
-            mockQuota = { used: 3, limit: 3, nextFreeAt: '2026-10-08T09:30:00.000Z' }
+            mockQuota = { used: 3, limit: 3, nextFreeAt: NEXT_FREE_AT }
             renderSettings(memberAuth())
 
             expect(runButton()).toBeDisabled()
 
             await waitFor(() => expect(runButton()).toBeEnabled())
-            expect(screen.queryByText(/The next one is available on/)).not.toBeInTheDocument()
+            expect(queryNextFreeDate()).not.toBeInTheDocument()
         })
 
         it('lets Run go again once a newer answer admits the analysis', async () => {
@@ -532,7 +536,7 @@ describe('AnalysisSettings', () => {
 
             await waitFor(() => expect(getAdmissionRefusal).toHaveBeenCalledTimes(2))
             await waitFor(() => expect(runButton()).toBeEnabled())
-            expect(screen.queryByText(/used all your analyses/)).not.toBeInTheDocument()
+            expect(screen.queryByText(describeRequestError(RequestErrorCode.QuotaExceeded))).not.toBeInTheDocument()
         })
     })
 
@@ -643,7 +647,7 @@ describe('AnalysisSettings', () => {
 
             await user.click(runButton())
 
-            expect(await screen.findByText("The upload didn't finish. Please try again.")).toBeInTheDocument()
+            expect(await screen.findByText(describeRequestError(RequestErrorCode.UploadIncomplete))).toBeInTheDocument()
             expect(startAnalysis).not.toHaveBeenCalled()
             expect(mockPush).not.toHaveBeenCalled()
         })

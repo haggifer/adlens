@@ -220,9 +220,7 @@ describe('AdWorkspace', () => {
 
         await act(async () => check.reject(new ApiRequestError(RequestErrorCode.ChallengeFailed)))
 
-        expect(
-            await screen.findByText('The security check didn’t pass. Try it again, then run the analysis.'),
-        ).toBeInTheDocument()
+        expect(await screen.findByText(describeRequestError(RequestErrorCode.ChallengeFailed))).toBeInTheDocument()
         expect(removeButton()).toBeEnabled()
         expect(replaceButton()).toBeEnabled()
         expect(createJob).not.toHaveBeenCalled()

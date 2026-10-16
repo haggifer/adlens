@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/test/render'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
 import { MobileMenu } from './MobileMenu'
-import { describeNextFree } from './quota-label'
+import { describeNextFree, formatQuotaLeft } from './quota-label'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
@@ -137,7 +137,7 @@ describe('MobileMenu', () => {
         it('shows Sign In, but no count, sign-up button, email or account items', async () => {
             const { menu } = await openMenu(anonymousAuth())
 
-            expect(menu.queryByText(/analyses left/)).not.toBeInTheDocument()
+            expect(menu.queryByText(formatQuotaLeft(QUOTA))).not.toBeInTheDocument()
             expect(menu.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
             expect(menu.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
             expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
@@ -161,7 +161,7 @@ describe('MobileMenu', () => {
             const { menu } = await openMenu(unconfirmedAuth())
             const email = menu.getByText(MEMBER_EMAIL)
             const confirm = menu.getByRole('button', { name: 'Confirm email' })
-            const quota = menu.getByText('2/3 analyses left')
+            const quota = menu.getByText(formatQuotaLeft(QUOTA))
 
             expect(email.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
             expect(confirm.compareDocumentPosition(quota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -171,7 +171,7 @@ describe('MobileMenu', () => {
             const { menu } = await openMenu(unconfirmedAuth())
 
             expect(menu.getByText(MEMBER_EMAIL)).toBeInTheDocument()
-            expect(menu.getByText('2/3 analyses left')).toBeInTheDocument()
+            expect(menu.getByText(formatQuotaLeft(QUOTA))).toBeInTheDocument()
             expect(menu.getByRole('button', { name: 'Confirm email' })).toBeInTheDocument()
             expect(menu.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
             expect(menu.getByRole('link', { name: /History/ })).toBeInTheDocument()
@@ -195,7 +195,7 @@ describe('MobileMenu', () => {
             mockQuota = quota
             const { menu } = await openMenu(memberAuth())
 
-            expect(menu.getByText(`2/3 analyses left · ${describeNextFree(quota)}`)).toBeInTheDocument()
+            expect(menu.getByText(`${formatQuotaLeft(quota)} · ${describeNextFree(quota)}`)).toBeInTheDocument()
         })
 
         it('shows the email but not the name a Google or GitHub sign-in brought, the account page, and Sign Out', async () => {

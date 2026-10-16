@@ -1,5 +1,7 @@
+import { describeRequestError } from '@/api/errors'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
+import { RequestErrorCode } from 'adlens-shared'
 import { ErrorState } from './ErrorState'
 
 describe('ErrorState', () => {
@@ -7,7 +9,7 @@ describe('ErrorState', () => {
         const onRetry = jest.fn()
         const { user } = renderWithProviders(<ErrorState onRetry={onRetry} />)
 
-        expect(screen.getByText('Something went wrong on our side. Please try again.')).toBeInTheDocument()
+        expect(screen.getByText(describeRequestError(RequestErrorCode.Internal))).toBeInTheDocument()
 
         await user.click(screen.getByRole('button', { name: 'Try again' }))
 

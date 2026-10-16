@@ -1,5 +1,7 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { listSamples } from '@/api/samples'
+import { formatSeconds } from '@/components/analysis/results'
+import { ALL_PLATFORMS_LABEL, PLATFORM_LABELS } from '@/labels'
 import { buildSample } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { act, fireEvent, render, screen } from '@testing-library/react'
@@ -22,9 +24,9 @@ describe('SampleRow', () => {
     it('shows the preview, duration, platforms and description', () => {
         const { container } = render(<SampleRow sample={SAMPLE} onSelect={jest.fn()} />)
 
-        expect(screen.getByText('Running shoes')).toBeInTheDocument()
-        expect(screen.getByText('0:15')).toBeInTheDocument()
-        expect(screen.getByText('Google')).toBeInTheDocument()
+        expect(screen.getByText(SAMPLE.title)).toBeInTheDocument()
+        expect(screen.getByText(formatSeconds(SAMPLE.media.durationS))).toBeInTheDocument()
+        expect(screen.getByText(PLATFORM_LABELS[Platform.YouTube])).toBeInTheDocument()
         expect(screen.getByText(SAMPLE.description)).toBeInTheDocument()
         expect(getPreview(container)).toHaveAttribute('src', SAMPLE.previewUrl)
     })
@@ -37,7 +39,7 @@ describe('SampleRow', () => {
             />,
         )
 
-        expect(screen.getByText('All platforms')).toBeInTheDocument()
+        expect(screen.getByText(ALL_PLATFORMS_LABEL)).toBeInTheDocument()
     })
 
     it('selects the sample when the row is clicked', async () => {
