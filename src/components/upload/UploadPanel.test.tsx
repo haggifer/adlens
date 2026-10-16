@@ -4,6 +4,7 @@ import { act, fireEvent, screen } from '@testing-library/react'
 import { MAX_UPLOAD_BYTES } from 'adlens-shared'
 import { useState } from 'react'
 import { UploadPanel } from './UploadPanel'
+import { UPLOAD_NOTICE } from './upload-notices'
 
 // Vidstack's custom elements don't run in jsdom, and the empty state renders no player.
 jest.mock('@vidstack/react', () => ({ MediaPlayer: () => null, MediaProvider: () => null }))
@@ -113,7 +114,7 @@ describe('UploadPanel', () => {
 
         await user.upload(input, new File(['picked'], 'ad.mp4', { type: 'video/mp4' }))
 
-        expect(await screen.findByText('We couldn’t read this video. Please choose it again.')).toBeInTheDocument()
+        expect(await screen.findByText(UPLOAD_NOTICE.unreadableFile)).toBeInTheDocument()
         expect(onSelect).not.toHaveBeenCalled()
     })
 
@@ -124,7 +125,7 @@ describe('UploadPanel', () => {
 
         await user.upload(input, tooLarge)
 
-        expect(await screen.findByText(/Video must be under/)).toBeInTheDocument()
+        expect(await screen.findByText(UPLOAD_NOTICE.tooLarge)).toBeInTheDocument()
         expect(mockReadFileSnapshot).not.toHaveBeenCalled()
         expect(onSelect).not.toHaveBeenCalled()
     })
@@ -186,7 +187,7 @@ describe('UploadPanel', () => {
 
             await act(async () => jest.advanceTimersByTime(READ_TIMEOUT_MS))
 
-            expect(await screen.findByText('We couldn’t read this video. Please choose it again.')).toBeInTheDocument()
+            expect(await screen.findByText(UPLOAD_NOTICE.unreadableFile)).toBeInTheDocument()
             expect(screen.queryByText('Reading your video…')).not.toBeInTheDocument()
             expect(getFileInput()).toBeEnabled()
             expect(onSelect).not.toHaveBeenCalled()
@@ -205,9 +206,7 @@ describe('UploadPanel', () => {
 
             await act(async () => jest.advanceTimersByTime(READ_TIMEOUT_MS))
 
-            expect(
-                await screen.findByText('Could not read the video. Please try a different file.'),
-            ).toBeInTheDocument()
+            expect(await screen.findByText(UPLOAD_NOTICE.unreadableMetadata)).toBeInTheDocument()
             expect(screen.queryByText('Reading your video…')).not.toBeInTheDocument()
             expect(getFileInput()).toBeEnabled()
             expect(URL.revokeObjectURL).toHaveBeenCalled()

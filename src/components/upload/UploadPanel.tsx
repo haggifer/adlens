@@ -12,6 +12,7 @@ import { useTheme } from 'antd-style'
 import { DragEvent, SyntheticEvent, useEffect, useRef, useState } from 'react'
 import { useStyles } from './styles'
 import type { AcceptedFile, AcceptedVideo, SelectedVideo, VideoMetadata } from './types'
+import { UPLOAD_NOTICE } from './upload-notices'
 import { toVideoMimeType, VIDEO_FILE_ACCEPT } from './video-type'
 
 const { Dragger } = Upload
@@ -115,21 +116,20 @@ export function UploadPanel({
         </div>
     )
 
+    const notifyRejected = (title: string) => notification.error({ title, placement: 'bottomRight' })
+
     // Client-side gate only — the server's ffprobe check is the real boundary; this just avoids a doomed upload. The
     // type and size come first, so a file that can't be used is never copied into memory.
     const verifyFile = async (picked: File): Promise<AcceptedFile | null> => {
         const contentType = toVideoMimeType(picked.type)
 
         if (!contentType) {
-            notification.error({
-                title: `Please upload a video in one of these formats: ${VIDEO_FORMATS_LABEL}.`,
-                placement: 'bottomRight',
-            })
+            notifyRejected(UPLOAD_NOTICE.unsupportedFormat)
             return null
         }
 
         if (picked.size > MAX_UPLOAD_BYTES) {
-            notification.error({ title: `Video must be under ${MAX_UPLOAD_MB} MB.`, placement: 'bottomRight' })
+            notifyRejected(UPLOAD_NOTICE.tooLarge)
             return null
         }
 
@@ -138,10 +138,7 @@ export function UploadPanel({
         try {
             file = await withReadTimeout(readFileSnapshot(picked))
         } catch {
-            notification.error({
-                title: 'We couldn’t read this video. Please choose it again.',
-                placement: 'bottomRight',
-            })
+            notifyRejected(UPLOAD_NOTICE.unreadableFile)
             return null
         }
 
@@ -150,18 +147,12 @@ export function UploadPanel({
         try {
             metadata = await readVideoMetadata(file)
         } catch {
-            notification.error({
-                title: 'Could not read the video. Please try a different file.',
-                placement: 'bottomRight',
-            })
+            notifyRejected(UPLOAD_NOTICE.unreadableMetadata)
             return null
         }
 
         if (metadata.durationS > MAX_DURATION_S) {
-            notification.error({
-                title: `Video must be ${MAX_DURATION_S} seconds or shorter.`,
-                placement: 'bottomRight',
-            })
+            notifyRejected(UPLOAD_NOTICE.tooLong)
             return null
         }
 
