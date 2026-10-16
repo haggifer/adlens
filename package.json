@@ -25,6 +25,7 @@
         "@next/mdx": "16.3.8",
         "@tanstack/react-query": "^5.101.2",
         "@vidstack/react": "^1.15.6",
+        "ably": "^2.29.0",
         "adlens-shared": "0.18.0",
         "antd": "^6.5.1",
         "antd-style": "^4.1.0",
@@ -36,7 +37,6 @@
         "react-dom": "19.2.4",
         "react-hook-form": "^7.85.0",
         "react-swipeable": "^7.0.2",
-        "socket.io-client": "^4.8.1",
         "zod": "^4.5.4",
         "zustand": "^5.0.15"
     },

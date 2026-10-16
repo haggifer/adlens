@@ -9,6 +9,7 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { ANTD_THEMES } from '@/design/theme'
 import { ThemeProvider, useTheme } from '@/design/ThemeContext'
 import { InitialScheme } from '@/design/types'
+import { useLiveUpdates } from '@/hooks/useLiveUpdates'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RequestErrorCode } from 'adlens-shared'
@@ -79,6 +80,12 @@ const AntdStyleRegistry = ({ children }: { children: ReactNode }) => {
     return <>{children}</>
 }
 
+const LiveUpdates = () => {
+    useLiveUpdates()
+
+    return null
+}
+
 const ThemedShell = ({
     children,
     initialAccountKind,
@@ -94,6 +101,7 @@ const ThemedShell = ({
         <StyleThemeProvider appearance={scheme} theme={ANTD_THEMES[scheme]}>
             <AntdApp>
                 <AuthProvider initialKind={initialAccountKind}>
+                    <LiveUpdates />
                     <AppShell>{children}</AppShell>
                 </AuthProvider>
             </AntdApp>

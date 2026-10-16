@@ -33,6 +33,9 @@ npm test             # Jest + React Testing Library
   It clears it only once Better Auth confirms the sign-out: `useAuth().signOut` rejects with an `AuthError`
   otherwise, and the UI signs out through `useSignOut`, which shows its `describeError` copy and resolves to
   whether the session ended.
+- Live updates are signals: `useLiveUpdates` reads `[presets, userId]`, `['job', userId, id]` and `['jobs', userId]`
+  again when the API announces a change. A new view of presets or jobs uses those keys so it stays current, and a live
+  message is never written into the cache as data.
 - Request and response types, enums and limits come from `adlens-shared`; don't redeclare them. Display labels for its
   enums live in `src/labels.ts`. Never commit a `file:` dependency.
 - Contract changes: the API's request schemas are strict, so a request field added in `adlens-shared` ships API first

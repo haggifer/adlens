@@ -1,40 +1,19 @@
 import { ApiRequestError } from '@/api/errors'
 import { getJob } from '@/api/jobs'
 import type { AuthContextValue } from '@/auth/AuthContext'
-import { memberAuth } from '@/test/auth'
+import { useLiveStore } from '@/contexts/stores/liveStore'
+import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
+import type { QueryClient } from '@tanstack/react-query'
 import { act, screen } from '@testing-library/react'
 import { type Job, JobStatus, RequestErrorCode } from 'adlens-shared'
-import { useJob } from './useJob'
-
-type SocketHandler = (payload?: unknown) => void
-
-interface FakeSocket {
-    handlers: Map<string, SocketHandler>
-    on: jest.Mock
-    disconnect: jest.Mock
-}
+import { jobKey, useJob } from './useJob'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
-const mockSockets: FakeSocket[] = []
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/api/jobs', () => ({ getJob: jest.fn() }))
-jest.mock('socket.io-client', () => ({
-    io: jest.fn(() => {
-        const socket: FakeSocket = {
-            handlers: new Map(),
-            on: jest.fn((event: string, handler: SocketHandler) => socket.handlers.set(event, handler)),
-            disconnect: jest.fn(),
-        }
-
-        mockSockets.push(socket)
-
-        return socket
-    }),
-}))
-
 const JOB_ID = 'job-1'
 
 const Probe = () => {
@@ -53,52 +32,53 @@ const renderJob = async (job: Job, queryClient = createTestQueryClient()) => {
     jest.mocked(getJob).mockResolvedValue(job)
     renderWithProviders(<Probe />, queryClient)
     await screen.findByText(job.status)
+
+    return queryClient
+}
+
+// What useLiveUpdates does when the API announces a change to the job.
+const announceChange = async (queryClient: QueryClient, job: Job) => {
+    jest.mocked(getJob).mockResolvedValue(job)
+    await act(async () => queryClient.invalidateQueries({ queryKey: ['job'] }))
 }
 
 describe('useJob', () => {
     beforeEach(() => {
-        mockSockets.length = 0
         jest.mocked(getJob).mockReset()
+        useLiveStore.setState({ isConnectionLost: false })
     })
 
-    it.each([JobStatus.Analyzed, JobStatus.Error, JobStatus.Pending])(
-        'opens no live connection for a %s job, which will not change any more',
-        async (status) => {
-            await renderJob(buildJob({ id: JOB_ID, status }))
+    it('shows the change the API announced', async () => {
+        const queryClient = await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Analyzing }))
 
-            expect(mockSockets).toHaveLength(0)
-        },
-    )
-
-    it('follows a running job live and disconnects once it finishes', async () => {
-        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Analyzing }))
-
-        expect(mockSockets).toHaveLength(1)
-
-        const [socket] = mockSockets
-
-        act(() => socket.handlers.get('job:updated')?.(buildJob({ id: JOB_ID, status: JobStatus.Analyzed })))
+        await announceChange(queryClient, buildJob({ id: JOB_ID, status: JobStatus.Analyzed }))
 
         expect(await screen.findByText(JobStatus.Analyzed)).toBeInTheDocument()
-        expect(socket.disconnect).toHaveBeenCalled()
-        expect(mockSockets).toHaveLength(1)
     })
 
-    it('tells when the live connection is lost, until it is back', async () => {
+    it('tells when the live connection is lost while the job runs, until it is back', async () => {
         await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
-
-        const [socket] = mockSockets
 
         expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
 
-        act(() => socket.handlers.get('connect_error')?.(new Error('websocket error')))
+        act(() => useLiveStore.setState({ isConnectionLost: true }))
 
         expect(screen.getByText('disconnected')).toBeInTheDocument()
 
-        act(() => socket.handlers.get('connect')?.())
+        act(() => useLiveStore.setState({ isConnectionLost: false }))
 
         expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
     })
+
+    it.each([JobStatus.Analyzed, JobStatus.Error])(
+        "doesn't warn about a lost connection for a %s job, which will not change any more",
+        async (status) => {
+            useLiveStore.setState({ isConnectionLost: true })
+            await renderJob(buildJob({ id: JOB_ID, status }))
+
+            expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
+        },
+    )
 
     it('asks for a running job every 10 seconds, so an abandoned one ends within 10 seconds of expiring', async () => {
         jest.useFakeTimers({ advanceTimers: true })
@@ -146,7 +126,7 @@ describe('useJob', () => {
             const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
 
             await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Analyzing }), queryClient)
-            act(() => mockSockets[0].handlers.get('job:updated')?.(buildJob({ id: JOB_ID, status: JobStatus.Error })))
+            await announceChange(queryClient, buildJob({ id: JOB_ID, status: JobStatus.Error }))
             await screen.findByText(JobStatus.Error)
 
             expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
@@ -171,32 +151,21 @@ describe('useJob', () => {
         expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['quota'] })
     })
 
-    it('doesn’t call a socket the API ended a lost connection, since the interval reads keep the page current', async () => {
-        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued }))
-
-        const [socket] = mockSockets
-
-        act(() => socket.handlers.get('disconnect')?.('io server disconnect'))
-
-        expect(screen.queryByText('disconnected')).not.toBeInTheDocument()
-
-        act(() => socket.handlers.get('disconnect')?.('transport close'))
-
-        expect(screen.getByText('disconnected')).toBeInTheDocument()
-    })
-
-    it('keeps a pushed update when an older read answers after it', async () => {
+    it('keeps a newer job when an older read answers after it', async () => {
         jest.useFakeTimers({ advanceTimers: true })
 
         try {
-            await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Queued, updatedAt: '2026-10-09T10:00:00.000Z' }))
+            const queryClient = await renderJob(
+                buildJob({ id: JOB_ID, status: JobStatus.Queued, updatedAt: '2026-10-09T10:00:00.000Z' }),
+            )
 
             let answerRead!: (job: Job) => void
 
             jest.mocked(getJob).mockReturnValueOnce(new Promise<Job>((resolve) => (answerRead = resolve)))
             await act(async () => jest.advanceTimersByTimeAsync(10_000))
             act(() =>
-                mockSockets[0].handlers.get('job:updated')?.(
+                queryClient.setQueryData(
+                    jobKey(MEMBER_USER.id, JOB_ID),
                     buildJob({ id: JOB_ID, status: JobStatus.Analyzing, updatedAt: '2026-10-09T10:00:20.000Z' }),
                 ),
             )

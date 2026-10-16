@@ -21,8 +21,8 @@ It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares 
   and `api.useadlens.com`
 - **Cloudflare Turnstile** (`@marsidev/react-turnstile`, Managed mode), run when an analysis starts or a contact
   message is sent, and invisible unless Cloudflare asks for a click
-- **TanStack Query** for server state, with a **Socket.IO** client that pushes realtime job updates into the query
-  cache
+- **TanStack Query** for server state, kept current by **Ably** (`ably/modular`, loaded lazily): the API announces
+  each change to a user's presets or jobs, and the matching queries are read again
 - **Zustand** for UI state (the auth and contact modals, in-app navigation for the Back button)
 - **react-hook-form + zod**; the analysis settings form validates with the shared `analysisSettingsSchema`
 - Direct-to-GCS uploads via V4 signed URLs, with progress
@@ -93,7 +93,7 @@ src/
   content/      # long-form MDX content (legal documents)
   contexts/     # Zustand stores
   design/       # antd theme, light/dark scheme and its cookie
-  hooks/        # server-state hooks (TanStack Query, realtime), sign-out and other shared UI hooks
+  hooks/        # server-state hooks (TanStack Query, live updates), sign-out and other shared UI hooks
   storage/      # signed-URL upload
   test/         # shared test helpers: render with providers, auth states, fixtures
 ```
@@ -110,13 +110,18 @@ to `www`). CI runs lint, types, tests and the build on every push to `init-setup
 Decisions shared with the API (cookie sessions on one domain, the contract package) are recorded in the
 [API README](https://github.com/haggifer/adlens-api#design-decisions).
 
-- **Every analysis has its own page** (`/analyses/[id]`), so a result survives a reload and can be linked. The job is
-  loaded once, then kept live by Socket.IO pushes written into the query cache; every (re)connect refetches, because
-  updates sent while disconnected are lost. The socket is open only while the job is verifying, queued or analyzing:
-  Cloud Run bills an API instance for as long as any socket to it is open. While that socket can't reach the API, the
-  progress panel says so, so a step that can't move isn't taken for a slow one. An abandoned job never changes again,
-  and the API expires it only when its owner reads their jobs, so the page also reads a running job every 10 seconds:
-  whatever went wrong shows within 10 seconds of the API knowing it.
+- **Every analysis has its own page** (`/analyses/[id]`), so a result survives a reload and can be linked. While a
+  running job's live connection or its last read can't reach the API, the progress panel says so, so a step that
+  can't move isn't taken for a slow one. An abandoned job never changes again, and the API expires it only when its
+  owner reads their jobs, so the page also reads a running job every 10 seconds: whatever went wrong shows within 10
+  seconds of the API knowing it.
+- **Live updates are signals, not data** (`src/hooks/useLiveUpdates.ts`, mounted once in `Providers.tsx`). While
+  someone is signed in (anonymous sessions included), the tab subscribes to its user's Ably channel with a token from
+  `GET /v1/live/token`, and each `presets` or `job` message reads the matching queries again through the API, which
+  stays the one place that decides what a user may see. Ably holds the connection, so an open tab keeps no API
+  instance running, and presets stay current across tabs and devices too. After a drop long enough that Ably can't
+  replay what was sent meanwhile, everything is read again. When the API has no Ably key, or can't be asked, the tab
+  connects nowhere and relies on its reads.
 - **A picked video is copied into memory once, right after the pick** (`src/storage/file-snapshot.ts`), and the
   metadata check, the preview and the upload all use the copy. Chrome checks a picked file's modification time on every
   later read and upload and fails them once it has moved (`net::ERR_UPLOAD_FILE_CHANGED`), which on Android happens to
