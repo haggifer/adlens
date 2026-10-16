@@ -73,7 +73,7 @@ describe('SignInForm', () => {
 
         const alert = await screen.findByRole('alert')
 
-        expect(within(alert).getByText('Wrong email or password.')).toBeInTheDocument()
+        expect(within(alert).getByText(describeError({ code: 'INVALID_EMAIL_OR_PASSWORD' }))).toBeInTheDocument()
         expect(authClient.getSession).not.toHaveBeenCalled()
         expect(useAuthModalStore.getState().view).toBe('signin')
     })

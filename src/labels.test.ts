@@ -1,9 +1,19 @@
-import { ALL_MARKETS_LABEL, ALL_PLATFORMS_LABEL, formatMarkets, formatPlatforms, formatTopic } from '@/labels'
+import {
+    ALL_MARKETS_LABEL,
+    ALL_PLATFORMS_LABEL,
+    formatMarkets,
+    formatPlatforms,
+    formatTopic,
+    MARKET_LABELS,
+    PLATFORM_LABELS,
+} from '@/labels'
 import { Market, Platform } from 'adlens-shared'
 
 describe('formatPlatforms', () => {
     it('lists the chosen platforms', () => {
-        expect(formatPlatforms([Platform.TikTok, Platform.Snapchat])).toBe('TikTok, Snapchat')
+        expect(formatPlatforms([Platform.TikTok, Platform.Snapchat])).toBe(
+            `${PLATFORM_LABELS[Platform.TikTok]}, ${PLATFORM_LABELS[Platform.Snapchat]}`,
+        )
     })
 
     it('names every platform when none was chosen', () => {
@@ -13,7 +23,7 @@ describe('formatPlatforms', () => {
 
 describe('formatMarkets', () => {
     it('lists the chosen markets', () => {
-        expect(formatMarkets([Market.US, Market.UK])).toBe('United States, United Kingdom')
+        expect(formatMarkets([Market.US, Market.UK])).toBe(`${MARKET_LABELS[Market.US]}, ${MARKET_LABELS[Market.UK]}`)
     })
 
     it('names every market when none was chosen', () => {

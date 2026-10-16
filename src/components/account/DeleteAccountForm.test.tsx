@@ -1,5 +1,6 @@
 import { authClient, deleteUser } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
@@ -93,7 +94,7 @@ describe('DeleteAccountForm', () => {
             await user.type(screen.getByLabelText('Password'), 'wrong')
             await submitAndConfirm(user)
 
-            expect(await screen.findByText('Wrong password.')).toBeInTheDocument()
+            expect(await screen.findByText(describeError({ code: 'INVALID_PASSWORD' }))).toBeInTheDocument()
             expect(auth.signOut).not.toHaveBeenCalled()
             expect(mockPush).not.toHaveBeenCalled()
         })
@@ -111,7 +112,7 @@ describe('DeleteAccountForm', () => {
             await user.type(screen.getByLabelText('Password'), PASSWORD)
             await submitAndConfirm(user)
 
-            expect(await screen.findByText('You were signed out. Sign in again.')).toBeInTheDocument()
+            expect(await screen.findByText(describeError({ code: 'SESSION_EXPIRED' }))).toBeInTheDocument()
             expect(auth.signOut).not.toHaveBeenCalled()
             expect(useAuthModalStore.getState().view).toBeNull()
         })
@@ -161,7 +162,7 @@ describe('DeleteAccountForm', () => {
 
             await submitAndConfirm(user)
 
-            expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+            expect(await screen.findByText(describeError({ status: 500 }))).toBeInTheDocument()
             expect(
                 screen.queryByText('For your security, sign in again to delete your account.'),
             ).not.toBeInTheDocument()

@@ -25,7 +25,7 @@ const SIGN_IN_REQUIRED = { status: 401, code: 'SIGN_IN_REQUIRED', message: 'Raw 
 
 const EMAIL_MISMATCH = { status: 403, code: 'EMAIL_MISMATCH', message: 'Raw server text' }
 
-const SIGN_IN_PROMPT = 'Sign in to confirm your email.'
+const SIGN_IN_PROMPT = describeError({ code: 'SIGN_IN_REQUIRED' })
 
 const MISMATCH_COPY = describeError({ code: 'EMAIL_MISMATCH' })
 
@@ -88,10 +88,12 @@ describe('ConfirmEmail', () => {
     })
 
     it('shows the copy for a refused token, not the server’s message, and offers a new link', async () => {
-        answerOnce({ status: 400, code: 'INVALID_TOKEN', message: 'Raw server text' })
+        const refused = { status: 400, code: 'INVALID_TOKEN', message: 'Raw server text' }
+
+        answerOnce(refused)
         const { user } = renderConfirmEmail(TOKEN)
 
-        expect(await screen.findByText('This link is invalid or has already been used.')).toBeInTheDocument()
+        expect(await screen.findByText(describeConfirmError(refused))).toBeInTheDocument()
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
         expect(mockReplace).not.toHaveBeenCalled()
 
@@ -124,17 +126,17 @@ describe('ConfirmEmail', () => {
         jest.mocked(verifyEmail).mockRejectedValueOnce(new TypeError('Failed to fetch'))
         renderConfirmEmail(TOKEN)
 
-        expect(
-            await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
-        ).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'NETWORK_ERROR' }))).toBeInTheDocument()
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
     it('tells a signed-out visitor with a refused token to sign in for a new link', async () => {
-        answerOnce({ status: 400, code: 'TOKEN_EXPIRED' })
+        const expired = { status: 400, code: 'TOKEN_EXPIRED' }
+
+        answerOnce(expired)
         const { user } = renderConfirmEmail(TOKEN, signedOutAuth())
 
-        expect(await screen.findByText('This link has expired. Request a new one.')).toBeInTheDocument()
+        expect(await screen.findByText(describeConfirmError(expired))).toBeInTheDocument()
         expect(screen.getByText('Sign in, then use Confirm email to get a new link.')).toBeInTheDocument()
         expect(useAuthModalStore.getState().view).toBeNull()
 

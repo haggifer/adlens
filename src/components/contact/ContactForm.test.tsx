@@ -6,6 +6,7 @@ import { anonymousAuth, MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CONTACT_MESSAGE_MAX_LENGTH, RequestErrorCode, type UploadTarget } from 'adlens-shared'
+import { checkAttachments } from './contact-attachments'
 import { ContactForm } from './ContactForm'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
@@ -41,6 +42,8 @@ const ATTACHMENTS_LABEL = 'Screenshots (optional)'
 const ATTACHMENTS_HINT = 'Up to 5 images: PNG, JPEG or WebP, up to 8 MB each, up to 25 MB in total.'
 
 const UPLOAD_FAILED_COPY = describeContactError(new ApiRequestError(RequestErrorCode.UploadIncomplete))
+
+const UNAVAILABLE_COPY = describeContactError(new ApiRequestError(RequestErrorCode.Unavailable))
 
 const buildImage = (name: string, type = 'image/png') => new File(['image bytes'], name, { type })
 
@@ -107,7 +110,7 @@ describe('ContactForm', () => {
         renderForm()
 
         await send(MESSAGE)
-        await screen.findByText('AdLens is briefly unavailable. Please try again.')
+        await screen.findByText(UNAVAILABLE_COPY)
         await userEvent.click(screen.getByRole('button', { name: /send message/i }))
 
         expect(await screen.findByText('Message sent')).toBeInTheDocument()
@@ -125,7 +128,7 @@ describe('ContactForm', () => {
         await send(MESSAGE)
 
         expect(
-            await screen.findByText('The security check didn’t pass. Try it again, then send the message.'),
+            await screen.findByText(describeContactError(new ApiRequestError(RequestErrorCode.ChallengeFailed))),
         ).toBeInTheDocument()
         expect(sendContactMessage).not.toHaveBeenCalled()
     })
@@ -209,7 +212,7 @@ describe('ContactForm', () => {
 
         await attach(SHOTS)
         await send(MESSAGE)
-        await screen.findByText('AdLens is briefly unavailable. Please try again.')
+        await screen.findByText(UNAVAILABLE_COPY)
         await userEvent.click(screen.getByRole('button', { name: /send message/i }))
 
         expect(await screen.findByText('Message sent')).toBeInTheDocument()
@@ -225,16 +228,19 @@ describe('ContactForm', () => {
     })
 
     it('refuses a file that isn’t a supported image until it is removed', async () => {
+        const gif = buildImage('clip.gif', 'image/gif')
+        const refusal = checkAttachments([gif]) ?? ''
+
         renderForm()
 
-        await attach([buildImage('clip.gif', 'image/gif')], userEvent.setup({ applyAccept: false }))
+        await attach([gif], userEvent.setup({ applyAccept: false }))
 
-        expect(screen.getByText('clip.gif isn’t a PNG, JPEG or WebP image.')).toBeInTheDocument()
+        expect(screen.getByText(refusal)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /send message/i })).toBeDisabled()
 
         await userEvent.click(screen.getByTitle('Remove file'))
 
-        expect(screen.queryByText('clip.gif isn’t a PNG, JPEG or WebP image.')).not.toBeInTheDocument()
+        expect(screen.queryByText(refusal)).not.toBeInTheDocument()
 
         await send(MESSAGE)
 
@@ -284,7 +290,7 @@ describe('ContactForm', () => {
         await send(MESSAGE)
 
         expect(
-            await screen.findByText('Too many messages in the last hour. Please try again later.'),
+            await screen.findByText(describeContactError(new ApiRequestError(RequestErrorCode.RateLimited))),
         ).toBeInTheDocument()
         expect(screen.getByLabelText('Message')).toHaveValue(MESSAGE)
     })
@@ -295,7 +301,7 @@ describe('ContactForm', () => {
 
         await send(MESSAGE)
 
-        expect(await screen.findByText('Something went wrong on our side. Please try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeContactError(new Error()))).toBeInTheDocument()
         expect(screen.queryByText(/socket hang up/)).not.toBeInTheDocument()
     })
 

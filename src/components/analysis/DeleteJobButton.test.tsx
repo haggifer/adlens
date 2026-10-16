@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { deleteJob } from '@/api/jobs'
 import { jobKey } from '@/hooks/useJob'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
@@ -81,9 +81,7 @@ describe('DeleteJobButton', () => {
         await user.click(screen.getByRole('button', { name: /delete analysis/i }))
         await user.click(await screen.findByRole('button', { name: 'Delete' }))
 
-        expect(
-            await screen.findByText('This analysis is still running. You can delete it once it finishes.'),
-        ).toBeInTheDocument()
+        expect(await screen.findByText(describeRequestError(RequestErrorCode.JobInProgress))).toBeInTheDocument()
         expect(onDeleted).not.toHaveBeenCalled()
         expect(consoleError).toHaveBeenCalledWith(failure)
     })

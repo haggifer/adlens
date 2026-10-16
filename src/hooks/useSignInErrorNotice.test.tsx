@@ -1,3 +1,4 @@
+import { describeError } from '@/auth/errors'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
 import { useSignInErrorNotice } from './useSignInErrorNotice'
@@ -24,6 +25,8 @@ const renderAt = (search: string, pathname = '/history') => {
     renderWithProviders(<Probe />)
 }
 
+const CANCELLED_COPY = describeError({ code: 'access_denied' })
+
 // What SocialButtons leaves behind when the sign-in takes this tab to the provider.
 const leaveForSignIn = () => sessionStorage.setItem('adlens.redirect-sign-in', '1')
 
@@ -37,7 +40,7 @@ describe('useSignInErrorNotice', () => {
         leaveForSignIn()
         renderAt('error=access_denied&tab=all')
 
-        expect(await screen.findByText('Sign-in was cancelled.')).toBeInTheDocument()
+        expect(await screen.findByText(CANCELLED_COPY)).toBeInTheDocument()
         expect(mockReplace).toHaveBeenCalledWith('/history?tab=all', { scroll: false })
     })
 
@@ -45,7 +48,7 @@ describe('useSignInErrorNotice', () => {
         leaveForSignIn()
         renderAt('error=state_mismatch&error_description=OAuth+state+cookie+missing')
 
-        expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'state_mismatch' }))).toBeInTheDocument()
         expect(screen.queryByText(/state cookie/)).not.toBeInTheDocument()
         expect(mockReplace).toHaveBeenCalledWith('/history', { scroll: false })
     })
@@ -54,7 +57,7 @@ describe('useSignInErrorNotice', () => {
         leaveForSignIn()
         renderAt('error=access_denied', '/auth/done')
 
-        expect(screen.queryByText('Sign-in was cancelled.')).not.toBeInTheDocument()
+        expect(screen.queryByText(CANCELLED_COPY)).not.toBeInTheDocument()
         expect(mockReplace).not.toHaveBeenCalled()
     })
 
@@ -67,7 +70,7 @@ describe('useSignInErrorNotice', () => {
     it('ignores an error in a link this tab didn’t leave for a sign-in from', () => {
         renderAt('error=access_denied')
 
-        expect(screen.queryByText('Sign-in was cancelled.')).not.toBeInTheDocument()
+        expect(screen.queryByText(CANCELLED_COPY)).not.toBeInTheDocument()
         expect(mockReplace).not.toHaveBeenCalled()
     })
 

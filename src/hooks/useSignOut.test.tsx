@@ -1,4 +1,5 @@
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
@@ -51,7 +52,7 @@ describe('useSignOut', () => {
 
         await user.click(screen.getByRole('button', { name: 'Sign out' }))
 
-        expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ status: 500 }))).toBeInTheDocument()
         expect(mockPush).not.toHaveBeenCalled()
         expect(consoleError).toHaveBeenCalledTimes(1)
     })
@@ -65,9 +66,7 @@ describe('useSignOut', () => {
 
         await user.click(screen.getByRole('button', { name: 'Sign out' }))
 
-        expect(
-            await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
-        ).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'NETWORK_ERROR' }))).toBeInTheDocument()
         expect(mockPush).not.toHaveBeenCalled()
     })
 })

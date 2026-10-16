@@ -1,3 +1,4 @@
+import { describeError } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
 import { postSocialSignInOutcome } from '@/auth/social-sign-in'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -6,6 +7,8 @@ import { screen, waitFor } from '@testing-library/react'
 import { useSocialSignInResult } from './useSocialSignInResult'
 
 jest.mock('@/auth/session', () => ({ refreshSession: jest.fn() }))
+
+const CANCELLED_COPY = describeError({ code: 'access_denied' })
 
 const onSettled = jest.fn()
 
@@ -36,7 +39,7 @@ describe('useSocialSignInResult', () => {
 
         postSocialSignInOutcome({ errorCode: 'access_denied' })
 
-        expect(await screen.findByText('Sign-in was cancelled.')).toBeInTheDocument()
+        expect(await screen.findByText(CANCELLED_COPY)).toBeInTheDocument()
         expect(onSettled).toHaveBeenCalled()
         expect(refreshSession).not.toHaveBeenCalled()
         expect(useAuthModalStore.getState().view).toBe('signin')
@@ -49,6 +52,6 @@ describe('useSocialSignInResult', () => {
         await new Promise((resolve) => setTimeout(resolve, 20))
 
         expect(onSettled).not.toHaveBeenCalled()
-        expect(screen.queryByText('Sign-in was cancelled.')).not.toBeInTheDocument()
+        expect(screen.queryByText(CANCELLED_COPY)).not.toBeInTheDocument()
     })
 })

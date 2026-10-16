@@ -1,4 +1,4 @@
-import { formatPlacementLabel } from '@/labels'
+import { formatPlacementLabel, RULE_PLATFORM_LABELS } from '@/labels'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -118,7 +118,7 @@ describe('ResultsPanel', () => {
         expect(screen.getByText('1 to confirm')).toBeInTheDocument()
         expect(heading(ADVISORIES_HEADING)).toBeInTheDocument()
         expect(screen.getByText('Target only people of legal drinking age.')).toBeInTheDocument()
-        expect(screen.getByText('Meta')).toBeInTheDocument()
+        expect(screen.getByText(RULE_PLATFORM_LABELS[RulePlatform.Meta])).toBeInTheDocument()
     })
 
     it('shows a probable issue on a blocker rule as a warning, not a blocker', () => {
@@ -251,7 +251,7 @@ describe('ResultsPanel', () => {
             />,
         )
 
-        expect(screen.getByText('YouTube')).toHaveClass('ant-tag-purple')
+        expect(screen.getByText(RULE_PLATFORM_LABELS[RulePlatform.YouTube])).toHaveClass('ant-tag-purple')
     })
 
     it('shows a result stored before checks named their placements as it was', () => {

@@ -1,6 +1,8 @@
+import { describeRequestError } from '@/api/errors'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { RequestErrorCode } from 'adlens-shared'
 import RouteError from './error'
 
 describe('RouteError', () => {
@@ -10,7 +12,7 @@ describe('RouteError', () => {
 
         renderWithProviders(<RouteError error={error} retry={jest.fn()} />)
 
-        expect(screen.getByText('Something went wrong on our side. Please try again.')).toBeInTheDocument()
+        expect(screen.getByText(describeRequestError(RequestErrorCode.Internal))).toBeInTheDocument()
         expect(screen.queryByText(/Cannot read properties/)).not.toBeInTheDocument()
         expect(consoleError).toHaveBeenCalledWith(error)
         consoleError.mockRestore()

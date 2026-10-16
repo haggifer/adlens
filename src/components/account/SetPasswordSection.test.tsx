@@ -1,5 +1,6 @@
 import { requestPasswordReset } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { MEMBER_EMAIL, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
@@ -36,7 +37,7 @@ describe('SetPasswordSection', () => {
 
         await user.click(screen.getByRole('button', { name: /email me a link/i }))
 
-        expect(await screen.findByText('We couldn’t send the email. Try again in a few minutes.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'EMAIL_NOT_SENT' }))).toBeInTheDocument()
         expect(screen.queryByText(/Check your inbox/)).not.toBeInTheDocument()
         expect(screen.queryByText('SMTP timeout')).not.toBeInTheDocument()
     })

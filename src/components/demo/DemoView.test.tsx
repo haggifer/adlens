@@ -1,5 +1,7 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
+import { formatSeconds } from '@/components/analysis/results'
 import type { UseDemosResult } from '@/hooks/useDemos'
+import { formatMarkets, formatPlatforms } from '@/labels'
 import { buildAnalysis, buildFinding, buildJob } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
@@ -63,7 +65,11 @@ describe('DemoView', () => {
 
         expect(screen.getByRole('heading', { name: 'Title of clothing-care-demo' })).toBeInTheDocument()
         expect(screen.getByText('Subtitle of clothing-care-demo')).toBeInTheDocument()
-        expect(screen.getByText('0:55 video · checked for Amazon Ads in United States')).toBeInTheDocument()
+        expect(
+            screen.getByText(
+                `${formatSeconds(MEDIA.durationS)} video · checked for ${formatPlatforms([Platform.Amazon])} in ${formatMarkets([Market.US])}`,
+            ),
+        ).toBeInTheDocument()
         expect(screen.getByText('Contact information')).toBeInTheDocument()
         expect(await screen.findByRole('region', { name: /Video ad/ })).toBeInTheDocument()
     })

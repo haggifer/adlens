@@ -118,11 +118,7 @@ describe('SignUpForm', () => {
             await submitSignUp(user)
 
             await waitFor(() => expect(useAuthModalStore.getState().view).toBe('confirm'))
-            expect(
-                await screen.findByText(
-                    'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
-                ),
-            ).toBeInTheDocument()
+            expect(await screen.findByText(describeError({ code: 'ACCOUNT_LINK_FAILED' }))).toBeInTheDocument()
         })
 
         it('keeps the form and the error when no account was signed in', async () => {

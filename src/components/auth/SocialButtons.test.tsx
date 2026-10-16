@@ -1,4 +1,5 @@
 import { signIn } from '@/auth/authClient'
+import { describeError } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
 import { postSocialSignInOutcome, takeRedirectSignIn } from '@/auth/social-sign-in'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
@@ -105,7 +106,7 @@ describe('SocialButtons', () => {
 
         await user.click(googleButton())
 
-        expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ status: 429 }))).toBeInTheDocument()
         expect(popup.close).toHaveBeenCalled()
         expect(popup.location.href).toBe('')
     })
@@ -117,9 +118,7 @@ describe('SocialButtons', () => {
 
         await user.click(githubButton())
 
-        expect(
-            await screen.findByText('Couldn’t reach AdLens. Check your connection and try again.'),
-        ).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'NETWORK_ERROR' }))).toBeInTheDocument()
         expect(popup.close).toHaveBeenCalled()
         expect(consoleError).toHaveBeenCalled()
     })
@@ -131,7 +130,7 @@ describe('SocialButtons', () => {
 
         await user.click(googleButton())
 
-        expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ status: 429 }))).toBeInTheDocument()
         expect(googleButton()).toBeEnabled()
         expect(takeRedirectSignIn()).toBe(false)
     })

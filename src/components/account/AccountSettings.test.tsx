@@ -1,6 +1,7 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { listAccounts, revokeOtherSessions } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { initializingAuth, MEMBER_USER, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
@@ -96,7 +97,7 @@ describe('AccountSettings', () => {
         } as never)
         renderSettings()
 
-        expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
+        expect(await screen.findByRole('alert')).toHaveTextContent(describeError({ status: 500 }))
         expect(screen.queryByText('Internal adapter failure')).not.toBeInTheDocument()
         expect(screen.getByRole('heading', { name: 'Other devices' })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Delete account' })).not.toBeInTheDocument()
@@ -122,9 +123,7 @@ describe('AccountSettings', () => {
         jest.mocked(listAccounts).mockRejectedValue(new TypeError('Failed to fetch'))
         renderSettings()
 
-        expect(await screen.findByRole('alert')).toHaveTextContent(
-            'Couldn’t reach AdLens. Check your connection and try again.',
-        )
+        expect(await screen.findByRole('alert')).toHaveTextContent(describeError({ code: 'NETWORK_ERROR' }))
         expect(screen.getByRole('heading', { name: 'Other devices' })).toBeInTheDocument()
         expect(consoleError).toHaveBeenCalledTimes(1)
         consoleError.mockRestore()
@@ -150,7 +149,7 @@ describe('AccountSettings', () => {
 
         await user.click(await screen.findByRole('button', { name: 'Sign out other devices' }))
 
-        expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ status: 429 }))).toBeInTheDocument()
         expect(screen.queryByText('Rate limit exceeded')).not.toBeInTheDocument()
     })
 

@@ -1,9 +1,10 @@
-import { ApiRequestError } from '@/api/errors'
+import { ApiRequestError, describeRequestError } from '@/api/errors'
 import { listJobs } from '@/api/jobs'
 import { listPresets } from '@/api/presets'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { buildJob, buildPreset } from '@/test/fixtures'
+import { JOB_STATUS_LABELS } from '@/labels'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor, within } from '@testing-library/react'
 import { type Job, type JobListResponse, RequestErrorCode } from 'adlens-shared'
@@ -130,7 +131,7 @@ describe('HistoryTable', () => {
     it('opens the analysis when anywhere on its row is clicked', async () => {
         const { user } = renderTable()
 
-        await user.click(within(await rowOf(JOB.file.name)).getAllByText('Done')[0])
+        await user.click(within(await rowOf(JOB.file.name)).getAllByText(JOB_STATUS_LABELS[JOB.status])[0])
 
         expect(mockPush).toHaveBeenCalledWith(`/analyses/${JOB.id}`)
     })
@@ -173,14 +174,14 @@ describe('HistoryTable', () => {
         jest.mocked(listJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
         renderTable()
 
-        expect(await screen.findByText('AdLens is briefly unavailable. Please try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
     })
 
     it('does not claim there are no analyses when the list failed to load', async () => {
         jest.mocked(listJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.Unavailable))
         renderTable()
 
-        await screen.findByText('AdLens is briefly unavailable. Please try again.')
+        await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))
         await waitForLoaded()
 
         expect(screen.queryByText('No analyses yet')).not.toBeInTheDocument()

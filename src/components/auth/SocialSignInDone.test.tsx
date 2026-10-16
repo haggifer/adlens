@@ -1,3 +1,4 @@
+import { describeError } from '@/auth/errors'
 import { announceSessionChange } from '@/auth/session'
 import { subscribeSocialSignInOutcome } from '@/auth/social-sign-in'
 import type { SocialSignInOutcome } from '@/auth/types'
@@ -56,6 +57,6 @@ describe('SocialSignInDone', () => {
     it('explains the failure when the browser keeps the window open', async () => {
         renderWithProviders(<SocialSignInDone errorCode="access_denied" />)
 
-        expect(await screen.findByText('Sign-in was cancelled.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'access_denied' }))).toBeInTheDocument()
     })
 })

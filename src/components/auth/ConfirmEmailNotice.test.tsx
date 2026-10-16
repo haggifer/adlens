@@ -1,5 +1,6 @@
 import { authClient, sendVerificationEmail } from '@/auth/authClient'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { describeError } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_EMAIL, memberAuth, unconfirmedAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
@@ -56,7 +57,7 @@ describe('ConfirmEmailNotice', () => {
 
         await user.click(await screen.findByRole('button', { name: 'Resend email' }))
 
-        expect(await screen.findByText('Too many attempts. Wait a minute and try again.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ status: 429 }))).toBeInTheDocument()
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()
     })
 
@@ -69,7 +70,7 @@ describe('ConfirmEmailNotice', () => {
 
         await user.click(await screen.findByRole('button', { name: 'Resend email' }))
 
-        expect(await screen.findByText('Your email is already confirmed.')).toBeInTheDocument()
+        expect(await screen.findByText(describeError({ code: 'EMAIL_ALREADY_VERIFIED' }))).toBeInTheDocument()
         expect(authClient.$store.notify).toHaveBeenCalledWith('$sessionSignal')
         expect(useAuthModalStore.getState().view).toBeNull()
         expect(screen.queryByText('Raw server text')).not.toBeInTheDocument()

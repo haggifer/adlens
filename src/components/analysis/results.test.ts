@@ -1,4 +1,4 @@
-import { formatPlacementLabel } from '@/labels'
+import { formatPlacementLabel, RULE_PLATFORM_LABELS } from '@/labels'
 import { buildAnalysis, buildCheck, buildFinding } from '@/test/fixtures'
 import { type Analysis, type Finding, type MetadataCheck, Placement, RulePlatform } from 'adlens-shared'
 import {
@@ -172,8 +172,10 @@ describe('getCheckTargets', () => {
         expect(getCheckTargets(buildCheck({ ...youTube, placements: [Placement.YouTubeBumper] }))).toEqual([
             formatPlacementLabel(Placement.YouTubeBumper),
         ])
-        expect(getCheckTargets(buildCheck(youTube))).toEqual(['YouTube'])
-        expect(getCheckTargets(buildCheck({ ...youTube, placements: [] }))).toEqual(['YouTube'])
+        expect(getCheckTargets(buildCheck(youTube))).toEqual([RULE_PLATFORM_LABELS[RulePlatform.YouTube]])
+        expect(getCheckTargets(buildCheck({ ...youTube, placements: [] }))).toEqual([
+            RULE_PLATFORM_LABELS[RulePlatform.YouTube],
+        ])
     })
 
     it('names nothing for a result stored before checks named their platform', () => {
