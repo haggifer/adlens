@@ -1,10 +1,9 @@
 import { toMegabytes } from '@/file-size'
-import { VIDEO_FORMATS_LABEL } from '@/labels'
+import { MAX_DURATION_LABEL, VIDEO_FORMATS_LABEL } from '@/labels'
 import {
     type ApiErrorCode,
     apiErrorSchema,
     JobErrorCode,
-    MAX_DURATION_S,
     MAX_PRESETS,
     MAX_UPLOAD_BYTES,
     RequestErrorCode,
@@ -18,7 +17,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     // The API never counts a run that ends without a result.
     [JobErrorCode.VideoUnreadable]:
         "We couldn't read this file as a video. Try exporting it again as MP4. This run wasn't counted.",
-    [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_S} seconds long. This run wasn't counted.`,
+    [JobErrorCode.VideoTooLong]: `Videos can be up to ${MAX_DURATION_LABEL} long. This run wasn't counted.`,
     [JobErrorCode.VideoTooLarge]: `Videos can be up to ${toMegabytes(MAX_UPLOAD_BYTES)} MB. This run wasn't counted.`,
     [JobErrorCode.UnsupportedFormat]: `This video format isn't supported. Use ${VIDEO_FORMATS_LABEL}. This run wasn't counted.`,
     // A failure after the upload and the format checks passed is nothing the user can act on, so it gets one message.

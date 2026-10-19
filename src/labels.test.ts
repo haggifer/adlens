@@ -1,6 +1,7 @@
 import {
     ALL_MARKETS_LABEL,
     ALL_PLATFORMS_LABEL,
+    formatDuration,
     formatMarkets,
     formatPlatforms,
     formatTopic,
@@ -49,5 +50,14 @@ describe('formatTopic', () => {
 
     it('shows a topic stored before topics were ids as it is', () => {
         expect(formatTopic('Bumper duration')).toBe('Bumper duration')
+    })
+})
+
+describe('formatDuration', () => {
+    it('writes whole minutes as minutes, and anything else in seconds', () => {
+        expect(formatDuration(180)).toBe('3 minutes')
+        expect(formatDuration(60)).toBe('1 minute')
+        expect(formatDuration(45)).toBe('45 seconds')
+        expect(formatDuration(90)).toBe('90 seconds')
     })
 })

@@ -1,6 +1,6 @@
 # AdLens (web)
 
-The AdLens web client. Upload a video ad of up to 60 seconds, say where it will run (platforms, placements,
+The AdLens web client. Upload a video ad of up to 3 minutes, say where it will run (platforms, placements,
 markets), and AdLens checks it against the platforms' ad policies and creative best practices. Every finding is
 timestamped, links to the policy or guide it comes from, and seeks the replayed video when clicked.
 

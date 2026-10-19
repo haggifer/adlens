@@ -1,7 +1,20 @@
 import type { SocialProvider } from '@/auth/types'
-import { JobStatus, Market, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
+import { JobStatus, Market, MAX_DURATION_S, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
+
+// "3 minutes" for whole minutes, "1 minute", or "45 seconds".
+export const formatDuration = (seconds: number): string => {
+    if (seconds < 60 || seconds % 60 !== 0) {
+        return `${seconds} seconds`
+    }
+
+    const minutes = seconds / 60
+
+    return minutes === 1 ? '1 minute' : `${minutes} minutes`
+}
+
+export const MAX_DURATION_LABEL = formatDuration(MAX_DURATION_S)
 
 export const ATTACHMENT_FORMATS_LABEL = 'PNG, JPEG or WebP'
 
