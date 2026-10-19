@@ -13,6 +13,7 @@ import { useQuota } from '@/hooks/useQuota'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
 import {
+    DashboardOutlined,
     FileSearchOutlined,
     HistoryOutlined,
     LogoutOutlined,
@@ -28,8 +29,9 @@ import { ReactNode, useState } from 'react'
 import { getSessionControlProps } from './session-control'
 import { useStyles } from './styles'
 
-// Who may open a link: anyone, any session (anonymous ones too), or only an account whose email is confirmed.
-type LinkAccess = 'public' | 'session' | 'account'
+// Who may open a link: anyone, any session (anonymous ones too), only an account whose email is confirmed, or only an
+// admin.
+type LinkAccess = 'public' | 'session' | 'account' | 'admin'
 
 interface MenuLink {
     href: string
@@ -51,14 +53,20 @@ const MENU_LINKS: MenuLink[] = [
     { href: '/presets', label: 'Presets', icon: <ProfileOutlined />, access: 'public' },
     { href: '/demo', label: 'Examples', icon: <FileSearchOutlined />, access: 'public' },
     { href: '/account', label: 'Account', icon: <SettingOutlined />, access: 'account' },
+    { href: '/admin', label: 'Admin', icon: <DashboardOutlined />, access: 'admin' },
 ]
 
-const isLinkAllowed = (access: LinkAccess, isSignedIn: boolean, isEmailConfirmed: boolean) => {
-    if (access === 'public') {
-        return true
+const isLinkAllowed = (access: LinkAccess, kind: AccountKind | null) => {
+    switch (access) {
+        case 'public':
+            return true
+        case 'session':
+            return kind !== null
+        case 'account':
+            return isConfirmedKind(kind)
+        case 'admin':
+            return kind === AccountKind.Admin
     }
-
-    return access === 'session' ? isSignedIn : isEmailConfirmed
 }
 
 export function MobileMenu() {
@@ -91,7 +99,7 @@ export function MobileMenu() {
     const isEmailConfirmed = isConfirmedKind(kind)
     // Confirmed or not: either way the user typed the address, so it may be shown.
     const hasAccount = isSignedIn && !isAnonymous
-    const visibleLinks = MENU_LINKS.filter((link) => isLinkAllowed(link.access, isSignedIn, isEmailConfirmed))
+    const visibleLinks = MENU_LINKS.filter((link) => isLinkAllowed(link.access, kind))
     const nextFree = quota ? describeNextFree(quota) : null
 
     const handleContact = () => {
