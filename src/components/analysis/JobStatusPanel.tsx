@@ -86,7 +86,7 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     return (
         <div className={cx(styles.panel, styles.progressPanel)}>
             <h2 className={styles.panelTitle}>Analyzing your ad</h2>
-            <p className={styles.hint}>This usually takes under a minute. You can leave this page and come back.</p>
+            <p className={styles.hint}>This usually takes 1–3 minutes. You can leave this page and come back.</p>
             {isDisconnected && (
                 <Alert
                     type="warning"
