@@ -20,4 +20,58 @@ export const useStyles = createStyles(({ token, css }) => ({
         font-weight: 700;
         letter-spacing: -0.02em;
     `,
+
+    // Side by side, the presets, calendar and time columns make a popup about 520px wide, which antd then flips past
+    // a phone's left edge. Below sm they stack in one column no wider than the screen: the presets as a row on top, the
+    // time columns under the calendar. "&.ant-picker-dropdown" outranks antd's own ".ant-picker-dropdown …" rules.
+    periodPopup: css`
+        @media (max-width: 575.98px) {
+            &.ant-picker-dropdown {
+                max-width: calc(100vw - 2rem);
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel-container {
+                width: 100%;
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel-layout {
+                flex-direction: column;
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel-container .ant-picker-presets {
+                min-width: 0;
+                max-width: none;
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel-container .ant-picker-presets ul {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                height: auto;
+                border-inline-end: 0;
+                border-bottom: 1px solid ${token.colorSplit};
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel-container .ant-picker-presets ul li + li {
+                margin-top: 0;
+            }
+
+            &.ant-picker-dropdown .ant-picker-panel {
+                display: flex;
+            }
+
+            &.ant-picker-dropdown .ant-picker-datetime-panel {
+                flex-direction: column;
+            }
+
+            &.ant-picker-dropdown .ant-picker-datetime-panel .ant-picker-date-panel {
+                width: auto;
+            }
+
+            &.ant-picker-dropdown .ant-picker-datetime-panel .ant-picker-time-panel {
+                border-inline-start: 0;
+                border-top: 1px solid ${token.colorSplit};
+            }
+        }
+    `,
 }))

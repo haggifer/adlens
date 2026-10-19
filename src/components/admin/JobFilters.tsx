@@ -3,6 +3,7 @@
 import { DatePicker, Input, Typography } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import { isJobFilterActive, JOB_PERIOD_PRESETS, type JobFilter, type JobPeriod, toJobPeriod } from './admin-job-filter'
+import { useStyles } from './styles'
 
 type PeriodValue = [Dayjs | null, Dayjs | null] | null
 
@@ -38,6 +39,8 @@ interface IProps {
 }
 
 export function JobFilters({ filter, onChange, shownCount, totalCount }: IProps) {
+    const { styles } = useStyles()
+
     return (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
             <Input
@@ -61,6 +64,7 @@ export function JobFilters({ filter, onChange, shownCount, totalCount }: IProps)
             <DatePicker.RangePicker
                 aria-label="Created"
                 className="mw-100"
+                classNames={{ popup: { root: styles.periodPopup } }}
                 placeholder={['Created from', 'to']}
                 allowEmpty={[false, false]}
                 showTime={SHOW_TIME}
