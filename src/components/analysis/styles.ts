@@ -44,7 +44,7 @@ export const useStyles = createStyles(({ token, css }) => ({
     intro: css`
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 0.75rem;
     `,
 
     // A page that is loading or couldn't load: its one element centred where the report would be.
