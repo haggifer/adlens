@@ -151,11 +151,7 @@ export function UploadPanel({
             return null
         }
 
-        if (metadata.durationS > MAX_DURATION_S) {
-            notifyRejected(UPLOAD_NOTICE.tooLong)
-            return null
-        }
-
+        // Branch no-time-limit: any length is accepted, so the maintainer can measure what longer videos cost.
         return { file, video: { ...metadata, contentType } }
     }
 
