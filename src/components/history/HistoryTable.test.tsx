@@ -14,7 +14,7 @@ import { HistoryTable } from './HistoryTable'
 const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }), usePathname: () => '/history' }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/api/jobs', () => ({
     deleteJob: jest.fn(async () => undefined),

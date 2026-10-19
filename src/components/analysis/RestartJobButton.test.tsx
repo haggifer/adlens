@@ -10,8 +10,13 @@ import { RestartJobButton } from './RestartJobButton'
 
 const mockAuth = memberAuth()
 const mockPush = jest.fn()
+const mockReplace = jest.fn()
+let mockPathname = '/history'
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({ push: mockPush, replace: mockReplace }),
+    usePathname: () => mockPathname,
+}))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockAuth }))
 jest.mock('@/api/jobs', () => ({ restartJob: jest.fn() }))
 
@@ -24,6 +29,8 @@ describe('RestartJobButton', () => {
     beforeEach(() => {
         jest.mocked(restartJob).mockReset()
         mockPush.mockClear()
+        mockReplace.mockClear()
+        mockPathname = '/history'
     })
 
     it('stays on the page, loading, until the new run has started, then opens it', async () => {
@@ -43,6 +50,17 @@ describe('RestartJobButton', () => {
 
         await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/analyses/${RESTARTED.id}`))
         expect(queryClient.getQueryData(jobKey(MEMBER_USER.id, RESTARTED.id))).toEqual(RESTARTED)
+    })
+
+    it('replaces the failed run’s own page with the new run, so Back skips it', async () => {
+        mockPathname = `/analyses/${FAILED.id}`
+        jest.mocked(restartJob).mockResolvedValueOnce(RESTARTED)
+        const { user } = renderWithProviders(<RestartJobButton job={FAILED} />)
+
+        await user.click(restartButton())
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(`/analyses/${RESTARTED.id}`))
+        expect(mockPush).not.toHaveBeenCalled()
     })
 
     it('says so and stays when the restart is refused, its video gone', async () => {
