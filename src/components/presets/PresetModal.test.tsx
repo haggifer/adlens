@@ -111,6 +111,16 @@ describe('PresetModal', () => {
         expect(screen.getByRole('checkbox', { name: 'Make default' })).toBeChecked()
     })
 
+    it('keeps Save disabled until a setting is chosen', async () => {
+        const { user } = renderModal()
+
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+
+        await pickMarket(user, Market.US)
+
+        expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
+    })
+
     it('never changes the settings it was opened with', async () => {
         const initialSettings = { ...SETTINGS, markets: [...SETTINGS.markets] }
         const { user } = renderModal({ initialSettings })

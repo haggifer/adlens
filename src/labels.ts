@@ -72,11 +72,13 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
     [JobStatus.Error]: 'Failed',
 }
 
+// The in-progress steps are antd's light blue preset, not `processing`: that one follows the teal primary colour, which
+// the cyan preset tag in History reads the same as.
 export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
     [JobStatus.Pending]: 'default',
-    [JobStatus.Verifying]: 'processing',
-    [JobStatus.Queued]: 'processing',
-    [JobStatus.Analyzing]: 'processing',
+    [JobStatus.Verifying]: 'blue',
+    [JobStatus.Queued]: 'blue',
+    [JobStatus.Analyzing]: 'blue',
     [JobStatus.Analyzed]: 'success',
     [JobStatus.Error]: 'error',
 }

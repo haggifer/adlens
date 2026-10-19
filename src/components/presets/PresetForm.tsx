@@ -18,9 +18,10 @@ import {
 } from 'adlens-shared'
 import { Alert, App, Button, Checkbox, Input, Popconfirm } from 'antd'
 import { type FormEvent, useState } from 'react'
-import { Controller, type ControllerRenderProps, useForm } from 'react-hook-form'
+import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
 import type { z } from 'zod'
 import { describePresetNameIssue, isSameName } from './preset-name'
+import { isSameSettings } from './same-settings'
 
 const presetFormSchema = savePresetInputSchema.omit({ overwrite: true })
 
@@ -94,9 +95,13 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
         resolver: zodResolver(presetFormSchema, { error: describePresetNameIssue }),
         defaultValues: getDefaultValues(preset, initialSettings),
     })
+    const settings = useWatch({ control, name: 'settings' })
 
     const { presets } = usePresets()
     const { savePreset, isSaving } = useSavePreset()
+
+    // A preset with nothing chosen would only stand for "check everything", which no settings at all already do.
+    const hasNoSettings = isSameSettings(settings, EMPTY_SETTINGS)
 
     const askOverwrite = (values: PresetFormValues) => {
         setClashingValues(values)
@@ -185,7 +190,12 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
                     cancelText="Cancel"
                     onConfirm={handleOverwrite}
                 >
-                    <Button type="primary" htmlType="submit" loading={isSubmitting || isSaving}>
+                    <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={isSubmitting || isSaving}
+                        disabled={hasNoSettings}
+                    >
                         Save
                     </Button>
                 </Popconfirm>

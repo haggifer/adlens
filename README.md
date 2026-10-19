@@ -166,6 +166,9 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   through `AppLink`, which cancels Next's navigation in `onNavigate` (Next's documented way to block a link) unless
   `window.confirm` says yes, and menu items that navigate in code ask the same way (`isLeaveConfirmed`). The browser's
   Back button within the app isn't asked about: Next handles it without an event that can be cancelled.
+- **A button's tooltip shows only where a pointer can hover** (`ButtonTooltip`). On a touch screen a tap would open it
+  over the action it just took, so it is held shut there; the button keeps its `aria-label`. Tooltips that are the
+  content (Requirements, the quota date) or that sit on text and tags (the applied preset's name) show everywhere.
 - **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders
