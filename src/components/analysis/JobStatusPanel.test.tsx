@@ -5,7 +5,7 @@ import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { buildJob } from '@/test/fixtures'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import { screen } from '@testing-library/react'
-import { JOB_START_WINDOW_MS, JobErrorCode, JobStatus, RequestErrorCode, RESTARTABLE_JOB_ERRORS } from 'adlens-shared'
+import { JOB_RESTART_WINDOW_MS, JobErrorCode, JobStatus, RequestErrorCode, RESTARTABLE_JOB_ERRORS } from 'adlens-shared'
 import { JobStatusPanel } from './JobStatusPanel'
 
 const RUNNING_STEPS = [JobStatus.Verifying, JobStatus.Queued, JobStatus.Analyzing]
@@ -86,7 +86,7 @@ describe('JobStatusPanel', () => {
         it.each([
             ['its video was rejected', { errorCode: JobErrorCode.VideoUnreadable }],
             ['its upload never arrived', { errorCode: JobErrorCode.UploadFailed }],
-            ['its video may be gone', { createdAt: new Date(Date.now() - JOB_START_WINDOW_MS).toISOString() }],
+            ['its video may be gone', { createdAt: new Date(Date.now() - JOB_RESTART_WINDOW_MS).toISOString() }],
         ])('offers only a new analysis when %s', (_case, overrides) => {
             renderWithProviders(<JobStatusPanel job={buildFailedJob(overrides)} />)
 

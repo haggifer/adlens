@@ -37,7 +37,7 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     const router = useRouter()
     const { notification } = App.useApp()
 
-    const { restartJob } = useRestartJob()
+    const { restartJob, isRestarting } = useRestartJob()
 
     const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
     const finishedIconStyle = { background: token.colorPrimary, color: token.colorTextLightSolid }
@@ -68,7 +68,7 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
                     extra={
                         <div className="d-flex flex-wrap justify-content-center gap-2">
                             {isRestartable && (
-                                <Button type="primary" onClick={handleRestart}>
+                                <Button type="primary" loading={isRestarting} onClick={handleRestart}>
                                     Restart analysis
                                 </Button>
                             )}
