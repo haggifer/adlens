@@ -255,10 +255,10 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   uploads.
 - **`/admin` hides itself from everyone but an admin.** The API is the real check: `/v1/admin/*` answers anyone else
   with the 404 of a route that doesn't exist, and reads the admin flag on every request. The page only avoids an empty
-  shell: signed out it asks for sign-in like any private page (an admin must be able to sign in there), and a signed-in
-  anonymous, unconfirmed or member session gets the not-found page (`PrivateRoute isAdminOnly`), as does an admin read
-  that comes back 404 because the flag was removed meanwhile; that 404 also refetches the session, since an expired one
-  gets the same answer and should ask for sign-in instead. The Admin entry sits in the account menu and the phone
+  shell, and answers the same way: everyone but an admin, signed out included, gets the not-found page
+  (`PrivateRoute isAdminOnly`), so no sign-in prompt shows the page exists; an admin signs in from the header first. An
+  admin read that comes back 404 because the flag was removed meanwhile, or the session expired, also shows not found,
+  and refetches the session so the header notices an expired one. The Admin entry sits in the account menu and the phone
   menu, never the header, and the page is noindex and out of the sitemap. It reads every job and user once (no
   pagination yet, fine at today's volume) and offers Reload rather than live updates, which stay per user; the page
   derives the costs, counts and user types from the raw records, and keeps its tab and filters in component state, so a

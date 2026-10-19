@@ -32,8 +32,8 @@ export function AdminView() {
 
     const handleReload = () => void queryClient.invalidateQueries({ queryKey: [ADMIN_QUERY_KEY] })
 
-    // Admin reads never answer 401, so nothing else notices an expired session. Fetched again, a dead one sends the
-    // visitor to PrivateRoute's sign-in prompt, and a live one keeps this not-found page.
+    // Admin reads never answer 401, so nothing else notices an expired session. Fetched again, a dead one turns the
+    // header back to Sign In; the page stays not found either way.
     useEffect(() => {
         if (isNoLongerAdmin) {
             refreshSession()

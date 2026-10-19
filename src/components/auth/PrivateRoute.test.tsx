@@ -103,6 +103,7 @@ describe('PrivateRoute', () => {
 
     describe('on an admin-only page', () => {
         it.each([
+            ['a signed-out visitor', signedOutAuth],
             ['an anonymous session', anonymousAuth],
             ['an account whose email isn’t confirmed', unconfirmedAuth],
             ['a member', memberAuth],
@@ -121,15 +122,11 @@ describe('PrivateRoute', () => {
             expect(screen.queryByTestId('not-found')).not.toBeInTheDocument()
         })
 
-        it('asks a signed-out visitor to sign in, so an admin can', async () => {
-            renderAdminRoute(signedOutAuth())
+        it('shows only a spinner while the session loads', () => {
+            const { container } = renderAdminRoute(initializingAuth())
 
-            expect(screen.queryByText(PAGE_CONTENT)).not.toBeInTheDocument()
+            expect(container.querySelector('.ant-spin')).toBeInTheDocument()
             expect(screen.queryByTestId('not-found')).not.toBeInTheDocument()
-
-            await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
-
-            expect(useAuthModalStore.getState().view).toBe('signin')
         })
     })
 })

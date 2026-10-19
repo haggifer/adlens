@@ -13,8 +13,8 @@ interface IProps {
     // A page that manages the account itself, which an anonymous session doesn't have and an account whose email
     // isn't confirmed can't use yet.
     isAccountOnly?: boolean
-    // A page only an admin may see. Anyone else signed in gets the not-found page, as for a page that doesn't exist;
-    // a signed-out visitor still gets the sign-in prompt, so an admin can sign in there.
+    // A page only an admin may see. Everyone else, signed out included, gets the not-found page, as for a page that
+    // doesn't exist; an admin signs in from the header first.
     isAdminOnly?: boolean
 }
 
@@ -32,6 +32,10 @@ export function PrivateRoute({ children, isAccountOnly, isAdminOnly }: IProps) {
         )
     }
 
+    if (isAdminOnly && accountKind !== AccountKind.Admin) {
+        return <NotFoundState />
+    }
+
     if (!isSignedIn) {
         return (
             <div className={styles.gate}>
@@ -44,10 +48,6 @@ export function PrivateRoute({ children, isAccountOnly, isAdminOnly }: IProps) {
                 </Button>
             </div>
         )
-    }
-
-    if (isAdminOnly && accountKind !== AccountKind.Admin) {
-        return <NotFoundState />
     }
 
     if (isAccountOnly && isAnonymous) {
