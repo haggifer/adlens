@@ -142,23 +142,6 @@ describe('useJob', () => {
         }
     })
 
-    it('refreshes the quota and admission again when a restarted run fails again', async () => {
-        const queryClient = createTestQueryClient()
-        const invalidate = jest.spyOn(queryClient, 'invalidateQueries')
-
-        await renderJob(buildJob({ id: JOB_ID, status: JobStatus.Analyzing }), queryClient)
-        await announceChange(queryClient, buildJob({ id: JOB_ID, status: JobStatus.Error }))
-        await screen.findByText(JobStatus.Error)
-        await announceChange(queryClient, buildJob({ id: JOB_ID, status: JobStatus.Verifying }))
-        await screen.findByText(JobStatus.Verifying)
-        invalidate.mockClear()
-        await announceChange(queryClient, buildJob({ id: JOB_ID, status: JobStatus.Error }))
-        await screen.findByText(JobStatus.Error)
-
-        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['quota'] })
-        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['admission'] })
-    })
-
     it('refreshes nothing for a job that had already failed when the page opened', async () => {
         const queryClient = createTestQueryClient()
         const invalidate = jest.spyOn(queryClient, 'invalidateQueries')

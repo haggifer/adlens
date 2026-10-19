@@ -1,11 +1,14 @@
 'use client'
 
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
+import { RestartJobButton } from '@/components/analysis/RestartJobButton'
 import { useJobs } from '@/hooks/useJobs'
+import { useNow } from '@/hooks/useNow'
 import { usePresets } from '@/hooks/usePresets'
+import { RESTART_CLOCK_MS } from '@/job-status'
 import { formatPlatforms, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '@/labels'
 import { TagFilled } from '@ant-design/icons'
-import type { Job, Preset } from 'adlens-shared'
+import { isJobRestartable, type Job, type Preset } from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -14,7 +17,13 @@ import { useStyles } from './styles'
 
 const formatCreatedAt = (job: Job) => new Date(job.createdAt).toLocaleString()
 
-const renderStatus = (job: Job) => <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>
+// A failed run still within the start window gets its Restart next to the tag.
+const renderStatus = (job: Job, now: number) => (
+    <span className="d-inline-flex align-items-center gap-1">
+        <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>
+        {isJobRestartable(job, now) && <RestartJobButton job={job} isIconOnly />}
+    </span>
+)
 
 const toNamesById = (presets: Preset[]) => new Map(presets.map((preset) => [preset.id, preset.name]))
 
@@ -25,6 +34,7 @@ const getPresetName = (job: Job, presetNames: Map<string, string>) =>
 const getColumns = (
     styles: ReturnType<typeof useStyles>['styles'],
     presetNames: Map<string, string>,
+    now: number,
 ): TableColumnsType<Job> => [
     {
         title: 'Video',
@@ -42,7 +52,7 @@ const getColumns = (
                     </div>
                     {/* Phones drop the Status and Created columns, so the row carries them under the name. */}
                     <div className={styles.compactMeta}>
-                        {renderStatus(job)}
+                        {renderStatus(job, now)}
                         <span>{formatCreatedAt(job)}</span>
                     </div>
                     {/* Below lg the Preset column is gone too, so the preset gets its own line. */}
@@ -78,7 +88,7 @@ const getColumns = (
         key: 'status',
         width: '8.5rem',
         responsive: ['sm'],
-        render: (_, job) => renderStatus(job),
+        render: (_, job) => renderStatus(job, now),
     },
     {
         title: 'Created',
@@ -100,14 +110,15 @@ const getColumns = (
 export function HistoryTable() {
     const { styles } = useStyles()
     const router = useRouter()
+    const now = useNow(RESTART_CLOCK_MS)
 
     const { jobs, isLoading, error, hasMore, isLoadingMore, loadMore } = useJobs()
     const { presets } = usePresets()
 
     const presetNames = useMemo(() => toNamesById(presets), [presets])
 
-    // The whole row opens the analysis. Clicks on its link or its Delete button are left to them, so a row never
-    // navigates twice or opens when deleting.
+    // The whole row opens the analysis. Clicks on its link or its Restart and Delete buttons are left to them, so a row
+    // never navigates twice or opens when restarting or deleting.
     const handleRowClick = (event: MouseEvent<HTMLElement>, job: Job) => {
         if ((event.target as HTMLElement).closest('a, button')) {
             return
@@ -122,7 +133,7 @@ export function HistoryTable() {
             {error && <Alert type="error" showIcon title={error.message} />}
             <Table<Job>
                 rowKey="id"
-                columns={getColumns(styles, presetNames)}
+                columns={getColumns(styles, presetNames, now)}
                 tableLayout="fixed"
                 rowClassName={() => styles.row}
                 onRow={(job) => ({ onClick: (event) => handleRowClick(event, job) })}

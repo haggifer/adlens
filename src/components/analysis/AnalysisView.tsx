@@ -7,6 +7,7 @@ import { formatPlatforms } from '@/labels'
 import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { AnalysisWorkspace } from './AnalysisWorkspace'
 import { DeleteJobButton } from './DeleteJobButton'
 import { useStyles } from './styles'
@@ -26,8 +27,16 @@ export function AnalysisView({ jobId }: IProps) {
     const { url, isMissing } = useJobVideo(jobId, hasVideo)
 
     const platforms = job ? formatPlatforms(job.settings.platforms) : ''
+    const restartedAs = job?.restartedAs
 
-    if (isLoading) {
+    // A restarted run is kept only as a record: its page shows the run that replaced it.
+    useEffect(() => {
+        if (restartedAs) {
+            router.replace(`/analyses/${restartedAs}`)
+        }
+    }, [restartedAs, router])
+
+    if (isLoading || restartedAs) {
         return (
             <div className={styles.statusPage}>
                 <Spin size="large" />
