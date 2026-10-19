@@ -5,3 +5,7 @@ import { JobStatus } from 'adlens-shared'
 const IN_PROGRESS: JobStatus[] = [JobStatus.Verifying, JobStatus.Queued, JobStatus.Analyzing]
 
 export const isJobInProgress = (status: JobStatus) => IN_PROGRESS.includes(status)
+
+// How often a page offering restarts reads the clock, so a run that passes the start window loses its Restart within
+// this time; the API refuses a late one all the same.
+export const RESTART_CLOCK_MS = 15 * 1000

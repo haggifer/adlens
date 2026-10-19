@@ -7,7 +7,8 @@ import {
     describeRequestError,
     toApiRequestError,
 } from '@/api/errors'
-import { JobErrorCode, MAX_DURATION_S, RequestErrorCode } from 'adlens-shared'
+import { MAX_DURATION_LABEL } from '@/labels'
+import { JobErrorCode, RequestErrorCode } from 'adlens-shared'
 import { AxiosError, AxiosHeaders } from 'axios'
 
 const axiosErrorWithResponse = (status: number, data: unknown) =>
@@ -82,7 +83,7 @@ describe('toApiRequestError', () => {
 
 describe('describeJobError', () => {
     it('describes the job error code, falling back to a generic analysis failure', () => {
-        expect(describeJobError(JobErrorCode.VideoTooLong)).toContain(String(MAX_DURATION_S))
+        expect(describeJobError(JobErrorCode.VideoTooLong)).toContain(MAX_DURATION_LABEL)
         expect(describeJobError(undefined)).toBe(describeJobError(JobErrorCode.AnalysisFailed))
     })
 
