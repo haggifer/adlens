@@ -1,6 +1,7 @@
 import { listAdminJobs, listAdminUsers } from '@/api/admin'
 import { ApiRequestError, describeRequestError } from '@/api/errors'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { refreshSession } from '@/auth/session'
 import { AccountKind } from '@/auth/types'
 import { adminAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
@@ -14,6 +15,7 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/api/admin', () => ({ listAdminJobs: jest.fn(), listAdminUsers: jest.fn() }))
+jest.mock('@/auth/session', () => ({ refreshSession: jest.fn() }))
 jest.mock('@/components/status/NotFoundState', () => ({ NotFoundState: () => <div data-testid="not-found" /> }))
 
 const USER: AdminUser = {
@@ -77,6 +79,7 @@ describe('AdminView', () => {
         expect(await screen.findByText(describeRequestError(RequestErrorCode.Unavailable))).toBeInTheDocument()
         await screen.findByText(JOB.file.name)
         expect(within(getRow(JOB.file.name)).getByLabelText(UNKNOWN_OWNER_TIP)).toBeInTheDocument()
+        expect(refreshSession).not.toHaveBeenCalled()
     })
 
     it('shows not found instead of the tables once the account is no longer an admin', async () => {
@@ -86,6 +89,14 @@ describe('AdminView', () => {
         expect(await screen.findByTestId('not-found')).toBeInTheDocument()
         expect(screen.queryByRole('table')).not.toBeInTheDocument()
         expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+
+    it('fetches the session again on not found, in case it expired', async () => {
+        jest.mocked(listAdminJobs).mockRejectedValue(new ApiRequestError(RequestErrorCode.NotFound))
+        renderView()
+
+        await screen.findByTestId('not-found')
+        expect(refreshSession).toHaveBeenCalledTimes(1)
     })
 
     it('reads the jobs and the users again on Reload', async () => {

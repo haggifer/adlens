@@ -257,7 +257,8 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   with the 404 of a route that doesn't exist, and reads the admin flag on every request. The page only avoids an empty
   shell: signed out it asks for sign-in like any private page (an admin must be able to sign in there), and a signed-in
   anonymous, unconfirmed or member session gets the not-found page (`PrivateRoute isAdminOnly`), as does an admin read
-  that comes back 404 because the flag was removed meanwhile. The Admin entry sits in the account menu and the phone
+  that comes back 404 because the flag was removed meanwhile; that 404 also refetches the session, since an expired one
+  gets the same answer and should ask for sign-in instead. The Admin entry sits in the account menu and the phone
   menu, never the header, and the page is noindex and out of the sitemap. It reads every job and user once (no
   pagination yet, fine at today's volume) and offers Reload rather than live updates, which stay per user; the page
   derives the costs, counts and user types from the raw records, and keeps its tab and filters in component state, so a
