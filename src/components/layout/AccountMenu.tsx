@@ -8,7 +8,7 @@ import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { useSignOut } from '@/hooks/useSignOut'
-import { LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
+import { DashboardOutlined, LogoutOutlined, MailOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Button, Dropdown, type DropdownProps, MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { type KeyboardEvent, useState } from 'react'
@@ -17,6 +17,7 @@ import { useStyles } from './styles'
 
 enum AccountMenuKey {
     Email = 'email',
+    Admin = 'admin',
     Account = 'account',
     Contact = 'contact',
     SignOut = 'signout',
@@ -29,6 +30,10 @@ const HOVER_TRIGGERS: DropdownProps['trigger'] = ['hover']
 const TOUCH_TRIGGERS: DropdownProps['trigger'] = ['click']
 
 const OPEN_KEYS = new Set(['Enter', ' ', 'ArrowDown'])
+
+const ADMIN_ITEM = { key: AccountMenuKey.Admin, label: 'Admin', icon: <DashboardOutlined /> }
+
+const MENU_PAGES = { [AccountMenuKey.Admin]: '/admin', [AccountMenuKey.Account]: '/account' }
 
 export function AccountMenu() {
     const { styles } = useStyles()
@@ -48,6 +53,7 @@ export function AccountMenu() {
     const items: MenuProps['items'] = [
         { key: AccountMenuKey.Email, label: user?.email, disabled: true },
         { type: 'divider' },
+        ...(kind === AccountKind.Admin ? [ADMIN_ITEM] : []),
         { key: AccountMenuKey.Account, label: 'Account', icon: <SettingOutlined /> },
         { key: AccountMenuKey.Contact, label: 'Contact us', icon: <MailOutlined /> },
         { type: 'divider' },
@@ -79,9 +85,9 @@ export function AccountMenu() {
     }
 
     const handleClick: MenuProps['onClick'] = ({ key }) => {
-        if (key === AccountMenuKey.Account) {
+        if (key === AccountMenuKey.Admin || key === AccountMenuKey.Account) {
             if (isLeaveConfirmed()) {
-                router.push('/account')
+                router.push(MENU_PAGES[key])
             }
 
             return

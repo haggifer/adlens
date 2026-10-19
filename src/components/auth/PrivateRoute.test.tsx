@@ -1,6 +1,6 @@
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import { adminAuth, anonymousAuth, initializingAuth, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PrivateRoute } from './PrivateRoute'
@@ -8,6 +8,7 @@ import { PrivateRoute } from './PrivateRoute'
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
+jest.mock('@/components/status/NotFoundState', () => ({ NotFoundState: () => <div data-testid="not-found" /> }))
 
 const PAGE_CONTENT = 'Page content'
 
@@ -16,6 +17,16 @@ const renderRoute = (auth: AuthContextValue, isAccountOnly?: boolean) => {
 
     return render(
         <PrivateRoute isAccountOnly={isAccountOnly}>
+            <p>{PAGE_CONTENT}</p>
+        </PrivateRoute>,
+    )
+}
+
+const renderAdminRoute = (auth: AuthContextValue) => {
+    mockUseAuth.mockReturnValue(auth)
+
+    return render(
+        <PrivateRoute isAdminOnly>
             <p>{PAGE_CONTENT}</p>
         </PrivateRoute>,
     )
@@ -88,5 +99,37 @@ describe('PrivateRoute', () => {
 
         expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Sign Up' })).not.toBeInTheDocument()
+    })
+
+    describe('on an admin-only page', () => {
+        it.each([
+            ['an anonymous session', anonymousAuth],
+            ['an account whose email isn’t confirmed', unconfirmedAuth],
+            ['a member', memberAuth],
+        ])('shows %s not found, as for a page that doesn’t exist', (_, getAuth) => {
+            renderAdminRoute(getAuth())
+
+            expect(screen.getByTestId('not-found')).toBeInTheDocument()
+            expect(screen.queryByText(PAGE_CONTENT)).not.toBeInTheDocument()
+            expect(screen.queryByRole('button')).not.toBeInTheDocument()
+        })
+
+        it('shows an admin the page', () => {
+            renderAdminRoute(adminAuth())
+
+            expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument()
+            expect(screen.queryByTestId('not-found')).not.toBeInTheDocument()
+        })
+
+        it('asks a signed-out visitor to sign in, so an admin can', async () => {
+            renderAdminRoute(signedOutAuth())
+
+            expect(screen.queryByText(PAGE_CONTENT)).not.toBeInTheDocument()
+            expect(screen.queryByTestId('not-found')).not.toBeInTheDocument()
+
+            await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
+
+            expect(useAuthModalStore.getState().view).toBe('signin')
+        })
     })
 })

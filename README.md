@@ -75,6 +75,7 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/history`       | Every analysis, newest first                                                                                                                                                                                                                                          |
 | `/presets`       | The user's presets (saved analysis settings), by name, with how often each was used: create, edit, delete and pick the default; linked from the navigation for everyone: a visitor without a session sees the empty state, since creating a preset starts the session |
 | `/account`       | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one)                                                                                             |
+| `/admin`         | Maintainer view of every user's jobs (tokens by kind, cost, AI time) and every user (type, jobs, cost), from `GET /v1/admin/jobs` and `/users`; admins only, linked from their account menu and phone menu                                                            |
 | `/confirm-email` | Landing page of the email confirmation link; confirms for the signed-in account and stays to say so (the tab the user came from updates on its own)                                                                                                                   |
 | `/auth/done`     | Landing page of the Google / GitHub sign-in popup; reports the outcome to the tab that opened it, then closes                                                                                                                                                         |
 | `/terms`         | Terms of Use                                                                                                                                                                                                                                                          |
@@ -252,6 +253,15 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (`POST /v1/contact/uploads`), uploads them straight to storage and sends the message with the draft id in place of a
   token. The API spends a draft on any send, even a refused one, so a retry starts over with a new check, draft and
   uploads.
+- **`/admin` hides itself from everyone but an admin.** The API is the real check: `/v1/admin/*` answers anyone else
+  with the 404 of a route that doesn't exist, and reads the admin flag on every request. The page only avoids an empty
+  shell: signed out it asks for sign-in like any private page (an admin must be able to sign in there), and a signed-in
+  anonymous, unconfirmed or member session gets the not-found page (`PrivateRoute isAdminOnly`), as does an admin read
+  that comes back 404 because the flag was removed meanwhile. The Admin entry sits in the account menu and the phone
+  menu, never the header, and the page is noindex and out of the sitemap. It reads every job and user once (no
+  pagination yet, fine at today's volume) and offers Reload rather than live updates, which stay per user; the page
+  derives the costs, counts and user types from the raw records, and keeps its tab and filters in component state, so a
+  reload starts on Jobs with no filter.
 
 ## License
 
