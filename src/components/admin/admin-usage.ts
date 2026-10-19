@@ -156,6 +156,7 @@ const summarizeUserJobs = (jobs: AdminJob[]): Map<string, UserJobsSummary> =>
         new Map<string, UserJobsSummary>(),
     )
 
+// Checks admin first, as the API grants access; the session's getAccountKind checks it last. Don't align the two.
 export const getUserType = (user: AdminUser): AccountKind => {
     if (user.isAdmin) {
         return AccountKind.Admin
