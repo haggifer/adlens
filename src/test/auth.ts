@@ -35,3 +35,6 @@ export const unconfirmedAuth = (): AuthContextValue =>
 
 export const memberAuth = (): AuthContextValue =>
     createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER, accountKind: AccountKind.Member })
+
+export const adminAuth = (): AuthContextValue =>
+    createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER, accountKind: AccountKind.Admin })
