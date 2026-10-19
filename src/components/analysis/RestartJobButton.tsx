@@ -6,6 +6,7 @@ import { useRestartJob } from '@/hooks/useRestartJob'
 import { RedoOutlined } from '@ant-design/icons'
 import type { Job } from 'adlens-shared'
 import { App, Button } from 'antd'
+import { useTheme } from 'antd-style'
 import { usePathname, useRouter } from 'next/navigation'
 
 interface IProps {
@@ -16,6 +17,7 @@ interface IProps {
 // Runs a failed analysis again on its video. The API checks that the video is still there before anything changes,
 // so the user stays where they are, the button loading, until the new run has started, and only then moves to it.
 export function RestartJobButton({ job, isIconOnly }: IProps) {
+    const token = useTheme()
     const router = useRouter()
     const pathname = usePathname()
     const { notification } = App.useApp()
@@ -47,8 +49,8 @@ export function RestartJobButton({ job, isIconOnly }: IProps) {
             <ButtonTooltip title="Restart analysis">
                 <Button
                     size="small"
-                    type="text"
                     icon={<RedoOutlined />}
+                    style={{ color: token.colorTextSecondary }}
                     loading={isRestarting}
                     aria-label="Restart analysis"
                     onClick={handleClick}
