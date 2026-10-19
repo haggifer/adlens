@@ -3,6 +3,7 @@ import { createJob, getAdmissionRefusal, startAnalysis } from '@/api/jobs'
 import { listPresets } from '@/api/presets'
 import { listSamples } from '@/api/samples'
 import type { AuthContextValue } from '@/auth/AuthContext'
+import { useLeaveGuardStore } from '@/contexts/stores/leaveGuardStore'
 import { MARKET_LABELS, PLATFORM_LABELS } from '@/labels'
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { memberAuth, unconfirmedAuth } from '@/test/auth'
@@ -327,6 +328,29 @@ describe('AdWorkspace', () => {
         expect(createJob).toHaveBeenCalledWith(expect.objectContaining({ settings: getSampleSettings(sample) }))
         // The preset applied before the sample no longer describes the settings.
         expect(jest.mocked(createJob).mock.calls[0][0].presetId).toBeUndefined()
+    })
+
+    it('guards leaving the page while an uploaded video is on it, but not a sample', async () => {
+        const sample = buildSample()
+
+        jest.mocked(listSamples).mockResolvedValue([sample])
+        const { user } = renderWorkspace()
+
+        expect(useLeaveGuardStore.getState().isGuarded).toBe(false)
+
+        await chooseFile(user, buildFile('launch.mp4'))
+
+        expect(useLeaveGuardStore.getState().isGuarded).toBe(true)
+
+        await user.click(removeButton())
+
+        expect(useLeaveGuardStore.getState().isGuarded).toBe(false)
+
+        await user.click(screen.getByText('Try a sample ad'))
+        await user.click(await screen.findByText(sample.description))
+        await screen.findByLabelText('Remove video')
+
+        expect(useLeaveGuardStore.getState().isGuarded).toBe(false)
     })
 
     // The metadata check makes and releases URLs of its own, so each test asks that none is left unreleased.

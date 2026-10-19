@@ -3,6 +3,7 @@
 import { describeRequestError } from '@/api/errors'
 import { ErrorState } from '@/components/status/ErrorState'
 import { useAdmission } from '@/hooks/useAdmission'
+import { useLeaveGuard } from '@/hooks/useLeaveGuard'
 import { type AnalysisSettingsInput, RequestErrorCode, type Sample } from 'adlens-shared'
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
@@ -63,6 +64,8 @@ export function AdWorkspace() {
     // Asked on load, not only once a video is chosen: an API that can't answer can't run an analysis, so the page says
     // so before anyone uploads or picks settings. A run already under way keeps its page.
     const admission = useAdmission()
+    // A sample stays one click away; an uploaded video would have to be picked again.
+    useLeaveGuard(source?.kind === 'file')
 
     const video = toSelectedVideo(source)
     const isUnavailable = admission.isUnavailable && !isRunning

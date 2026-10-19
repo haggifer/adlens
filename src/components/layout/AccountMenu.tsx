@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
+import { isLeaveConfirmed } from '@/components/utils/leave-guard'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useHoverCapable } from '@/hooks/useHoverCapable'
@@ -79,7 +80,10 @@ export function AccountMenu() {
 
     const handleClick: MenuProps['onClick'] = ({ key }) => {
         if (key === AccountMenuKey.Account) {
-            router.push('/account')
+            if (isLeaveConfirmed()) {
+                router.push('/account')
+            }
+
             return
         }
 

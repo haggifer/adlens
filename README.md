@@ -161,6 +161,11 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 - **Save as preset never changes the analysis settings.** Its dialog starts from a copy of the panel's settings. A
   preset saved with them unchanged is applied (marked, and counted when the run starts); one whose settings were edited
   in the dialog is only saved, and the panel keeps its settings and applied preset.
+- **Leaving the home page with an uploaded video asks first** (`useLeaveGuard`; a sample doesn't, it is one click
+  away). A reload, a closed tab or a typed address gets the browser's own `beforeunload` dialog. In-app links go
+  through `AppLink`, which cancels Next's navigation in `onNavigate` (Next's documented way to block a link) unless
+  `window.confirm` says yes, and menu items that navigate in code ask the same way (`isLeaveConfirmed`). The browser's
+  Back button within the app isn't asked about: Next handles it without an event that can be cancelled.
 - **The theme follows the system until the user picks one.** The root layout renders the scheme from the user's choice
   (a cookie) or, on Chromium, from the `Sec-CH-Prefers-Color-Scheme` client hint, so the first paint is usually right;
   other browsers are corrected from `prefers-color-scheme` after hydration. The cost is that every route renders

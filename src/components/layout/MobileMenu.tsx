@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { describeNextFree, formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
+import { AppLink } from '@/components/utils/AppLink'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
 import { useMenuSwipe } from '@/hooks/useMenuSwipe'
@@ -22,7 +23,6 @@ import {
     UploadOutlined,
 } from '@ant-design/icons'
 import { Button, Divider, Drawer } from 'antd'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { getSessionControlProps } from './session-control'
@@ -178,7 +178,7 @@ export function MobileMenu() {
                 )}
                 <nav className={styles.drawerNav} aria-label="Main">
                     {visibleLinks.map((link) => (
-                        <Link
+                        <AppLink
                             key={link.href}
                             href={link.href}
                             className={styles.drawerItem}
@@ -188,7 +188,7 @@ export function MobileMenu() {
                         >
                             {link.icon}
                             {link.label}
-                        </Link>
+                        </AppLink>
                     ))}
                     <button type="button" className={styles.drawerItem} onClick={handleContact}>
                         <MailOutlined />

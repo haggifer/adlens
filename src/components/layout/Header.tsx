@@ -6,11 +6,11 @@ import { AccountMenu } from '@/components/layout/AccountMenu'
 import { MobileMenu } from '@/components/layout/MobileMenu'
 import { describeNextFree, formatQuotaLeft } from '@/components/layout/quota-label'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
+import { AppLink } from '@/components/utils/AppLink'
 import { useQuota } from '@/hooks/useQuota'
 import { useRefreshAtNextFree } from '@/hooks/useRefreshAtNextFree'
 import { useShownAccountKind } from '@/hooks/useShownAccountKind'
 import { Divider, Tooltip, type TooltipProps } from 'antd'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useStyles } from './styles'
 
@@ -47,12 +47,12 @@ export function Header() {
         <header className={styles.header}>
             <div className={styles.headerInner}>
                 <div className={styles.headerLeft}>
-                    <Link href="/" className={styles.logoLink} aria-label="AdLens home">
+                    <AppLink href="/" className={styles.logoLink} aria-label="AdLens home">
                         <Logo />
-                    </Link>
+                    </AppLink>
                     <nav className={cx(styles.nav, styles.desktopOnly)} aria-label="Main">
                         {navLinks.map((item) => (
-                            <Link
+                            <AppLink
                                 key={item.href}
                                 href={item.href}
                                 className={styles.navLink}
@@ -60,7 +60,7 @@ export function Header() {
                                 aria-current={pathname === item.href ? 'page' : undefined}
                             >
                                 {item.label}
-                            </Link>
+                            </AppLink>
                         ))}
                     </nav>
                 </div>

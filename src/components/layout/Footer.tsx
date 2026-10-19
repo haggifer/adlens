@@ -1,7 +1,7 @@
 'use client'
 
+import { AppLink } from '@/components/utils/AppLink'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import Link from 'next/link'
 import { useStyles } from './styles'
 
 export function Footer() {
@@ -11,15 +11,15 @@ export function Footer() {
     return (
         <footer className={styles.footer}>
             <nav className={styles.footerLinks} aria-label="Legal and contact">
-                <Link href="/privacy" className={styles.footerLink}>
+                <AppLink href="/privacy" className={styles.footerLink}>
                     Privacy
-                </Link>
+                </AppLink>
                 <span className={styles.footerSep} aria-hidden="true">
                     /
                 </span>
-                <Link href="/terms" className={styles.footerLink}>
+                <AppLink href="/terms" className={styles.footerLink}>
                     Terms of Use
-                </Link>
+                </AppLink>
                 <span className={styles.footerSep} aria-hidden="true">
                     /
                 </span>
