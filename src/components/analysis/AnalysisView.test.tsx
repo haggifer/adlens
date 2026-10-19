@@ -7,9 +7,10 @@ import { type Job, JobErrorCode, type JobMedia, JobStatus } from 'adlens-shared'
 import { AnalysisView } from './AnalysisView'
 
 const mockPush = jest.fn()
+const mockReplace = jest.fn()
 let mockJob: Job | undefined
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }) }))
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }) }))
 jest.mock('@/hooks/useJob', () => ({ useJob: () => ({ job: mockJob, isLoading: false, error: null }) }))
 jest.mock('@/hooks/useJobVideo', () => ({
     useJobVideo: jest.fn(() => ({ url: 'https://storage.example/video.mp4', isMissing: false })),
@@ -20,6 +21,7 @@ jest.mock('@vidstack/react', () => ({
 }))
 jest.mock('@vidstack/react/player/layouts/default', () => ({ DefaultVideoLayout: () => null, defaultLayoutIcons: {} }))
 jest.mock('./DeleteJobButton', () => ({ DeleteJobButton: () => null }))
+jest.mock('./RestartJobButton', () => ({ RestartJobButton: () => null }))
 jest.mock('@/components/utils/BackButton', () => ({ BackButton: () => null }))
 
 const MEDIA: JobMedia = {
@@ -43,6 +45,13 @@ describe('AnalysisView', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         jest.mocked(useJobVideo).mockReturnValue({ url: 'https://storage.example/video.mp4', isMissing: false })
+    })
+
+    it('shows the run that restarted a failed one instead', () => {
+        renderView(buildJob({ status: JobStatus.Error, restartedAs: 'job-2' }))
+
+        expect(mockReplace).toHaveBeenCalledWith('/analyses/job-2')
+        expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
     })
 
     it('replays the video next to the results of an analysis', async () => {

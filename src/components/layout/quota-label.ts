@@ -24,14 +24,12 @@ export const formatQuotaDate = (isoDate: string): string => {
     return `${read('month')} ${read('day')} ${read('hour')}:${read('minute')}`
 }
 
-// The window is rolling: at nextFreeAt the oldest counted analysis stops counting, which frees one analysis, not the
-// whole allowance. Null while none counts, and for an admin (no limit).
-export const describeNextFree = ({ used, limit, nextFreeAt }: Quota): string | null => {
+// When the oldest counted analysis stops counting. The window is rolling, so that frees one analysis, not the whole
+// allowance; the short wording is the maintainer's choice. Null while none counts, and for an admin (no limit).
+export const describeNextFree = ({ limit, nextFreeAt }: Quota): string | null => {
     if (limit === null || nextFreeAt === null) {
         return null
     }
 
-    const date = formatQuotaDate(nextFreeAt)
-
-    return used >= limit ? `Your next analysis frees up on ${date}` : `One more analysis frees up on ${date}`
+    return `Resets on ${formatQuotaDate(nextFreeAt)}`
 }

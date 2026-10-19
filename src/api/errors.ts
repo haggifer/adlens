@@ -24,6 +24,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
     // A failure after the upload and the format checks passed is nothing the user can act on, so it gets one message.
     [JobErrorCode.AnalysisFailed]: NOT_COUNTED_COPY,
     [JobErrorCode.AnalysisTimedOut]: NOT_COUNTED_COPY,
+    [JobErrorCode.ModelUnavailable]: `The AI service was overloaded or didn’t respond in time. ${NOT_COUNTED_COPY}`,
     [JobErrorCode.VideoCheckFailed]: NOT_COUNTED_COPY,
     [JobErrorCode.UploadFailed]: NOT_COUNTED_COPY,
     [RequestErrorCode.UploadIncomplete]: "The upload didn't finish. Please try again.",
@@ -36,6 +37,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
         'Too many analyses from your internet connection this week. Contact us if you need more.',
     [RequestErrorCode.DisposableEmail]: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
+    [RequestErrorCode.JobNotRestartable]: 'Sorry, restart is not available for this analysis.',
     [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
     [RequestErrorCode.PresetNameTaken]: 'A preset with this name already exists.',
@@ -98,6 +100,8 @@ export const describeJobErrorTitle = (code: JobErrorCode | undefined): string =>
             return 'This video can’t be analyzed'
         case JobErrorCode.UploadFailed:
             return 'The upload didn’t finish'
+        case JobErrorCode.ModelUnavailable:
+            return 'The AI service couldn’t complete this analysis'
         default:
             return 'Something went wrong with this analysis'
     }

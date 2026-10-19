@@ -1,12 +1,15 @@
 'use client'
 
 import { describeJobError, describeJobErrorTitle } from '@/api/errors'
-import { type Job, JobStatus } from 'adlens-shared'
+import { useNow } from '@/hooks/useNow'
+import { RESTART_CLOCK_MS } from '@/job-status'
+import { isJobRestartable, type Job, JobStatus } from 'adlens-shared'
 import { Alert, Button, Result, Steps } from 'antd'
 import { useTheme } from 'antd-style'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties } from 'react'
 import { AnalysisAnimation } from './AnalysisAnimation'
+import { RestartJobButton } from './RestartJobButton'
 import { useStyles } from './styles'
 
 const PROGRESS_STEPS = [
@@ -34,10 +37,12 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     const { styles, cx } = useStyles()
     const token = useTheme()
     const router = useRouter()
+    const now = useNow(RESTART_CLOCK_MS)
 
     const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
     const finishedIconStyle = { background: token.colorPrimary, color: token.colorTextLightSolid }
     const stepItems = getStepItems(current, finishedIconStyle)
+    const isRestartable = isJobRestartable(job, now)
     const newAnalysisButton = (
         <Button type="primary" onClick={() => router.push('/')}>
             Start a new analysis
@@ -52,9 +57,12 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
                     title={describeJobErrorTitle(job.errorCode)}
                     subTitle={describeJobError(job.errorCode)}
                     extra={
-                        <Button type="primary" onClick={() => router.push('/')}>
-                            Analyze another video
-                        </Button>
+                        <div className="d-flex flex-wrap justify-content-center gap-2">
+                            <Button type={isRestartable ? 'default' : 'primary'} onClick={() => router.push('/')}>
+                                Analyze another video
+                            </Button>
+                            {isRestartable && <RestartJobButton job={job} />}
+                        </div>
                     }
                 />
             </div>

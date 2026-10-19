@@ -11,6 +11,7 @@ import { DemoView } from './DemoView'
 let mockDemos: UseDemosResult
 
 jest.mock('@/hooks/useDemos', () => ({ useDemos: () => mockDemos }))
+jest.mock('@/components/analysis/RestartJobButton', () => ({ RestartJobButton: () => null }))
 jest.mock('@vidstack/react', () => ({
     MediaPlayer: ({ 'aria-label': label }: { 'aria-label': string }) => <div role="region" aria-label={label} />,
     MediaProvider: () => null,

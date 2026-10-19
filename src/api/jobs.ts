@@ -60,6 +60,12 @@ export const startAnalysis = async (jobId: string): Promise<Job> => {
     return data.job
 }
 
+export const restartJob = async (jobId: string): Promise<Job> => {
+    const { data } = await api.post<JobResponse>(`/v1/jobs/${jobId}/restart`)
+
+    return data.job
+}
+
 export const getJob = async (jobId: string): Promise<Job> => {
     const { data } = await api.get<JobResponse>(`/v1/jobs/${jobId}`)
 
