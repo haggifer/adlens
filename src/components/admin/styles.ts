@@ -21,6 +21,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         letter-spacing: -0.02em;
     `,
 
+    pageMeta: css`
+        margin: 0;
+        color: ${token.colorTextSecondary};
+        font-size: 0.9rem;
+    `,
+
     // Side by side, the presets, calendar and time columns make a popup about 520px wide, which antd then flips past
     // a phone's left edge. Below sm they stack in one column no wider than the screen: the presets as a row on top, the
     // time columns under the calendar. "&.ant-picker-dropdown" outranks antd's own ".ant-picker-dropdown …" rules.

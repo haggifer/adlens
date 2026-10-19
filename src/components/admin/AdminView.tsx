@@ -46,7 +46,13 @@ export function AdminView() {
 
     return (
         <section className={styles.page}>
-            <h1 className={styles.pageTitle}>Admin</h1>
+            <header className="d-flex flex-column gap-1">
+                <h1 className={styles.pageTitle}>Admin</h1>
+                <p className={styles.pageMeta}>
+                    Costs are estimates, priced at list prices from each job’s recorded Gemini calls. Cached input, the
+                    part of the input served from Vertex’s cache, bills at 10% of the input rate.
+                </p>
+            </header>
             {error && <Alert type="error" showIcon title={error.message} />}
             <Tabs
                 activeKey={tab}
