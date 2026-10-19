@@ -1,6 +1,7 @@
 'use client'
 
 import { type ApiRequestError, describePresetError } from '@/api/errors'
+import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { usePresets } from '@/hooks/usePresets'
 import { ImportOutlined } from '@ant-design/icons'
 import type { Preset } from 'adlens-shared'
@@ -116,7 +117,7 @@ export function ApplyPresetPopover({ onApply, selectedPresetId = null, isDisable
                 />
             }
         >
-            <Tooltip title={getTriggerTitle(isLoading ? [] : presets, selectedPresetId, error)}>
+            <ButtonTooltip title={getTriggerTitle(isLoading ? [] : presets, selectedPresetId, error)}>
                 {/* A disabled button takes no pointer events, so the wrapper carries the tooltip and the click. */}
                 <span className="d-inline-flex">
                     <Button
@@ -126,7 +127,7 @@ export function ApplyPresetPopover({ onApply, selectedPresetId = null, isDisable
                         disabled={isUnavailable}
                     />
                 </span>
-            </Tooltip>
+            </ButtonTooltip>
         </Popover>
     )
 }

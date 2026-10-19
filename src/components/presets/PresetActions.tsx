@@ -1,5 +1,6 @@
 'use client'
 
+import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { SaveOutlined, TagFilled } from '@ant-design/icons'
 import type { AnalysisSettingsInput, Preset } from 'adlens-shared'
 import { Button, Tooltip } from 'antd'
@@ -41,7 +42,7 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
                     </span>
                 </Tooltip>
             )}
-            <Tooltip title="Save as preset">
+            <ButtonTooltip title="Save as preset">
                 {/* A disabled button takes no pointer events, so the wrapper carries the tooltip during a run. */}
                 <span className="d-inline-flex">
                     <Button
@@ -52,7 +53,7 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
                         onClick={() => setIsSaveOpen(true)}
                     />
                 </span>
-            </Tooltip>
+            </ButtonTooltip>
             <ApplyPresetPopover
                 onApply={onApply}
                 selectedPresetId={isSelected ? appliedPreset.id : null}

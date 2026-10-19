@@ -1,10 +1,11 @@
 'use client'
 
 import { useAuth } from '@/auth/AuthContext'
+import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { usePresets } from '@/hooks/usePresets'
 import { PlusOutlined } from '@ant-design/icons'
 import { MAX_PRESETS } from 'adlens-shared'
-import { Alert, Button, Empty, Spin, Tooltip } from 'antd'
+import { Alert, Button, Empty, Spin } from 'antd'
 import { useState } from 'react'
 import { PresetModal } from './PresetModal'
 import { PresetsTable } from './PresetsTable'
@@ -44,9 +45,9 @@ export function PresetsView() {
             <div className={styles.titleRow}>
                 <h1 className={styles.pageTitle}>Presets</h1>
                 {isAtLimit ? (
-                    <Tooltip title={LIMIT_TOOLTIP}>
+                    <ButtonTooltip title={LIMIT_TOOLTIP}>
                         <span>{createButton}</span>
-                    </Tooltip>
+                    </ButtonTooltip>
                 ) : (
                     createButton
                 )}

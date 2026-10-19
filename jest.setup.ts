@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom'
 
-// antd's responsive helpers query matchMedia, which jsdom doesn't implement.
+// antd's responsive helpers query matchMedia, which jsdom doesn't implement. Tests run as a desktop with a mouse: it can
+// hover (useHoverCapable), and no width breakpoint matches.
 Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query: string) => ({
-        matches: false,
+        matches: query.includes('hover: hover'),
         media: query,
         onchange: null,
         addListener: () => {},

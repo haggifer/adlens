@@ -1,12 +1,13 @@
 'use client'
 
 import { toApiRequestError } from '@/api/errors'
+import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useDeleteJob } from '@/hooks/useDeleteJob'
 import { isJobInProgress } from '@/job-status'
 import { DeleteOutlined } from '@ant-design/icons'
 import type { Job } from 'adlens-shared'
-import { App, Button, Tooltip } from 'antd'
+import { App, Button } from 'antd'
 
 interface IProps {
     job: Job
@@ -59,9 +60,9 @@ export function DeleteJobButton({ job, isIconOnly, onDeleted }: IProps) {
 
     if (isRunning) {
         return (
-            <Tooltip title="You can delete it once the analysis finishes">
+            <ButtonTooltip title="You can delete it once the analysis finishes">
                 <span>{button}</span>
-            </Tooltip>
+            </ButtonTooltip>
         )
     }
 

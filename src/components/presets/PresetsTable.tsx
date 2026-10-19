@@ -1,12 +1,13 @@
 'use client'
 
 import { describePresetError } from '@/api/errors'
+import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { MODAL_WIDTH } from '@/design/theme'
 import { useDeletePreset } from '@/hooks/useDeletePreset'
 import { useSetDefaultPreset } from '@/hooks/useSetDefaultPreset'
 import { DeleteOutlined, EditOutlined, StarFilled, StarOutlined } from '@ant-design/icons'
 import type { Preset } from 'adlens-shared'
-import { App, Button, Table, type TableColumnsType, Tooltip } from 'antd'
+import { App, Button, Table, type TableColumnsType } from 'antd'
 import { type ReactNode, useState } from 'react'
 import { PresetModal } from './PresetModal'
 import { useStyles } from './styles'
@@ -58,7 +59,7 @@ const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
 
     return (
         <div className="d-flex justify-content-end gap-1">
-            <Tooltip title={preset.isDefault ? 'Default, click to unset' : 'Make default'}>
+            <ButtonTooltip title={preset.isDefault ? 'Default, click to unset' : 'Make default'}>
                 <Button
                     type={preset.isDefault ? 'primary' : 'text'}
                     icon={preset.isDefault ? <StarFilled /> : <StarOutlined />}
@@ -71,16 +72,16 @@ const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
                     loading={isSetting}
                     onClick={handleToggleDefault}
                 />
-            </Tooltip>
-            <Tooltip title="Edit">
+            </ButtonTooltip>
+            <ButtonTooltip title="Edit">
                 <Button
                     type="text"
                     icon={<EditOutlined />}
                     aria-label={`Edit ${preset.name}`}
                     onClick={() => onEdit(preset)}
                 />
-            </Tooltip>
-            <Tooltip title="Delete">
+            </ButtonTooltip>
+            <ButtonTooltip title="Delete">
                 <Button
                     type="text"
                     danger
@@ -88,7 +89,7 @@ const PresetRowActions = ({ preset, onEdit }: IActionsProps) => {
                     aria-label={`Delete ${preset.name}`}
                     onClick={handleDeleteClick}
                 />
-            </Tooltip>
+            </ButtonTooltip>
         </div>
     )
 }
