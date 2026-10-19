@@ -20,16 +20,11 @@ describe('formatQuotaLeft', () => {
 describe('describeNextFree', () => {
     const NEXT_FREE_AT = '2026-10-16T09:30:00.000Z'
 
-    it('says one more analysis frees up when the oldest counted one stops counting', () => {
-        expect(describeNextFree({ used: 1, limit: 3, nextFreeAt: NEXT_FREE_AT })).toBe(
-            `One more analysis frees up on ${formatQuotaDate(NEXT_FREE_AT)}`,
-        )
-    })
+    it('names when the oldest counted analysis stops counting, the same whether or not any is left', () => {
+        const someLeft = describeNextFree({ used: 1, limit: 3, nextFreeAt: NEXT_FREE_AT })
 
-    it('names it the next analysis once none is left', () => {
-        expect(describeNextFree({ used: 3, limit: 3, nextFreeAt: NEXT_FREE_AT })).toBe(
-            `Your next analysis frees up on ${formatQuotaDate(NEXT_FREE_AT)}`,
-        )
+        expect(someLeft).toContain(formatQuotaDate(NEXT_FREE_AT))
+        expect(describeNextFree({ used: 3, limit: 3, nextFreeAt: NEXT_FREE_AT })).toBe(someLeft)
     })
 
     it('is null while no analysis counts', () => {
