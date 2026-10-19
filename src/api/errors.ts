@@ -37,6 +37,7 @@ const ERROR_COPY: Record<ApiErrorCode, string> = {
         'Too many analyses from your internet connection this week. Contact us if you need more.',
     [RequestErrorCode.DisposableEmail]: 'Sign up with a permanent email address. Temporary inboxes aren’t accepted.',
     [RequestErrorCode.JobNotPending]: 'This analysis has already started.',
+    [RequestErrorCode.JobNotRestartable]: 'This analysis can’t be restarted anymore. Analyze the video again instead.',
     [RequestErrorCode.JobInProgress]: 'This analysis is still running. You can delete it once it finishes.',
     [RequestErrorCode.ValidationFailed]: 'Some of the settings are invalid.',
     [RequestErrorCode.PresetNameTaken]: 'A preset with this name already exists.',

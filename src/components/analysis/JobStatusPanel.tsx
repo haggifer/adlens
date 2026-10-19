@@ -1,8 +1,9 @@
 'use client'
 
-import { describeJobError, describeJobErrorTitle } from '@/api/errors'
-import { type Job, JobStatus } from 'adlens-shared'
-import { Alert, Button, Result, Steps } from 'antd'
+import { describeJobError, describeJobErrorTitle, toApiRequestError } from '@/api/errors'
+import { useRestartJob } from '@/hooks/useRestartJob'
+import { isJobRestartable, type Job, JobStatus } from 'adlens-shared'
+import { Alert, App, Button, Result, Steps } from 'antd'
 import { useTheme } from 'antd-style'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties } from 'react'
@@ -34,15 +35,28 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
     const { styles, cx } = useStyles()
     const token = useTheme()
     const router = useRouter()
+    const { notification } = App.useApp()
+
+    const { restartJob } = useRestartJob()
 
     const current = PROGRESS_STEPS.findIndex((step) => step.status === job.status)
     const finishedIconStyle = { background: token.colorPrimary, color: token.colorTextLightSolid }
     const stepItems = getStepItems(current, finishedIconStyle)
+    const isRestartable = isJobRestartable(job)
     const newAnalysisButton = (
         <Button type="primary" onClick={() => router.push('/')}>
             Start a new analysis
         </Button>
     )
+
+    const handleRestart = async () => {
+        try {
+            await restartJob(job)
+        } catch (error) {
+            console.error(error)
+            notification.error({ title: toApiRequestError(error).message, placement: 'bottomRight' })
+        }
+    }
 
     if (job.status === JobStatus.Error) {
         return (
@@ -52,9 +66,16 @@ export function JobStatusPanel({ job, isDisconnected = false }: IProps) {
                     title={describeJobErrorTitle(job.errorCode)}
                     subTitle={describeJobError(job.errorCode)}
                     extra={
-                        <Button type="primary" onClick={() => router.push('/')}>
-                            Analyze another video
-                        </Button>
+                        <div className="d-flex flex-wrap justify-content-center gap-2">
+                            {isRestartable && (
+                                <Button type="primary" onClick={handleRestart}>
+                                    Restart analysis
+                                </Button>
+                            )}
+                            <Button type={isRestartable ? 'default' : 'primary'} onClick={() => router.push('/')}>
+                                Analyze another video
+                            </Button>
+                        </div>
                     }
                 />
             </div>

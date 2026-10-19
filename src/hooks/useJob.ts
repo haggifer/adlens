@@ -62,12 +62,10 @@ export function useJob(jobId: string): UseJobResult {
     const isInProgress = Boolean(userId && status && isJobInProgress(status))
     const isDisconnected = isInProgress && (isConnectionLost || isRefetchError)
 
+    // Reset once the job leaves error, so a restarted run that fails again refreshes the limits again.
     if (status !== shownStatus) {
         setShownStatus(status)
-
-        if (status === JobStatus.Error && shownStatus) {
-            setHasFailedWhileWatched(true)
-        }
+        setHasFailedWhileWatched(status === JobStatus.Error && Boolean(shownStatus))
     }
 
     // A failed run isn't counted, so the header's count and whether Run is allowed change with it.

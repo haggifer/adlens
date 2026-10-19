@@ -11,6 +11,7 @@ let mockJob: Job | undefined
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }) }))
 jest.mock('@/hooks/useJob', () => ({ useJob: () => ({ job: mockJob, isLoading: false, error: null }) }))
+jest.mock('@/hooks/useRestartJob', () => ({ useRestartJob: () => ({ restartJob: jest.fn(), isRestarting: false }) }))
 jest.mock('@/hooks/useJobVideo', () => ({
     useJobVideo: jest.fn(() => ({ url: 'https://storage.example/video.mp4', isMissing: false })),
 }))
