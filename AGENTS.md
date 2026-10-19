@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # AGENTS.md
 
 Guidance for coding agents working in this repository. Read [README.md](README.md) first: it covers the stack,
-routes, environment and the design decisions behind them.
+routes and environment; the design decisions behind them are in [docs/design-decisions.md](docs/design-decisions.md).
 
 ## Commands
 
@@ -72,8 +72,8 @@ npm test             # Jest + React Testing Library
 - Formatting is Prettier (`.prettierrc`); linting is ESLint. Format only the files you touch.
 - Comments explain why, not what.
 - Commits follow Conventional Commits (`feat(scope): …`, `fix: …`, `docs: …`), one commit per distinct change.
-- When a change affects a command, env variable, rule above or design decision, update README.md or this file in the
-  same commit.
+- When a change affects a command, env variable, rule above or design decision, update README.md,
+  docs/design-decisions.md or this file in the same commit.
 
 ## Gotchas
 
