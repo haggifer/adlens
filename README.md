@@ -11,14 +11,13 @@ timestamped, cites the policy or guide it comes from, and seeks the replayed vid
 
 ![An example report: the findings next to the replayed video, which a finding's timestamp has seeked to the end card it cites](docs/report.png)
 
-AdLens is four repositories. This one is the web app; start here.
+AdLens is three repositories. This one is the web app; start here.
 
 | Repo                                                       | What it is                                                                                                |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | **adlens** (this repo)                                     | Next.js web app on Vercel                                                                                 |
 | [adlens-api](https://github.com/haggifer/adlens-api)       | NestJS API, the Gemini analysis worker and the daily cleanup on Cloud Run (with the architecture diagram) |
 | [adlens-shared](https://github.com/haggifer/adlens-shared) | The API contract: Zod schemas and inferred types, published to npm                                        |
-| [adlens-lab](https://github.com/haggifer/adlens-lab)       | Evaluation harness that runs the production analysis code on batches of videos, with traces and cost      |
 
 ## Highlights
 
@@ -35,9 +34,6 @@ AdLens is four repositories. This one is the web app; start here.
 - **A shared Zod contract on npm with exact pins**, rather than a monorepo: the web app and the API deploy
   independently, and every contract change is an explicit version bump
   ([adlens-shared](https://github.com/haggifer/adlens-shared#design-decisions)).
-- **Prompt changes are measured before they ship.** The lab runs production's analysis code on the same videos with
-  other settings. For example, whole-second timestamps replaced decimals that ran away to the token limit in 6 of 6
-  runs ([adlens-lab](https://github.com/haggifer/adlens-lab#lab-defaults-where-the-lab-differs-from-production)).
 - **The first analysis needs no account:** an anonymous session starts with the first run, Turnstile only interrupts
   when Cloudflare asks for a click, and the quota is a rolling 7-day window that refunds failed runs.
 
@@ -289,6 +285,5 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE.md): free to read, run and learn from, not for commercial use. The analysis
-lab ([adlens-lab](https://github.com/haggifer/adlens-lab)) and the contract package
-([adlens-shared](https://github.com/haggifer/adlens-shared)) are MIT.
+[PolyForm Noncommercial 1.0.0](LICENSE.md): free to read, run and learn from, not for commercial use. The contract
+package ([adlens-shared](https://github.com/haggifer/adlens-shared)) is MIT.
