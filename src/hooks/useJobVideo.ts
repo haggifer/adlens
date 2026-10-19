@@ -10,9 +10,10 @@ export interface UseJobVideoResult {
     isMissing: boolean
 }
 
-// Signed URLs live 15 minutes. A ≤60 s clip is buffered long before that, and swapping the URL would restart the
-// player, so the link is only refreshed when the page is opened again after it went stale.
-const VIDEO_URL_STALE_MS = 10 * 60 * 1000
+// The API signs a replay URL for 2 hours. A seek into a part of the video not loaded yet needs the URL still valid, and
+// swapping the URL would restart the player, so an open page keeps its URL (no refetch on focus or reconnect) and only a
+// page opened again past this age asks for a new one, with an hour or more left on it.
+const VIDEO_URL_STALE_MS = 60 * 60 * 1000
 
 export function useJobVideo(jobId: string, isEnabled: boolean): UseJobVideoResult {
     const { user } = useAuth()
@@ -21,6 +22,8 @@ export function useJobVideo(jobId: string, isEnabled: boolean): UseJobVideoResul
         queryFn: () => getJobVideo(jobId),
         enabled: Boolean(user) && isEnabled,
         staleTime: VIDEO_URL_STALE_MS,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     })
 
     return { url: data?.url, isMissing: error?.code === RequestErrorCode.NotFound }
