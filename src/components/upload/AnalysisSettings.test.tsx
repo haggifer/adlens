@@ -872,7 +872,7 @@ describe('AnalysisSettings', () => {
                     const saved = buildPreset({
                         id: 'preset-3',
                         name: 'First cut',
-                        settings: { platforms: [], placements: [], markets: [] },
+                        settings: { platforms: [], placements: [], markets: [Market.UK] },
                     })
                     let loadPresets!: (presets: Preset[]) => void
                     let finishSave!: (preset: Preset) => void
@@ -881,6 +881,7 @@ describe('AnalysisSettings', () => {
                     jest.mocked(createPreset).mockReturnValue(new Promise((resolve) => (finishSave = resolve)))
                     const { user, rerender } = renderSettings(signedOutAuth(), FILE_SOURCE)
 
+                    await toggleOption(user, getMarketsSelect(), MARKET_LABELS[Market.UK])
                     await user.click(screen.getByLabelText('Save as preset'))
                     await user.type(await screen.findByLabelText('Name'), saved.name)
                     await user.click(getSaveButtonByText())
