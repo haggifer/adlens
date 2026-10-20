@@ -19,7 +19,6 @@ const TOKEN_COLUMN_WIDTH = 160
 
 const LOCALE = { emptyText: 'No jobs' }
 
-// Wider than the page: it scrolls sideways rather than squeezing the columns.
 const SCROLL = { x: 'max-content' }
 
 const JOB_STATUS_ORDER = Object.values(JobStatus)
@@ -129,7 +128,6 @@ const getColumns = (isOtherInputShown: boolean, isUserListMissing: boolean): Tab
 
 interface IProps {
     jobs: AdminJob[]
-    // Every user, for each job's owner.
     users: AdminUser[]
     // The users query failed: no owner can be told apart from a deleted one.
     isUserListMissing?: boolean

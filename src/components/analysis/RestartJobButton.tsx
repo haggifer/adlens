@@ -14,8 +14,8 @@ interface IProps {
     isIconOnly?: boolean
 }
 
-// Runs a failed analysis again on its video. The API checks that the video is still there before anything changes,
-// so the user stays where they are, the button loading, until the new run has started, and only then moves to it.
+// The API checks that the video is still there before anything changes, so the user stays where they are, the button
+// loading, until the new run has started, and only then moves to it.
 export function RestartJobButton({ job, isIconOnly }: IProps) {
     const token = useTheme()
     const router = useRouter()

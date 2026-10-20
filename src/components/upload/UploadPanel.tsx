@@ -40,8 +40,7 @@ const withReadTimeout = <T,>(read: Promise<T>): Promise<T> =>
         read.then(resolve, reject).finally(() => clearTimeout(timer))
     })
 
-// Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
-// the browser can't decode) surface as an error so a doomed upload is stopped client-side.
+// Rejected reads (a file the browser can't decode) surface as an error so a doomed upload is stopped client-side.
 const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
     new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file)

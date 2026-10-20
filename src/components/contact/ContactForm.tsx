@@ -54,7 +54,6 @@ export function ContactForm({ onDone }: IProps) {
     const [formError, setFormError] = useState<string | null>(null)
     const [sentTo, setSentTo] = useState<string | null>(null)
     const [attachments, setAttachments] = useState<UploadFile[]>([])
-    // The screenshot shown full size, as an object URL of the picked file.
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const humanCheck = useRef<HumanCheckHandle>(null)
     const {

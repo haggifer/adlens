@@ -9,7 +9,6 @@ export interface SelectedVideo {
     type: string
     width?: number
     height?: number
-    // Set when the video is one of the published sample ads.
     sampleTitle?: string
 }
 

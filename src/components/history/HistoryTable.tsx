@@ -18,7 +18,6 @@ import { useStyles } from './styles'
 
 const formatCreatedAt = (job: Job) => new Date(job.createdAt).toLocaleString()
 
-// A failed run still within the start window gets its Restart next to the tag.
 const renderStatus = (job: Job, now: number) => (
     <span className="d-inline-flex align-items-center gap-1">
         <Tag color={JOB_STATUS_COLORS[job.status]}>{JOB_STATUS_LABELS[job.status]}</Tag>

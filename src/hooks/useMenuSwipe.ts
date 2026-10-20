@@ -36,7 +36,6 @@ const OWN_SWIPE_SELECTOR = [
 
 const getIsMenuShown = () => window.matchMedia(MENU_QUERY).matches
 
-// The server renders no menu swipe; the client takes over at hydration.
 const getIsMenuShownOnServer = () => false
 
 const subscribeToMenuQuery = (onChange: () => void) => {

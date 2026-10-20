@@ -17,7 +17,6 @@ interface ModelPricing {
     introductory?: Rates
 }
 
-// One billed Gemini call: what its price depends on.
 export interface GeminiCall {
     model: string
     location: string
@@ -118,7 +117,6 @@ export const splitCachedTokens = (cachedTokens: number, byModality: Record<strin
     return rest > 0 ? { ...byModality, [TEXT_MODALITY]: (byModality[TEXT_MODALITY] ?? 0) + rest } : byModality
 }
 
-// undefined for a model missing from the price list.
 export const priceGeminiCall = (call: GeminiCall): GeminiCallCost | undefined => {
     const pricing = PRICING[call.model]
 

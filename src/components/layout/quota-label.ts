@@ -25,7 +25,7 @@ export const formatQuotaDate = (isoDate: string): string => {
 }
 
 // When the oldest counted analysis stops counting. The window is rolling, so that frees one analysis, not the whole
-// allowance; the short wording is the maintainer's choice. Null while none counts, and for an admin (no limit).
+// allowance. Null while none counts, and for an admin (no limit).
 export const describeNextFree = ({ limit, nextFreeAt }: Quota): string | null => {
     if (limit === null || nextFreeAt === null) {
         return null

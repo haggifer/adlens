@@ -21,11 +21,9 @@ interface IProps {
     isDisconnected?: boolean
 }
 
-// The video beside its results (or the run's status): one analysis, wherever it's shown.
 export function AnalysisWorkspace({ job, videoUrl, hasPlayer, isDisconnected }: IProps) {
     const { styles, cx } = useStyles()
 
-    // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
     const playerRef = useRef<MediaPlayerInstance>(null)
 
     const handleSeek = (seconds: number) => {

@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Preset, SavePresetInput } from 'adlens-shared'
 
 export interface SavePresetVariables {
-    // Absent for a new preset.
     id?: string
     input: SavePresetInput
 }

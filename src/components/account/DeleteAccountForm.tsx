@@ -19,7 +19,6 @@ const SESSION_EXPIRED = 'SESSION_EXPIRED'
 
 const PASSWORD_INPUT_ID = 'delete-account-password'
 
-// What deleting removes, said on the Account page and again in the modal.
 export const DELETION_SCOPE = 'Deletes your account, every analysis and every uploaded video, permanently.'
 
 const withPasswordSchema = z.object({ password: z.string().min(1, 'Enter your password') })

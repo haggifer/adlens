@@ -37,7 +37,6 @@ interface IProps {
     className?: string
     // Loads the video at once rather than when the player scrolls into view.
     isEager?: boolean
-    // The player instance, for seeking from outside.
     playerRef?: RefObject<MediaPlayerInstance | null>
 }
 

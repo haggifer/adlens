@@ -27,7 +27,6 @@ const AUTH_ERROR_COPY: Record<string, string> = {
     EMAIL_NOT_SENT: 'We couldn’t send the email. Try again in a few minutes.',
     // One code in adlens-shared, so its copy has one owner.
     [RequestErrorCode.DisposableEmail]: describeRequestError(RequestErrorCode.DisposableEmail),
-    // Sign-up or sign-in succeeded, but the anonymous history couldn't be moved to the account.
     ACCOUNT_LINK_FAILED:
         'You’re signed in, but your earlier analyses couldn’t be moved. Contact us and we’ll move them.',
     // The confirmation link: it needs a session signed in as its own account.
@@ -54,7 +53,6 @@ export const isRateLimited = (error: AuthError | null): boolean => error?.status
 
 export const isNetworkError = (error: AuthError | null): boolean => error?.code === NETWORK_ERROR_CODE
 
-// A sign-up for an address that already has an account.
 export const isEmailInUse = (error: AuthError | null): boolean => ALREADY_IN_USE_CODES.has(error?.code ?? '')
 
 export const describeError = (error: AuthError | null): string => {

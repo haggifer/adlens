@@ -19,7 +19,6 @@ interface AnimatedIcon {
     color: PresetColor
 }
 
-// One fade in and out per icon.
 const ICON_CYCLE_MS = 800
 
 // What the analysis looks at: the ad, its picture, its sound, its text, the policies, the evidence.

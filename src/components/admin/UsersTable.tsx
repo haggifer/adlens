@@ -19,7 +19,6 @@ const USER_TYPE_ORDER = Object.values(AccountKind)
 
 const LOCALE = { emptyText: 'No users' }
 
-// Wider than a phone: it scrolls sideways inside its box rather than widening the page.
 const SCROLL = { x: 'max-content' }
 
 const COLUMNS: TableColumnsType<AdminUserRow> = [
@@ -57,7 +56,6 @@ const COLUMNS: TableColumnsType<AdminUserRow> = [
 
 interface IProps {
     users: AdminUser[]
-    // Every job, for each user's count and cost.
     jobs: AdminJob[]
     isLoading?: boolean
 }

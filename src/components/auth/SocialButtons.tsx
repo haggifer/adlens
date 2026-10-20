@@ -76,7 +76,6 @@ const startRedirectSignIn = (provider: SocialProvider) =>
 export function SocialButtons() {
     const { notification } = App.useApp()
 
-    // The provider whose button spins while its popup is in front.
     const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null)
     // Longer than the spinner: a popup the visitor left in the background can still finish the sign-in.
     const [isAwaitingOutcome, setIsAwaitingOutcome] = useState(false)
