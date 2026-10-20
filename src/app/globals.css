@@ -4,11 +4,10 @@
     margin: 0;
 }
 
-/* The gutter keeps the scrollbar's space whether or not a page scrolls, so the centred layout doesn't shift sideways
-   between a page that fits the screen (Analyze) and one that scrolls (History). */
+/* No `scrollbar-gutter: stable`: antd already makes up for the scrollbar it hides under a modal, and a reserved gutter
+   on top of that shifted the page by a scrollbar's width whenever a modal opened. */
 html {
     height: 100%;
-    scrollbar-gutter: stable;
 }
 
 /* On the root, not the app shell: the page background, a sibling of the shell, starts its glow under the header. */
@@ -42,7 +41,6 @@ html {
     }
 }
 
-/* No `max-width: 100vw`: with the stable gutter above, it left the page a scrollbar's width short of the window. */
 html,
 body {
     min-height: 100%;
