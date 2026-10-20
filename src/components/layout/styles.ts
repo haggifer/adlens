@@ -113,9 +113,14 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    // antd sizes an icon-only button's width with two classes (.ant-btn.ant-btn-icon-only), which a single class loses
+    // to: the square needs the same weight.
     menuButton: css`
-        width: 2.75rem;
-        height: 2.75rem;
+        &.ant-btn-icon-only {
+            width: 2.75rem;
+            height: 2.75rem;
+        }
+
         font-size: 1.25rem;
     `,
 
