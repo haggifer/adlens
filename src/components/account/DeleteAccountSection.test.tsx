@@ -4,9 +4,10 @@ import { describeError } from '@/auth/errors'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
+import type { QueryClient } from '@tanstack/react-query'
 import { screen, waitFor } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
-import { DeleteAccountForm } from './DeleteAccountForm'
+import { DeleteAccountSection } from './DeleteAccountSection'
 
 const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
@@ -18,25 +19,31 @@ jest.mock('@/auth/authClient', () => ({
     deleteUser: jest.fn(async () => ({ data: { success: true }, error: null })),
 }))
 
-// Each test types a password and waits for antd's confirmation dialog: seconds of work under a full parallel run.
+// Each test opens antd's modal and types a password: seconds of work under a full parallel run.
 jest.setTimeout(20_000)
 
 const PASSWORD = 'correct horse battery staple'
 
 const JOBS_KEY = ['jobs', MEMBER_USER.id]
 
-const renderForm = (hasPassword: boolean, auth: AuthContextValue = memberAuth()) => {
+const renderSection = (hasPassword: boolean, auth: AuthContextValue = memberAuth(), queryClient?: QueryClient) => {
     mockUseAuth.mockReturnValue(auth)
 
-    return renderWithProviders(<DeleteAccountForm hasPassword={hasPassword} />)
+    return renderWithProviders(<DeleteAccountSection hasPassword={hasPassword} />, queryClient)
 }
 
-const submitAndConfirm = async (user: UserEvent) => {
+const openModal = async (user: UserEvent) => {
     await user.click(screen.getByRole('button', { name: 'Delete account' }))
-    await user.click(await screen.findByRole('button', { name: 'Delete my account' }))
+
+    return screen.findByRole('dialog')
 }
 
-describe('DeleteAccountForm', () => {
+const getDeleteButton = () => screen.getByRole('button', { name: 'Delete' })
+
+const expectModalClosed = () =>
+    waitFor(() => expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument())
+
+describe('DeleteAccountSection', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         useAuthModalStore.setState({ view: null })
@@ -44,26 +51,34 @@ describe('DeleteAccountForm', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
-    describe('with a password', () => {
-        it('asks for the password before offering to delete', async () => {
-            const { user } = renderForm(true)
+    it('shows only its title and the button that opens the deletion', () => {
+        renderSection(true)
 
-            await user.click(screen.getByRole('button', { name: 'Delete account' }))
+        expect(screen.getByRole('heading', { name: 'Delete account' })).toBeInTheDocument()
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
+    })
+
+    describe('with a password', () => {
+        it('asks for the password before deleting', async () => {
+            const { user } = renderSection(true)
+
+            await openModal(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText('Enter your password')).toBeInTheDocument()
-            expect(screen.queryByRole('button', { name: 'Delete my account' })).not.toBeInTheDocument()
             expect(deleteUser).not.toHaveBeenCalled()
         })
 
-        it('deletes with the password once confirmed, drops the cached data and goes home', async () => {
+        it('deletes with the password, drops the cached data and goes home', async () => {
             const queryClient = createTestQueryClient()
 
             queryClient.setQueryData(JOBS_KEY, { pages: [] })
-            mockUseAuth.mockReturnValue(memberAuth())
-            const { user } = renderWithProviders(<DeleteAccountForm hasPassword />, queryClient)
+            const { user } = renderSection(true, memberAuth(), queryClient)
 
+            await openModal(user)
             await user.type(screen.getByLabelText('Password'), PASSWORD)
-            await submitAndConfirm(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText('Your account has been deleted')).toBeInTheDocument()
             expect(deleteUser).toHaveBeenCalledWith({ password: PASSWORD })
@@ -72,29 +87,34 @@ describe('DeleteAccountForm', () => {
             expect(mockPush).toHaveBeenCalledWith('/')
         })
 
-        it('keeps the account when the user cancels', async () => {
-            const { user } = renderForm(true)
+        it('keeps the account when the user cancels, and forgets the typed password', async () => {
+            const { user } = renderSection(true)
 
+            await openModal(user)
             await user.type(screen.getByLabelText('Password'), PASSWORD)
-            await user.click(screen.getByRole('button', { name: 'Delete account' }))
-            await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+            await user.click(screen.getByRole('button', { name: 'Cancel' }))
+            await expectModalClosed()
+            await openModal(user)
 
             expect(deleteUser).not.toHaveBeenCalled()
+            expect(screen.getByLabelText('Password')).toHaveValue('')
         })
 
-        it('shows the copy for a wrong password and keeps the user signed in', async () => {
+        it('shows the copy for a wrong password, keeps the modal open and the user signed in', async () => {
             const auth = memberAuth()
 
             jest.mocked(deleteUser).mockResolvedValueOnce({
                 data: null,
                 error: { status: 400, code: 'INVALID_PASSWORD', message: 'Raw server text' },
             } as never)
-            const { user } = renderForm(true, auth)
+            const { user } = renderSection(true, auth)
 
+            await openModal(user)
             await user.type(screen.getByLabelText('Password'), 'wrong')
-            await submitAndConfirm(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText(describeError({ code: 'INVALID_PASSWORD' }))).toBeInTheDocument()
+            expect(getDeleteButton()).toBeInTheDocument()
             expect(auth.signOut).not.toHaveBeenCalled()
             expect(mockPush).not.toHaveBeenCalled()
         })
@@ -107,10 +127,11 @@ describe('DeleteAccountForm', () => {
                 data: null,
                 error: { status: 400, code: 'SESSION_EXPIRED' },
             } as never)
-            const { user } = renderForm(true, auth)
+            const { user } = renderSection(true, auth)
 
+            await openModal(user)
             await user.type(screen.getByLabelText('Password'), PASSWORD)
-            await submitAndConfirm(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText(describeError({ code: 'SESSION_EXPIRED' }))).toBeInTheDocument()
             expect(auth.signOut).not.toHaveBeenCalled()
@@ -119,37 +140,41 @@ describe('DeleteAccountForm', () => {
     })
 
     describe('without a password', () => {
-        it('asks for no password and deletes once confirmed', async () => {
-            const { user } = renderForm(false)
+        it('asks for no password and deletes from the modal', async () => {
+            const { user } = renderSection(false)
+
+            await openModal(user)
 
             expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
 
-            await submitAndConfirm(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText('Your account has been deleted')).toBeInTheDocument()
             expect(deleteUser).toHaveBeenCalledWith({})
         })
 
-        it('asks to sign in again when the session is too old to delete without a password', async () => {
+        it('closes the modal and asks to sign in again when the session is too old', async () => {
             const auth = memberAuth()
 
             jest.mocked(deleteUser).mockResolvedValueOnce({
                 data: null,
                 error: { status: 400, code: 'SESSION_EXPIRED' },
             } as never)
-            const { user } = renderForm(false, auth)
+            const { user } = renderSection(false, auth)
 
-            await submitAndConfirm(user)
+            await openModal(user)
+            await user.click(getDeleteButton())
 
             expect(
                 await screen.findByText('For your security, sign in again to delete your account.'),
             ).toBeInTheDocument()
             await waitFor(() => expect(useAuthModalStore.getState().view).toBe('signin'))
+            await expectModalClosed()
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             expect(mockPush).not.toHaveBeenCalled()
         })
 
-        it('shows the error and closes the modal instead of hanging when sign-out fails before re-authentication', async () => {
+        it('shows the error and closes the modal when sign-out fails before re-authentication', async () => {
             const auth = memberAuth()
             const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -158,17 +183,16 @@ describe('DeleteAccountForm', () => {
                 error: { status: 400, code: 'SESSION_EXPIRED' },
             } as never)
             jest.mocked(auth.signOut).mockRejectedValueOnce({ status: 500 })
-            const { user } = renderForm(false, auth)
+            const { user } = renderSection(false, auth)
 
-            await submitAndConfirm(user)
+            await openModal(user)
+            await user.click(getDeleteButton())
 
             expect(await screen.findByText(describeError({ status: 500 }))).toBeInTheDocument()
             expect(
                 screen.queryByText('For your security, sign in again to delete your account.'),
             ).not.toBeInTheDocument()
-            await waitFor(() =>
-                expect(screen.queryByRole('button', { name: 'Delete my account' })).not.toBeInTheDocument(),
-            )
+            await expectModalClosed()
             expect(useAuthModalStore.getState().view).toBeNull()
             expect(mockPush).not.toHaveBeenCalled()
             expect(consoleError).toHaveBeenCalledTimes(1)

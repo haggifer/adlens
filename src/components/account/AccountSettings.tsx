@@ -10,7 +10,7 @@ import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { Alert, App, Button, Skeleton } from 'antd'
 import { useState } from 'react'
 import { ChangePasswordForm } from './ChangePasswordForm'
-import { DeleteAccountForm } from './DeleteAccountForm'
+import { DeleteAccountSection } from './DeleteAccountSection'
 import { SetPasswordSection } from './SetPasswordSection'
 import { useStyles } from './styles'
 
@@ -104,7 +104,7 @@ export function AccountSettings() {
                         </Button>
                     </div>
                 </div>
-                {providers && <DeleteAccountForm hasPassword={hasPassword} />}
+                {providers && <DeleteAccountSection hasPassword={hasPassword} />}
             </div>
         </section>
     )
