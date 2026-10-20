@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/auth/AuthContext'
+import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
 import { ButtonTooltip } from '@/components/utils/ButtonTooltip'
 import { usePresets } from '@/hooks/usePresets'
 import { PlusOutlined } from '@ant-design/icons'
@@ -16,6 +17,7 @@ const LIMIT_TOOLTIP = `You can keep up to ${MAX_PRESETS} presets`
 // No PrivateRoute: a visitor without a session sees the empty state, and creating a preset starts the session.
 export function PresetsView() {
     const { styles } = useStyles()
+    const { styles: analysisStyles } = useAnalysisStyles()
     const { isInitializing } = useAuth()
 
     const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -43,7 +45,7 @@ export function PresetsView() {
     return (
         <section className={styles.page}>
             <div className={styles.titleRow}>
-                <h1 className={styles.pageTitle}>Presets</h1>
+                <h1 className={analysisStyles.pageTitle}>Presets</h1>
                 {isAtLimit ? (
                     <ButtonTooltip title={LIMIT_TOOLTIP}>
                         <span>{createButton}</span>

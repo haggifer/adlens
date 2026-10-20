@@ -15,6 +15,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 1.25rem;
         flex: 1;
         padding: 2rem 0;
+
+        /* The top of the Examples page (analysis styles' page), so every page's title starts at the same height. */
+        @media (max-width: 991.98px) {
+            padding-top: 1.5rem;
+        }
     `,
 
     titleRow: css`
@@ -22,15 +27,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
-    `,
-
-    pageTitle: css`
-        margin: 0;
-        font-family: ${HEADING_FONT_STACK};
-        color: ${token.colorTextHeading};
-        font-size: clamp(1.75rem, 4vw, 2.25rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
     `,
 
     gate: css`

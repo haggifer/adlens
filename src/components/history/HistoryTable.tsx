@@ -2,6 +2,7 @@
 
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { RestartJobButton } from '@/components/analysis/RestartJobButton'
+import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
 import { useJobs } from '@/hooks/useJobs'
 import { useNow } from '@/hooks/useNow'
 import { usePresets } from '@/hooks/usePresets'
@@ -109,6 +110,7 @@ const getColumns = (
 
 export function HistoryTable() {
     const { styles } = useStyles()
+    const { styles: analysisStyles } = useAnalysisStyles()
     const router = useRouter()
     const now = useNow(RESTART_CLOCK_MS)
 
@@ -129,7 +131,7 @@ export function HistoryTable() {
 
     return (
         <section className={styles.page}>
-            <h1 className={styles.pageTitle}>History</h1>
+            <h1 className={analysisStyles.pageTitle}>History</h1>
             {error && <Alert type="error" showIcon title={error.message} />}
             <Table<Job>
                 rowKey="id"
