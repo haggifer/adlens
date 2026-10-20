@@ -5,8 +5,9 @@ import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { createTestQueryClient, renderWithProviders } from '@/test/render'
 import type { QueryClient } from '@tanstack/react-query'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
+import { DELETION_SCOPE } from './DeleteAccountForm'
 import { DeleteAccountSection } from './DeleteAccountSection'
 
 const mockPush = jest.fn()
@@ -38,10 +39,10 @@ const openModal = async (user: UserEvent) => {
     return screen.findByRole('dialog')
 }
 
-const getDeleteButton = () => screen.getByRole('button', { name: 'Delete' })
+// The page's button and the modal's submit share the label, so the submit is looked up inside the modal.
+const getDeleteButton = () => within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete account' })
 
-const expectModalClosed = () =>
-    waitFor(() => expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument())
+const expectModalClosed = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
 describe('DeleteAccountSection', () => {
     beforeEach(() => {
@@ -51,10 +52,11 @@ describe('DeleteAccountSection', () => {
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('shows only its title and the button that opens the deletion', () => {
+    it('shows only its title, what deleting removes and the button that opens the deletion', () => {
         renderSection(true)
 
         expect(screen.getByRole('heading', { name: 'Delete account' })).toBeInTheDocument()
+        expect(screen.getByText(DELETION_SCOPE)).toBeInTheDocument()
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
         expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
     })

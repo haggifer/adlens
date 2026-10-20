@@ -19,6 +19,9 @@ const SESSION_EXPIRED = 'SESSION_EXPIRED'
 
 const PASSWORD_INPUT_ID = 'delete-account-password'
 
+// What deleting removes, said on the Account page and again in the modal.
+export const DELETION_SCOPE = 'Deletes your account, every analysis and every uploaded video, permanently.'
+
 const withPasswordSchema = z.object({ password: z.string().min(1, 'Enter your password') })
 
 const withoutPasswordSchema = z.object({ password: z.string() })
@@ -92,7 +95,7 @@ export function DeleteAccountForm({ hasPassword, onClose }: IProps) {
     return (
         <form className="d-flex flex-column gap-3" onSubmit={handleSubmit(deleteAccount)}>
             <p className={styles.sectionText}>
-                Deletes your account, every analysis and every uploaded video, permanently. This can’t be undone.
+                {DELETION_SCOPE} This can’t be undone.
                 {hasPassword && ' Enter your password to confirm.'}
             </p>
             {hasPassword && (
@@ -114,7 +117,7 @@ export function DeleteAccountForm({ hasPassword, onClose }: IProps) {
             <div className="d-flex justify-content-end gap-2 mt-2">
                 <Button onClick={onClose}>Cancel</Button>
                 <Button type="primary" danger htmlType="submit" loading={isSubmitting}>
-                    Delete
+                    Delete account
                 </Button>
             </div>
         </form>

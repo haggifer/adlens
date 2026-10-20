@@ -3,7 +3,7 @@
 import { MODAL_WIDTH } from '@/design/theme'
 import { Button, Modal } from 'antd'
 import { useState } from 'react'
-import { DeleteAccountForm } from './DeleteAccountForm'
+import { DeleteAccountForm, DELETION_SCOPE } from './DeleteAccountForm'
 import { useStyles } from './styles'
 
 const TITLE = 'Delete account'
@@ -22,6 +22,7 @@ export function DeleteAccountSection({ hasPassword }: IProps) {
     return (
         <div className={cx(styles.section, styles.dangerSection)}>
             <h2 className={styles.sectionTitle}>{TITLE}</h2>
+            <p className={styles.sectionText}>{DELETION_SCOPE}</p>
             <div>
                 <Button type="primary" danger onClick={() => setIsOpen(true)}>
                     {TITLE}
