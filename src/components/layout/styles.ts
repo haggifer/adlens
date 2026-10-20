@@ -113,7 +113,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
-    // antd's icon-only button is already a square of the control height (36px); only the icon grows.
     menuButton: css`
         font-size: 1.25rem;
     `,
