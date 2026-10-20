@@ -4,6 +4,7 @@ import { ApiRequestError } from '@/api/errors'
 import { revokeOtherSessions } from '@/auth/authClient'
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
+import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
 import { useLinkedAccounts } from '@/hooks/useLinkedAccounts'
 import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { Alert, App, Button, Skeleton } from 'antd'
@@ -30,6 +31,7 @@ const describeProvidersError = (error: AuthError | ApiRequestError) =>
 
 export function AccountSettings() {
     const { styles } = useStyles()
+    const { styles: analysisStyles } = useAnalysisStyles()
     const { notification } = App.useApp()
     const { user } = useAuth()
 
@@ -60,7 +62,7 @@ export function AccountSettings() {
             <section className="d-flex justify-content-center">
                 <div className={styles.column}>
                     <div className="d-flex flex-column gap-1">
-                        <h1 className={styles.pageTitle}>Account</h1>
+                        <h1 className={analysisStyles.pageTitle}>Account</h1>
                         <Skeleton active title={false} paragraph={USER_LINE_SKELETON} />
                     </div>
                     {SECTION_SKELETONS.map((paragraph, index) => (
@@ -77,7 +79,7 @@ export function AccountSettings() {
         <section className="d-flex justify-content-center">
             <div className={styles.column}>
                 <div className="d-flex flex-column gap-1">
-                    <h1 className={styles.pageTitle}>Account</h1>
+                    <h1 className={analysisStyles.pageTitle}>Account</h1>
                     {/* Sign-up asks for no name; only Google and GitHub sign-ins bring one. */}
                     <p className={styles.sectionText}>{[user.name, user.email].filter(Boolean).join(' · ')}</p>
                 </div>
