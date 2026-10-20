@@ -8,6 +8,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 0.25rem;
         padding-bottom: 0.5rem;
         color: ${token.colorPrimary};
+
+        /* The lift lines the logo up with the desktop nav; behind the burger menu there is no nav to line up with. */
+        @media (max-width: 991.98px) {
+            padding-bottom: 0;
+        }
     `,
 
     logoMark: css`
