@@ -7,7 +7,7 @@ interface AmbientColors {
 // The page background: the layout colour with a soft glow of the primary colour at the top and the bottom. The top glow
 // is placed from the header's bottom edge (--header-h), so it starts under the plain header rather than behind it. Its
 // sizes are viewport units, so any element painting it with `background-attachment: fixed` lines up with the page
-// exactly. The top glow's radii are CSS variables (globals.css), so phones get a wider, lower one.
+// exactly. The top glow's radii are CSS variables (globals.css), so narrow screens get a wider, lower one.
 export const ambientBackground = ({ colorPrimary, colorWhite, colorBgLayout }: AmbientColors, isDarkMode: boolean) => {
     // In dark mode the raw primary is too dark to read over the near-black base, so lift the glow toward white.
     const accent = isDarkMode ? `color-mix(in srgb, ${colorPrimary}, ${colorWhite} 35%)` : colorPrimary
