@@ -23,7 +23,7 @@ export function DeleteAccountSection({ hasPassword }: IProps) {
         <div className={cx(styles.section, styles.dangerSection)}>
             <h2 className={styles.sectionTitle}>{TITLE}</h2>
             <div>
-                <Button danger onClick={() => setIsOpen(true)}>
+                <Button type="primary" danger onClick={() => setIsOpen(true)}>
                     {TITLE}
                 </Button>
             </div>
