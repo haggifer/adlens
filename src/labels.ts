@@ -1,4 +1,5 @@
 import type { SocialProvider } from '@/auth/types'
+import { getPlatformPlacements, withPlatformPlacements } from '@/components/upload/platform-placements'
 import { JobStatus, Market, MAX_DURATION_S, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
@@ -44,7 +45,21 @@ export const RULE_PLATFORM_LABELS: Record<RulePlatform, string> = {
     [RulePlatform.All]: 'All platforms',
 }
 
-const PLACEMENT_LABELS: Record<Placement, string> = {
+// Blue, green, red and cyan are left out: History's status and preset tags use them in the same rows.
+export const PLATFORM_COLORS: Record<Platform, string> = {
+    [Platform.Meta]: 'geekblue',
+    [Platform.TikTok]: 'magenta',
+    [Platform.YouTube]: 'volcano',
+    [Platform.Snapchat]: 'gold',
+    [Platform.Pinterest]: 'lime',
+    [Platform.LinkedIn]: 'purple',
+    [Platform.Amazon]: 'orange',
+}
+
+// An analysis with no placement chosen is checked against every placement of its platforms.
+export const ALL_PLACEMENTS_LABEL = 'All placements'
+
+export const PLACEMENT_LABELS: Record<Placement, string> = {
     [Placement.MetaFeed]: 'Feed',
     [Placement.MetaReels]: 'Reels',
     [Placement.MetaStories]: 'Stories',
@@ -103,6 +118,28 @@ export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
 
 export const formatPlatforms = (platforms: Platform[]): string =>
     platforms.length ? platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ') : ALL_PLATFORMS_LABEL
+
+// A platform's only placement needs no platform name beside it: "TikTok (In-feed)".
+const formatPlacementOfPlatform = (placement: Placement): string =>
+    getPlatformPlacements(PLACEMENT_PLATFORM[placement]).length === 1
+        ? PLACEMENT_LABELS[placement]
+        : formatPlacementLabel(placement)
+
+const formatPlatformWithPlacements = (platform: Platform, placements: Placement[]): string => {
+    const labels = placements
+        .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
+        .map(formatPlacementOfPlatform)
+
+    return labels.length ? `${PLATFORM_LABELS[platform]} (${labels.join(', ')})` : PLATFORM_LABELS[platform]
+}
+
+export const formatPlatformsWithPlacements = (platforms: Platform[], placements: Placement[]): string => {
+    const allPlacements = withPlatformPlacements(platforms, placements)
+
+    return platforms.length
+        ? platforms.map((platform) => formatPlatformWithPlacements(platform, allPlacements)).join(', ')
+        : ALL_PLATFORMS_LABEL
+}
 
 // Rule topics are ids of the form `category:subject` (`deceptive:fake_ui`); the report shows them as words.
 const TOPIC_CATEGORY_LABELS: Record<string, string> = {

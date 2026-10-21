@@ -3,7 +3,7 @@
 import { BackButton } from '@/components/utils/BackButton'
 import { useJob } from '@/hooks/useJob'
 import { useJobVideo } from '@/hooks/useJobVideo'
-import { formatPlatforms } from '@/labels'
+import { formatPlatformsWithPlacements } from '@/labels'
 import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
@@ -26,7 +26,7 @@ export function AnalysisView({ jobId }: IProps) {
     const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
     const { url, isMissing } = useJobVideo(jobId, hasVideo)
 
-    const platforms = job ? formatPlatforms(job.settings.platforms) : ''
+    const platforms = job ? formatPlatformsWithPlacements(job.settings.platforms, job.settings.placements) : ''
     const restartedAs = job?.restartedAs
 
     // A restarted run is kept only as a record: its page shows the run that replaced it.

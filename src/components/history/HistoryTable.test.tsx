@@ -5,10 +5,24 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { buildJob, buildPreset } from '@/test/fixtures'
 import { RESTART_CLOCK_MS } from '@/job-status'
-import { JOB_STATUS_LABELS } from '@/labels'
+import {
+    ALL_PLACEMENTS_LABEL,
+    ALL_PLATFORMS_LABEL,
+    formatPlacementLabel,
+    JOB_STATUS_LABELS,
+    PLATFORM_LABELS,
+} from '@/labels'
 import { renderWithProviders } from '@/test/render'
 import { act, screen, waitFor, within } from '@testing-library/react'
-import { type Job, type JobListResponse, JOB_START_WINDOW_MS, JobStatus, RequestErrorCode } from 'adlens-shared'
+import {
+    type Job,
+    type JobListResponse,
+    JOB_START_WINDOW_MS,
+    JobStatus,
+    Placement,
+    Platform,
+    RequestErrorCode,
+} from 'adlens-shared'
 import { HistoryTable } from './HistoryTable'
 
 const mockPush = jest.fn()
@@ -89,6 +103,52 @@ describe('HistoryTable', () => {
             renderTable()
 
             expect(within(await rowOf(JOB.file.name)).getByText('—')).toBeInTheDocument()
+        })
+
+        it("tags each platform, and each placement in its platform's colour", async () => {
+            jest.mocked(listJobs).mockResolvedValue(
+                page([
+                    buildJob({
+                        settings: {
+                            platforms: [Platform.Meta, Platform.YouTube],
+                            placements: [Placement.MetaReels, Placement.YouTubeShorts],
+                            markets: [],
+                        },
+                    }),
+                ]),
+            )
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+            const metaTag = within(row).getByText(PLATFORM_LABELS[Platform.Meta]).closest('.ant-tag')
+            const youTubeTag = within(row).getByText(PLATFORM_LABELS[Platform.YouTube]).closest('.ant-tag')
+            const reelsTag = within(row).getByTitle(formatPlacementLabel(Placement.MetaReels))
+            const shortsTag = within(row).getByTitle(formatPlacementLabel(Placement.YouTubeShorts))
+
+            expect(metaTag?.className).not.toBe(youTubeTag?.className)
+            expect(reelsTag.className).toBe(metaTag?.className)
+            expect(shortsTag.className).toBe(youTubeTag?.className)
+        })
+
+        it('tags every placement of a platform saved without any of them, as the analysis page lists them', async () => {
+            jest.mocked(listJobs).mockResolvedValue(
+                page([buildJob({ settings: { platforms: [Platform.TikTok], placements: [], markets: [] } })]),
+            )
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+
+            expect(within(row).getByTitle(formatPlacementLabel(Placement.TikTokInFeed))).toBeInTheDocument()
+            expect(within(row).queryByText(ALL_PLACEMENTS_LABEL)).not.toBeInTheDocument()
+        })
+
+        it('tags a run with no platform or placement chosen as checked against all of them', async () => {
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+
+            expect(within(row).getByText(ALL_PLATFORMS_LABEL).closest('.ant-tag')).not.toBeNull()
+            expect(within(row).getByText(ALL_PLACEMENTS_LABEL).closest('.ant-tag')).not.toBeNull()
         })
     })
 

@@ -33,6 +33,16 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
+    tags: css`
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+
+        .ant-tag {
+            margin: 0;
+        }
+    `,
+
     row: css`
         cursor: pointer;
     `,

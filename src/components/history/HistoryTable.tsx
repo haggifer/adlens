@@ -3,13 +3,30 @@
 import { DeleteJobButton } from '@/components/analysis/DeleteJobButton'
 import { RestartJobButton } from '@/components/analysis/RestartJobButton'
 import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
+import { withPlatformPlacements } from '@/components/upload/platform-placements'
 import { useJobs } from '@/hooks/useJobs'
 import { useNow } from '@/hooks/useNow'
 import { usePresets } from '@/hooks/usePresets'
 import { RESTART_CLOCK_MS } from '@/job-status'
-import { formatPlatforms, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '@/labels'
+import {
+    ALL_PLACEMENTS_LABEL,
+    ALL_PLATFORMS_LABEL,
+    formatPlacementLabel,
+    JOB_STATUS_COLORS,
+    JOB_STATUS_LABELS,
+    PLACEMENT_LABELS,
+    PLATFORM_COLORS,
+    PLATFORM_LABELS,
+} from '@/labels'
 import { TagFilled } from '@ant-design/icons'
-import { isJobRestartable, type Job, type Preset } from 'adlens-shared'
+import {
+    isJobRestartable,
+    type Job,
+    type Placement,
+    PLACEMENT_PLATFORM,
+    type Platform,
+    type Preset,
+} from 'adlens-shared'
 import { Alert, Button, Empty, Table, type TableColumnsType, Tag } from 'antd'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -24,6 +41,34 @@ const renderStatus = (job: Job, now: number) => (
         {isJobRestartable(job, now) && <RestartJobButton job={job} isIconOnly />}
     </span>
 )
+
+const renderPlatformTags = (platforms: Platform[]) =>
+    platforms.length ? (
+        platforms.map((platform) => (
+            <Tag key={platform} color={PLATFORM_COLORS[platform]}>
+                {PLATFORM_LABELS[platform]}
+            </Tag>
+        ))
+    ) : (
+        <Tag>{ALL_PLATFORMS_LABEL}</Tag>
+    )
+
+// Screen readers don't get the colour that ties a placement to its platform, and two platforms have a "Single video".
+const renderPlacementTags = (placements: Placement[]) =>
+    placements.length ? (
+        placements.map((placement) => (
+            <Tag
+                key={placement}
+                color={PLATFORM_COLORS[PLACEMENT_PLATFORM[placement]]}
+                title={formatPlacementLabel(placement)}
+            >
+                <span className="visually-hidden">{PLACEMENT_PLATFORM[placement]} </span>
+                {PLACEMENT_LABELS[placement]}
+            </Tag>
+        ))
+    ) : (
+        <Tag>{ALL_PLACEMENTS_LABEL}</Tag>
+    )
 
 const toNamesById = (presets: Preset[]) => new Map(presets.map((preset) => [preset.id, preset.name]))
 
@@ -70,10 +115,20 @@ const getColumns = (
     {
         title: 'Platforms',
         key: 'platforms',
-        // With the Preset column, Video keeps about 200px of a 944px table at 992px and about 300px at 1200px.
-        width: '20%',
+        width: '17%',
         responsive: ['lg'],
-        render: (_, job) => formatPlatforms(job.settings.platforms),
+        render: (_, job) => <div className={styles.tags}>{renderPlatformTags(job.settings.platforms)}</div>,
+    },
+    {
+        title: 'Placements',
+        key: 'placements',
+        width: '17%',
+        responsive: ['xl'],
+        render: (_, job) => (
+            <div className={styles.tags}>
+                {renderPlacementTags(withPlatformPlacements(job.settings.platforms, job.settings.placements))}
+            </div>
+        ),
     },
     {
         title: 'Preset',

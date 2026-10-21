@@ -3,12 +3,15 @@ import {
     ALL_PLATFORMS_LABEL,
     formatDuration,
     formatMarkets,
+    formatPlacementLabel,
     formatPlatforms,
+    formatPlatformsWithPlacements,
     formatTopic,
     MARKET_LABELS,
+    PLACEMENT_LABELS,
     PLATFORM_LABELS,
 } from '@/labels'
-import { Market, Platform } from 'adlens-shared'
+import { Market, Placement, Platform } from 'adlens-shared'
 
 describe('formatPlatforms', () => {
     it('lists the chosen platforms', () => {
@@ -19,6 +22,39 @@ describe('formatPlatforms', () => {
 
     it('names every platform when none was chosen', () => {
         expect(formatPlatforms([])).toBe(ALL_PLATFORMS_LABEL)
+    })
+})
+
+describe('formatPlatformsWithPlacements', () => {
+    const TIKTOK = `${PLATFORM_LABELS[Platform.TikTok]} (${PLACEMENT_LABELS[Placement.TikTokInFeed]})`
+
+    it("names a platform's only placement without repeating the platform", () => {
+        expect(formatPlatformsWithPlacements([Platform.TikTok], [Placement.TikTokInFeed])).toBe(TIKTOK)
+    })
+
+    it('names each chosen placement of a platform that has several, with the platform', () => {
+        const placements = [Placement.YouTubeSkippableInStream, Placement.YouTubeNonSkippableInStream]
+
+        expect(formatPlatformsWithPlacements([Platform.YouTube], placements)).toBe(
+            `${PLATFORM_LABELS[Platform.YouTube]} (${placements.map(formatPlacementLabel).join(', ')})`,
+        )
+    })
+
+    it('lists each platform with its own placements', () => {
+        expect(
+            formatPlatformsWithPlacements(
+                [Platform.YouTube, Platform.TikTok],
+                [Placement.TikTokInFeed, Placement.YouTubeShorts],
+            ),
+        ).toBe(`${PLATFORM_LABELS[Platform.YouTube]} (${formatPlacementLabel(Placement.YouTubeShorts)}), ${TIKTOK}`)
+    })
+
+    it('gives a platform saved without any of its placements all of them', () => {
+        expect(formatPlatformsWithPlacements([Platform.TikTok], [])).toBe(TIKTOK)
+    })
+
+    it('names every platform when none was chosen', () => {
+        expect(formatPlatformsWithPlacements([], [])).toBe(ALL_PLATFORMS_LABEL)
     })
 })
 
