@@ -6,7 +6,6 @@ import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { useStyles as useAnalysisStyles } from '@/components/analysis/styles'
 import { useLinkedAccounts } from '@/hooks/useLinkedAccounts'
-import { SOCIAL_PROVIDER_LABELS } from '@/labels'
 import { Alert, App, Button, Skeleton } from 'antd'
 import { useState } from 'react'
 import { ChangePasswordForm } from './ChangePasswordForm'
@@ -16,13 +15,8 @@ import { useStyles } from './styles'
 
 const PASSWORD_PROVIDER = 'credential'
 
-const METHOD_LABELS: Record<string, string> = { [PASSWORD_PROVIDER]: 'Email and password', ...SOCIAL_PROVIDER_LABELS }
-
-const formatMethods = (providers: string[]) =>
-    providers.map((provider) => METHOD_LABELS[provider] ?? provider).join(', ')
-
-// Text rows per section placeholder, roughly matching the sign-in methods, password, sessions and deletion cards.
-const SECTION_SKELETONS = [1, 5, 2, 3].map((rows) => ({ rows }))
+// Text rows per section placeholder, roughly matching the password, sessions and deletion cards.
+const SECTION_SKELETONS = [5, 2, 3].map((rows) => ({ rows }))
 
 const USER_LINE_SKELETON = { rows: 1, width: '60%' }
 
@@ -84,15 +78,7 @@ export function AccountSettings() {
                     <p className={styles.sectionText}>{[user.name, user.email].filter(Boolean).join(' · ')}</p>
                 </div>
                 {providersError && <Alert type="error" showIcon title={describeProvidersError(providersError)} />}
-                {providers && (
-                    <>
-                        <div className={styles.section}>
-                            <h2 className={styles.sectionTitle}>Sign-in methods</h2>
-                            <p className={styles.sectionText}>{formatMethods(providers)}</p>
-                        </div>
-                        {hasPassword ? <ChangePasswordForm /> : <SetPasswordSection />}
-                    </>
-                )}
+                {providers && (hasPassword ? <ChangePasswordForm /> : <SetPasswordSection />)}
                 <div className={styles.section}>
                     <h2 className={styles.sectionTitle}>Other devices</h2>
                     <p className={styles.sectionText}>

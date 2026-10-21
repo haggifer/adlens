@@ -31,7 +31,7 @@ const CURRENT_PASSWORD = 'correct horse battery staple'
 
 const NEW_PASSWORD = 'a-new-password-123'
 
-const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Other devices', 'Delete account']
+const SECTION_HEADINGS = ['Change password', 'Other devices', 'Delete account']
 
 const renderSettings = (auth: AuthContextValue = memberAuth()) => {
     mockUseAuth.mockReturnValue(auth)
@@ -46,8 +46,7 @@ describe('AccountSettings', () => {
         linkAccounts('credential', 'google')
         const { queryClient, user } = renderSettings()
 
-        expect(await screen.findByText('Email and password, Google')).toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Change password' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Change password' })).toBeInTheDocument()
         expect(queryClient.getQueryData(['linkedAccounts', MEMBER_USER.id])).toEqual(['credential', 'google'])
 
         await user.click(screen.getByRole('button', { name: 'Delete account' }))
@@ -59,9 +58,8 @@ describe('AccountSettings', () => {
         linkAccounts('github')
         const { user } = renderSettings()
 
-        expect(await screen.findByText('GitHub')).toBeInTheDocument()
+        expect(await screen.findByRole('button', { name: /email me a link/i })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Change password' })).not.toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /email me a link/i })).toBeInTheDocument()
 
         await user.click(screen.getByRole('button', { name: 'Delete account' }))
 
@@ -89,7 +87,7 @@ describe('AccountSettings', () => {
         linkAccounts('credential')
         const { container } = renderSettings()
 
-        expect(await screen.findByRole('heading', { name: 'Sign-in methods' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Change password' })).toBeInTheDocument()
 
         for (const heading of SECTION_HEADINGS) {
             expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
