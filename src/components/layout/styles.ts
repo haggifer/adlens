@@ -1,5 +1,8 @@
 import { createStyles } from 'antd-style'
 
+// 1200px of content between the 1.5rem side paddings, so History's tag columns fit beside the video name.
+const MAX_LAYOUT_WIDTH = '1248px'
+
 export const useStyles = createStyles(({ token, css }) => ({
     appShell: css`
         position: relative;
@@ -19,7 +22,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         flex: 1;
         flex-direction: column;
         width: 100%;
-        max-width: 1120px;
+        max-width: ${MAX_LAYOUT_WIDTH};
         margin: 0 auto;
         padding: 0 var(--main-pad-x);
 
@@ -42,7 +45,7 @@ export const useStyles = createStyles(({ token, css }) => ({
         align-items: center;
         justify-content: space-between;
         gap: 1.5rem;
-        max-width: 1120px;
+        max-width: ${MAX_LAYOUT_WIDTH};
         height: 64px;
         margin: 0 auto;
         padding: 0 1.5rem;

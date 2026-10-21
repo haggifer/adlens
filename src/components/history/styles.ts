@@ -37,9 +37,13 @@ export const useStyles = createStyles(({ token, css }) => ({
         display: flex;
         flex-wrap: wrap;
         gap: 0.25rem;
+        min-width: 0;
 
         .ant-tag {
+            max-width: 100%;
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     `,
 

@@ -108,14 +108,16 @@ const getColumns = (
     {
         title: 'Platforms',
         key: 'platforms',
-        width: '17%',
+        // The widest tag, "Meta (Facebook, Instagram)", plus the cell's padding.
+        width: '13rem',
         responsive: ['lg'],
         render: (_, job) => <div className={styles.tags}>{renderPlatformTags(job.settings.platforms)}</div>,
     },
     {
         title: 'Placements',
         key: 'placements',
-        width: '17%',
+        // The widest tag, "YouTube · Non-skippable in-stream", plus the cell's padding.
+        width: '15.75rem',
         responsive: ['xl'],
         render: (_, job) => (
             <div className={styles.tags}>
