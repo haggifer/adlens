@@ -1,5 +1,5 @@
 import type { SocialProvider } from '@/auth/types'
-import { getPlatformPlacements, withPlatformPlacements } from '@/components/upload/platform-placements'
+import { withPlatformPlacements } from '@/components/upload/platform-placements'
 import { JobStatus, Market, MAX_DURATION_S, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
@@ -119,18 +119,23 @@ export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
 export const formatPlatforms = (platforms: Platform[]): string =>
     platforms.length ? platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ') : ALL_PLATFORMS_LABEL
 
-// A platform's only placement needs no platform name beside it: "TikTok (In-feed)".
-const formatPlacementOfPlatform = (placement: Placement): string =>
-    getPlatformPlacements(PLACEMENT_PLATFORM[placement]).length === 1
+// Meta's option label lists its apps, which its placements in brackets would follow.
+const PLATFORM_WITH_PLACEMENTS_LABELS: Record<Platform, string> = { ...PLATFORM_LABELS, [Platform.Meta]: 'Meta' }
+
+// A placement keeps its prefix only where it names something else than the platform: Google (YouTube · Shorts), but
+// Amazon Ads (Sponsored Brands video).
+const formatPlacementOfPlatform = (placement: Placement, platformLabel: string): string =>
+    platformLabel.startsWith(PLACEMENT_PLATFORM[placement])
         ? PLACEMENT_LABELS[placement]
         : formatPlacementLabel(placement)
 
 const formatPlatformWithPlacements = (platform: Platform, placements: Placement[]): string => {
-    const labels = placements
+    const label = PLATFORM_WITH_PLACEMENTS_LABELS[platform]
+    const placementLabels = placements
         .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
-        .map(formatPlacementOfPlatform)
+        .map((placement) => formatPlacementOfPlatform(placement, label))
 
-    return labels.length ? `${PLATFORM_LABELS[platform]} (${labels.join(', ')})` : PLATFORM_LABELS[platform]
+    return placementLabels.length ? `${label} (${placementLabels.join(', ')})` : label
 }
 
 export const formatPlatformsWithPlacements = (platforms: Platform[], placements: Placement[]): string => {

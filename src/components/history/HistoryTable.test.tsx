@@ -122,12 +122,12 @@ describe('HistoryTable', () => {
             const row = await rowOf(JOB.file.name)
             const metaTag = within(row).getByText(PLATFORM_LABELS[Platform.Meta]).closest('.ant-tag')
             const youTubeTag = within(row).getByText(PLATFORM_LABELS[Platform.YouTube]).closest('.ant-tag')
-            const reelsTag = within(row).getByTitle(formatPlacementLabel(Placement.MetaReels))
-            const shortsTag = within(row).getByTitle(formatPlacementLabel(Placement.YouTubeShorts))
+            const reelsTag = within(row).getByText(formatPlacementLabel(Placement.MetaReels)).closest('.ant-tag')
+            const shortsTag = within(row).getByText(formatPlacementLabel(Placement.YouTubeShorts)).closest('.ant-tag')
 
             expect(metaTag?.className).not.toBe(youTubeTag?.className)
-            expect(reelsTag.className).toBe(metaTag?.className)
-            expect(shortsTag.className).toBe(youTubeTag?.className)
+            expect(reelsTag?.className).toBe(metaTag?.className)
+            expect(shortsTag?.className).toBe(youTubeTag?.className)
         })
 
         it('tags every placement of a platform saved without any of them, as the analysis page lists them', async () => {
@@ -138,7 +138,9 @@ describe('HistoryTable', () => {
 
             const row = await rowOf(JOB.file.name)
 
-            expect(within(row).getByTitle(formatPlacementLabel(Placement.TikTokInFeed))).toBeInTheDocument()
+            expect(
+                within(row).getByText(formatPlacementLabel(Placement.TikTokInFeed)).closest('.ant-tag'),
+            ).toBeInTheDocument()
             expect(within(row).queryByText(ALL_PLACEMENTS_LABEL)).not.toBeInTheDocument()
         })
 

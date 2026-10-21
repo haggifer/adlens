@@ -14,7 +14,6 @@ import {
     formatPlacementLabel,
     JOB_STATUS_COLORS,
     JOB_STATUS_LABELS,
-    PLACEMENT_LABELS,
     PLATFORM_COLORS,
     PLATFORM_LABELS,
 } from '@/labels'
@@ -53,17 +52,11 @@ const renderPlatformTags = (platforms: Platform[]) =>
         <Tag>{ALL_PLATFORMS_LABEL}</Tag>
     )
 
-// Screen readers don't get the colour that ties a placement to its platform, and two platforms have a "Single video".
 const renderPlacementTags = (placements: Placement[]) =>
     placements.length ? (
         placements.map((placement) => (
-            <Tag
-                key={placement}
-                color={PLATFORM_COLORS[PLACEMENT_PLATFORM[placement]]}
-                title={formatPlacementLabel(placement)}
-            >
-                <span className="visually-hidden">{PLACEMENT_PLATFORM[placement]} </span>
-                {PLACEMENT_LABELS[placement]}
+            <Tag key={placement} color={PLATFORM_COLORS[PLACEMENT_PLATFORM[placement]]}>
+                {formatPlacementLabel(placement)}
             </Tag>
         ))
     ) : (

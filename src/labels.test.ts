@@ -28,11 +28,20 @@ describe('formatPlatforms', () => {
 describe('formatPlatformsWithPlacements', () => {
     const TIKTOK = `${PLATFORM_LABELS[Platform.TikTok]} (${PLACEMENT_LABELS[Placement.TikTokInFeed]})`
 
-    it("names a platform's only placement without repeating the platform", () => {
+    it('leaves out a placement prefix that repeats the platform', () => {
         expect(formatPlatformsWithPlacements([Platform.TikTok], [Placement.TikTokInFeed])).toBe(TIKTOK)
+        expect(formatPlatformsWithPlacements([Platform.Amazon], [Placement.AmazonSponsoredBrandsVideo])).toBe(
+            `${PLATFORM_LABELS[Platform.Amazon]} (${PLACEMENT_LABELS[Placement.AmazonSponsoredBrandsVideo]})`,
+        )
     })
 
-    it('names each chosen placement of a platform that has several, with the platform', () => {
+    it("names Meta without its apps, so its placements' brackets aren't the second pair", () => {
+        expect(formatPlatformsWithPlacements([Platform.Meta], [Placement.MetaStories])).toBe(
+            `${Platform.Meta} (${PLACEMENT_LABELS[Placement.MetaStories]})`,
+        )
+    })
+
+    it('keeps the prefix of a placement named after something else than its platform', () => {
         const placements = [Placement.YouTubeSkippableInStream, Placement.YouTubeNonSkippableInStream]
 
         expect(formatPlatformsWithPlacements([Platform.YouTube], placements)).toBe(
