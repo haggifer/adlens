@@ -74,7 +74,7 @@ export function AnalysisView({ jobId }: IProps) {
                     <div className="d-flex flex-column gap-1">
                         <div className="d-flex align-items-center gap-2">
                             <h1 className={styles.pageTitle}>{job.file.name}</h1>
-                            {job.sampleId && <Tag color="processing">Sample ad</Tag>}
+                            {job.sampleId && <Tag color="purple">Sample</Tag>}
                         </div>
                         <p className={styles.pageMeta}>
                             {platforms} · {new Date(job.createdAt).toLocaleString()}
