@@ -23,6 +23,7 @@ const rowOf = (id: string, createdAt: string, user?: AdminUser): AdminJobRow => 
     name: `${id}.mp4`,
     user,
     isUnrecorded: false,
+    models: [],
 })
 
 const ROWS = [

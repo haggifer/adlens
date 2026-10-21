@@ -47,6 +47,8 @@ export interface AdminJobRow {
     usage?: JobUsage
     // Has usage totals from before each call was recorded, so there's nothing to break down or price.
     isUnrecorded: boolean
+    // Each model the job's recorded calls used, in call order; a retry may have run on another one.
+    models: string[]
 }
 
 export interface AdminUserRow extends UserJobsSummary {
@@ -169,6 +171,8 @@ export const getUserType = (user: AdminUser): AccountKind => {
     return user.emailVerified ? AccountKind.Member : AccountKind.Unconfirmed
 }
 
+const getCallModels = (job: AdminJob): string[] => [...new Set((job.usage?.calls ?? []).map((call) => call.model))]
+
 export const toJobRows = (jobs: AdminJob[], users: AdminUser[]): AdminJobRow[] => {
     const usersById = new Map(users.map((user) => [user.id, user]))
 
@@ -178,6 +182,7 @@ export const toJobRows = (jobs: AdminJob[], users: AdminUser[]): AdminJobRow[] =
         user: usersById.get(job.userId),
         usage: summarizeJobUsage(job),
         isUnrecorded: Boolean(job.usage) && !job.usage?.calls?.length,
+        models: getCallModels(job),
     }))
 }
 

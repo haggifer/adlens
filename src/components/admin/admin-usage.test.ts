@@ -104,6 +104,16 @@ describe('summarizeJobUsage', () => {
         expect(usage?.byKind[TokenKind.VideoInput].tokens).toBe(0)
     })
 
+    it('prices each call at its own model’s rates', () => {
+        const argonCall = { ...CALL, model: 'gemini-4-argon' }
+        const usage = summarizeJobUsage(jobWith({ usage: { calls: [CALL, argonCall] } }))
+        const flashCost = priceGeminiCall(GEMINI_CALL)?.total ?? 0
+        const argonCost = priceGeminiCall({ ...GEMINI_CALL, model: argonCall.model })?.total ?? 0
+
+        expect(argonCost).toBeGreaterThan(flashCost)
+        expect(usage?.usd).toBeCloseTo(flashCost + argonCost, 10)
+    })
+
     it('keeps the tokens but drops the costs when a call’s model is unpriced', () => {
         const usage = summarizeJobUsage(jobWith({ usage: { calls: [CALL, { ...CALL, model: 'some-future-model' }] } }))
 
@@ -160,6 +170,13 @@ describe('toJobRows', () => {
         expect(rows.map((row) => row.isUnrecorded)).toEqual([false, true, false])
         expect(rows[0].usage?.usd).toBeCloseTo(0.01043025, 10)
         expect(rows[1].usage).toBeUndefined()
+    })
+
+    it('lists each model the job’s calls used once, in call order, and none for a job without calls', () => {
+        const calls = [CALL, { ...CALL, model: 'gemini-4-argon' }, CALL]
+        const rows = toJobRows([jobWith({ usage: { calls } }), jobWith({ id: 'j2', usage: {} })], [])
+
+        expect(rows.map((row) => row.models)).toEqual([[CALL.model, 'gemini-4-argon'], []])
     })
 
     it('gives each job its owner, and none to a job whose owner isn’t a user, like a demo', () => {

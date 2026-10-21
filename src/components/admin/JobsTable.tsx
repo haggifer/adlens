@@ -103,6 +103,13 @@ const getColumns = (isOtherInputShown: boolean, isUserListMissing: boolean): Tab
         sorter: (a, b) => a.job.userId.localeCompare(b.job.userId),
         render: (_, row) => <Typography.Text copyable>{row.job.userId}</Typography.Text>,
     },
+    {
+        title: 'Model',
+        key: 'model',
+        width: 170,
+        sorter: (a, b) => a.models.join().localeCompare(b.models.join()),
+        render: (_, row) => (row.models.length ? row.models.join(', ') : renderMissing(row)),
+    },
     getTokenColumn('Video input', TokenKind.VideoInput),
     getTokenColumn('Audio input', TokenKind.AudioInput),
     getTokenColumn('Text input', TokenKind.TextInput),

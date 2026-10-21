@@ -57,8 +57,10 @@ const getCellElements = (name: string) => within(getRow(name)).getAllByRole('cel
 
 const getCells = (name: string) => getCellElements(name).map((cell) => cell.textContent)
 
-// After Created, Name, Status, User email and User id.
-const getUsageCells = (name: string) => getCells(name).slice(5)
+const getModelCell = (name: string) => getCells(name)[5]
+
+// After Created, Name, Status, User email, User id and Model.
+const getUsageCells = (name: string) => getCells(name).slice(6)
 
 const getEmailCell = (name: string) => getCellElements(name)[3]
 
@@ -123,6 +125,19 @@ describe('JobsTable', () => {
 
         expect(getUsageCells('old.mp4')).toEqual(['—', '—', '—', '—', '—', '—', '—', '—'])
         expect(getUsageCells('never.mp4')).toEqual(['—', '—', '—', '—', '—', '—', '—', '—'])
+        expect(getModelCell('old.mp4')).toBe('—')
+        expect(getModelCell('never.mp4')).toBe('—')
+    })
+
+    it('names the models the job’s calls ran on, each once, before the token columns', () => {
+        const calls = [CALL, { ...CALL, model: 'gemini-4-argon' }, CALL]
+
+        renderWithProviders(<JobsTable users={[USER]} jobs={[toJob('retried', { usage: { calls } })]} />)
+
+        const headers = getHeaders()
+
+        expect(headers.indexOf('Model')).toBe(headers.indexOf('Video input') - 1)
+        expect(getModelCell('retried.mp4')).toBe(`${CALL.model}, gemini-4-argon`)
     })
 
     it('shows how long the job’s Gemini calls took together, after the cost', () => {
