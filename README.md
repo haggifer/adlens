@@ -1,11 +1,39 @@
-# AdLens (web)
+# AdLens
 
-The AdLens web client. Upload a video ad of up to 3 minutes, say where it will run (platforms, placements,
+AI policy checks for video ads. Upload an ad of up to 3 minutes, say where it will run (platforms, placements,
 markets), and AdLens checks it against the platforms' ad policies and creative best practices. Every finding is
-timestamped, links to the policy or guide it comes from, and seeks the replayed video when clicked.
+timestamped, cites the policy or guide it comes from, and seeks the replayed video when clicked.
 
-It talks to the [AdLens API](https://github.com/haggifer/adlens-api) and shares the API contract through the
-[`adlens-shared`](https://www.npmjs.com/package/adlens-shared) package.
+**[Try it live](https://www.useadlens.com)** · **[Example reports](https://www.useadlens.com/demo)** (no sign-up)
+
+[![CI](https://github.com/haggifer/adlens/actions/workflows/ci.yml/badge.svg?branch=init-setup)](https://github.com/haggifer/adlens/actions/workflows/ci.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE.md)
+
+AdLens is three repositories. This one is the web app; start here.
+
+| Repo                                                       | What it is                                                                                                |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **adlens** (this repo)                                     | Next.js web app on Vercel                                                                                 |
+| [adlens-api](https://github.com/haggifer/adlens-api)       | NestJS API, the Gemini analysis worker and the daily cleanup on Cloud Run (with the architecture diagram) |
+| [adlens-shared](https://github.com/haggifer/adlens-shared) | The API contract: Zod schemas and inferred types, published to npm                                        |
+
+## Highlights
+
+- **Race-safe job lifecycle.** Every status change is one conditional update on the expected status, so a double
+  click or a retried request can't verify, charge or start an analysis twice, and a failed run is always refunded
+  ([API: Job lifecycle](https://github.com/haggifer/adlens-api#job-lifecycle)).
+- **Uploads go straight to Cloud Storage** through V4 signed URLs that bind the exact type and size and can only
+  create, so the API never carries the video and a verified upload can't be replaced.
+- **One Cloud Run image, three entry points:** the API, an on-demand analysis job (one execution per analysis,
+  nothing running between them) and a scheduled daily cleanup
+  ([API: Design decisions](https://github.com/haggifer/adlens-api#design-decisions)).
+- **Live updates are signals, not data.** The API announces a change over Ably and the tab reads it again through
+  the API, which stays the one place that decides what a user may see.
+- **A shared Zod contract on npm with exact pins**, rather than a monorepo: the web app and the API deploy
+  independently, and every contract change is an explicit version bump
+  ([adlens-shared](https://github.com/haggifer/adlens-shared#design-decisions)).
+- **The first analysis needs no account:** an anonymous session starts with the first run, Turnstile only interrupts
+  when Cloudflare asks for a click, and the quota is a rolling 7-day window that refunds failed runs.
 
 ## Stack
 
@@ -266,6 +294,5 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE.md): free to read, run and learn from, not for commercial use. The analysis
-lab ([adlens-lab](https://github.com/haggifer/adlens-lab)) and the contract package
-([adlens-shared](https://github.com/haggifer/adlens-shared)) are MIT.
+[PolyForm Noncommercial 1.0.0](LICENSE.md): free to read, run and learn from, not for commercial use. The contract
+package ([adlens-shared](https://github.com/haggifer/adlens-shared)) is MIT.
