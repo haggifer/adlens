@@ -23,8 +23,9 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     videoName: css`
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem 0.5rem;
         min-width: 0;
 
         .ant-tag {
@@ -54,9 +55,8 @@ export const useStyles = createStyles(({ token, css }) => ({
     videoLink: css`
         color: ${token.colorText};
         font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        /* File names often have no spaces to break at. */
+        overflow-wrap: anywhere;
     `,
 
     compactMeta: css`

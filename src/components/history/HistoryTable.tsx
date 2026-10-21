@@ -87,7 +87,7 @@ const getColumns = (
             return (
                 <div className={styles.videoCell}>
                     <div className={styles.videoName}>
-                        <Link href={`/analyses/${job.id}`} className={styles.videoLink} title={job.file.name}>
+                        <Link href={`/analyses/${job.id}`} className={styles.videoLink}>
                             {job.file.name}
                         </Link>
                         {job.sampleId && <Tag color="processing">Sample</Tag>}
