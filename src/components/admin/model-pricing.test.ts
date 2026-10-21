@@ -77,6 +77,22 @@ describe('priceGeminiCall', () => {
         expect(priceGeminiCall({ ...CALL, location: 'europe-west1' })?.thinking).toBeCloseTo(0.003980625, 10)
     })
 
+    it('prices Gemini 4 Argon at its promotional rate through November 2026 and its list rate from December', () => {
+        const argon = { ...CALL, model: 'gemini-4-argon', at: '2026-11-30T23:59:00.000Z' }
+
+        // 8,447 input tokens × $2 + 1,092 output and thinking tokens × $10, per million.
+        expect(priceGeminiCall(argon)?.total).toBeCloseTo(0.027814, 10)
+        expect(priceGeminiCall({ ...argon, at: '2026-12-01T00:00:00.000Z' })?.total).toBeCloseTo(0.055628, 10)
+    })
+
+    it('prices Gemini 4 Argon cached input at 5% of the input rate', () => {
+        const cost = priceGeminiCall({ ...CALL, model: 'gemini-4-argon', cachedTokensByModality: { TEXT: 4000 } })
+
+        // (1,717 + 4,000 × 5%) × $2 and 4,000 × $0.1, per million.
+        expect(cost?.inputByModality.TEXT).toBeCloseTo(0.003834, 10)
+        expect(cost?.cached).toBeCloseTo(0.0004, 10)
+    })
+
     it('prices a Flex call at half of every line, cached input included', () => {
         const flex = priceGeminiCall({ ...CALL, trafficType: 'ON_DEMAND_FLEX', cachedTokensByModality: { TEXT: 4000 } })
 
