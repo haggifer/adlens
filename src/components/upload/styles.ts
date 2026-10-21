@@ -318,18 +318,15 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
         opacity: 0;
         transition: opacity 0.2s ease;
 
-        /* The video stage is always black regardless of app theme, so these use fixed white values —
-           theme tokens would render dark-on-black in light mode. */
-        .ant-btn {
-            color: #ffffff;
-            background: transparent;
-            border: none;
-            transition: background 0.2s ease;
-        }
-
-        .ant-btn:hover {
+        /* The video stage is always black regardless of app theme, so these use fixed values — theme tokens would
+           render dark-on-black in light mode. antd's hover, focus and pressed styles would recolour them. */
+        .ant-btn,
+        .ant-btn:hover,
+        .ant-btn:focus,
+        .ant-btn:active {
             color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.2) !important;
+            background: rgba(50, 50, 50, 0.8) !important;
+            border: none !important;
         }
 
         @media (hover: none) {
