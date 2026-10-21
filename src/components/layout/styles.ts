@@ -1,6 +1,6 @@
 import { createStyles } from 'antd-style'
 
-// 1200px of content between the 1.5rem side paddings, so History's tag columns fit beside the video name.
+// Room for History's tag columns beside the video name: about 1200px of content inside the side paddings.
 const MAX_LAYOUT_WIDTH = '1248px'
 
 export const useStyles = createStyles(({ token, css }) => ({

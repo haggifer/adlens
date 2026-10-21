@@ -44,7 +44,7 @@ const renderStatus = (job: Job, now: number) => (
 const renderPlatformTags = (platforms: Platform[]) =>
     platforms.length ? (
         platforms.map((platform) => (
-            <Tag key={platform} color={PLATFORM_COLORS[platform]}>
+            <Tag key={platform} color={PLATFORM_COLORS[platform]} title={PLATFORM_LABELS[platform]}>
                 {PLATFORM_LABELS[platform]}
             </Tag>
         ))
@@ -55,7 +55,11 @@ const renderPlatformTags = (platforms: Platform[]) =>
 const renderPlacementTags = (placements: Placement[]) =>
     placements.length ? (
         placements.map((placement) => (
-            <Tag key={placement} color={PLATFORM_COLORS[PLACEMENT_PLATFORM[placement]]}>
+            <Tag
+                key={placement}
+                color={PLATFORM_COLORS[PLACEMENT_PLATFORM[placement]]}
+                title={formatPlacementLabel(placement)}
+            >
                 {formatPlacementLabel(placement)}
             </Tag>
         ))
@@ -108,7 +112,7 @@ const getColumns = (
     {
         title: 'Platforms',
         key: 'platforms',
-        // The widest tag, "Meta (Facebook, Instagram)", plus the cell's padding.
+        // Fits the longest platform tag at the default font size; a longer one is cut off, with its label on hover.
         width: '13rem',
         responsive: ['lg'],
         render: (_, job) => <div className={styles.tags}>{renderPlatformTags(job.settings.platforms)}</div>,
@@ -116,7 +120,7 @@ const getColumns = (
     {
         title: 'Placements',
         key: 'placements',
-        // The widest tag, "YouTube · Non-skippable in-stream", plus the cell's padding.
+        // Fits the longest placement tag at the default font size; a longer one is cut off, with its label on hover.
         width: '15.75rem',
         responsive: ['xl'],
         render: (_, job) => (
