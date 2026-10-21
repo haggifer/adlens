@@ -90,7 +90,7 @@ const getColumns = (
                         <Link href={`/analyses/${job.id}`} className={styles.videoLink}>
                             {job.file.name}
                         </Link>
-                        {job.sampleId && <Tag color="processing">Sample</Tag>}
+                        {job.sampleId && <Tag color="purple">Sample</Tag>}
                     </div>
                     {/* Phones drop the Status and Created columns, so the row carries them under the name. */}
                     <div className={styles.compactMeta}>

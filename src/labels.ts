@@ -45,14 +45,15 @@ export const RULE_PLATFORM_LABELS: Record<RulePlatform, string> = {
     [RulePlatform.All]: 'All platforms',
 }
 
-// Blue, green, red and cyan are left out: History's status and preset tags use them in the same rows.
+// Green, red, cyan and purple are left out: History's status, preset and sample tags use them in the same rows. The one
+// preset left, yellow, is too pale to read, so LinkedIn shares blue with the in-progress statuses in their own column.
 export const PLATFORM_COLORS: Record<Platform, string> = {
     [Platform.Meta]: 'geekblue',
     [Platform.TikTok]: 'magenta',
     [Platform.YouTube]: 'volcano',
     [Platform.Snapchat]: 'gold',
     [Platform.Pinterest]: 'lime',
-    [Platform.LinkedIn]: 'purple',
+    [Platform.LinkedIn]: 'blue',
     [Platform.Amazon]: 'orange',
 }
 
