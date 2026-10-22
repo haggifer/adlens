@@ -121,8 +121,8 @@ Imports use the `@/*` alias, which maps to `src/*`.
 
 ## Deployment
 
-Vercel builds and deploys every push to `init-setup` to production at `https://www.useadlens.com` (the apex redirects
-to `www`). CI runs lint, types, tests and the build on every push to `init-setup` or `main` and on every pull request.
+Vercel builds and deploys every push to `main` to production at `https://www.useadlens.com` (the apex redirects
+to `www`). CI runs lint, types, tests and the build on every push to `main` and on every pull request.
 
 ## Design decisions
 

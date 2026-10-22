@@ -77,7 +77,7 @@ npm test             # Jest + React Testing Library
 
 ## Gotchas
 
-- Every push to `init-setup` deploys to production on Vercel.
+- Every push to `main` deploys to production on Vercel.
 - `NEXT_PUBLIC_*` values are inlined at build time; changing them needs a rebuild.
 - A production build (`VERCEL_ENV=production`) fails without `NEXT_PUBLIC_TURNSTILE_SITE_KEY` or `NEXT_PUBLIC_SITE_URL`:
   `src/config.ts` checks them while `next build` renders the pages. `VERCEL_ENV` isn't inlined, so the check never runs in the browser.
