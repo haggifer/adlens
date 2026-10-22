@@ -6,7 +6,7 @@ timestamped, cites the policy or guide it comes from, and seeks the replayed vid
 
 **[Try it live](https://www.useadlens.com)** · **[Example reports](https://www.useadlens.com/demo)** (no sign-up)
 
-[![CI](https://github.com/haggifer/adlens/actions/workflows/ci.yml/badge.svg?branch=init-setup)](https://github.com/haggifer/adlens/actions/workflows/ci.yml)
+[![CI](https://github.com/haggifer/adlens/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/haggifer/adlens/actions/workflows/ci.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE.md)
 
 ![An AdLens report: the replayed video at the flagged moment, next to its findings](.github/readme/report.png)
