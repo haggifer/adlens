@@ -9,6 +9,8 @@ timestamped, cites the policy or guide it comes from, and seeks the replayed vid
 [![CI](https://github.com/haggifer/adlens/actions/workflows/ci.yml/badge.svg?branch=init-setup)](https://github.com/haggifer/adlens/actions/workflows/ci.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE.md)
 
+![An AdLens report: the replayed video at the flagged moment, next to its findings](.github/readme/report.png)
+
 AdLens is three repositories. This one is the web app; start here.
 
 | Repo                                                       | What it is                                                                                                |
