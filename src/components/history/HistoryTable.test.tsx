@@ -1,21 +1,40 @@
 import { ApiRequestError, describeRequestError } from '@/api/errors'
-import { listJobs } from '@/api/jobs'
+import { listJobs, restartJob } from '@/api/jobs'
 import { listPresets } from '@/api/presets'
 import type { AuthContextValue } from '@/auth/AuthContext'
 import { MEMBER_USER, memberAuth } from '@/test/auth'
 import { buildJob, buildPreset } from '@/test/fixtures'
-import { JOB_STATUS_LABELS } from '@/labels'
+import { RESTART_CLOCK_MS } from '@/job-status'
+import {
+    ALL_PLACEMENTS_LABEL,
+    ALL_PLATFORMS_LABEL,
+    formatPlacementLabel,
+    JOB_STATUS_LABELS,
+    PLATFORM_LABELS,
+} from '@/labels'
 import { renderWithProviders } from '@/test/render'
-import { screen, waitFor, within } from '@testing-library/react'
-import { type Job, type JobListResponse, RequestErrorCode } from 'adlens-shared'
+import { act, screen, waitFor, within } from '@testing-library/react'
+import {
+    type Job,
+    type JobListResponse,
+    JOB_START_WINDOW_MS,
+    JobStatus,
+    Placement,
+    Platform,
+    RequestErrorCode,
+} from 'adlens-shared'
 import { HistoryTable } from './HistoryTable'
 
 const mockPush = jest.fn()
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }), usePathname: () => '/history' }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
-jest.mock('@/api/jobs', () => ({ deleteJob: jest.fn(async () => undefined), listJobs: jest.fn() }))
+jest.mock('@/api/jobs', () => ({
+    deleteJob: jest.fn(async () => undefined),
+    listJobs: jest.fn(),
+    restartJob: jest.fn(),
+}))
 jest.mock('@/api/presets', () => ({ listPresets: jest.fn() }))
 
 const JOB = buildJob()
@@ -85,6 +104,54 @@ describe('HistoryTable', () => {
 
             expect(within(await rowOf(JOB.file.name)).getByText('—')).toBeInTheDocument()
         })
+
+        it("tags each platform, and each placement in its platform's colour", async () => {
+            jest.mocked(listJobs).mockResolvedValue(
+                page([
+                    buildJob({
+                        settings: {
+                            platforms: [Platform.Meta, Platform.YouTube],
+                            placements: [Placement.MetaReels, Placement.YouTubeShorts],
+                            markets: [],
+                        },
+                    }),
+                ]),
+            )
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+            const metaTag = within(row).getByText(PLATFORM_LABELS[Platform.Meta]).closest('.ant-tag')
+            const youTubeTag = within(row).getByText(PLATFORM_LABELS[Platform.YouTube]).closest('.ant-tag')
+            const reelsTag = within(row).getByText(formatPlacementLabel(Placement.MetaReels)).closest('.ant-tag')
+            const shortsTag = within(row).getByText(formatPlacementLabel(Placement.YouTubeShorts)).closest('.ant-tag')
+
+            expect(metaTag?.className).not.toBe(youTubeTag?.className)
+            expect(reelsTag?.className).toBe(metaTag?.className)
+            expect(shortsTag?.className).toBe(youTubeTag?.className)
+        })
+
+        it('tags every placement of a platform saved without any of them, as the analysis page lists them', async () => {
+            jest.mocked(listJobs).mockResolvedValue(
+                page([buildJob({ settings: { platforms: [Platform.TikTok], placements: [], markets: [] } })]),
+            )
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+
+            expect(
+                within(row).getByText(formatPlacementLabel(Placement.TikTokInFeed)).closest('.ant-tag'),
+            ).toBeInTheDocument()
+            expect(within(row).queryByText(ALL_PLACEMENTS_LABEL)).not.toBeInTheDocument()
+        })
+
+        it('tags a run with no platform or placement chosen as checked against all of them', async () => {
+            renderTable()
+
+            const row = await rowOf(JOB.file.name)
+
+            expect(within(row).getByText(ALL_PLATFORMS_LABEL).closest('.ant-tag')).not.toBeNull()
+            expect(within(row).getByText(ALL_PLACEMENTS_LABEL).closest('.ant-tag')).not.toBeNull()
+        })
     })
 
     // Below lg the Preset column is gone, so the row carries the preset as a tag on a line of its own.
@@ -136,6 +203,62 @@ describe('HistoryTable', () => {
         await user.click(within(await rowOf(JOB.file.name)).getByRole('button', { name: /delete analysis/i }))
 
         expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    describe('a failed run', () => {
+        const failedAgo = (id: string, ms: number) =>
+            buildJob({
+                id,
+                status: JobStatus.Error,
+                file: { ...JOB.file, name: `${id}.mp4` },
+                createdAt: new Date(Date.now() - ms).toISOString(),
+            })
+
+        // jsdom matches no media query, so the restart shows only in the phone line under the name, which CSS hides.
+        const restartIn = (row: HTMLElement) =>
+            within(row).queryAllByRole('button', { name: 'Restart analysis', hidden: true })
+
+        it('offers a restart next to its tag only within the start window', async () => {
+            jest.mocked(listJobs).mockResolvedValue(
+                page([failedAgo('recent', 0), failedAgo('old', JOB_START_WINDOW_MS), buildJob({ id: 'done' })]),
+            )
+            renderTable()
+
+            expect(restartIn(await rowOf('recent.mp4')).length).toBeGreaterThan(0)
+            expect(restartIn(await rowOf('old.mp4'))).toHaveLength(0)
+            expect(restartIn(await rowOf(JOB.file.name))).toHaveLength(0)
+        })
+
+        it('stops offering it once the start window passes while the page is open', async () => {
+            jest.useFakeTimers({ advanceTimers: true })
+
+            try {
+                jest.mocked(listJobs).mockResolvedValue(page([failedAgo('ending', JOB_START_WINDOW_MS - 1000)]))
+                renderTable()
+
+                const row = await rowOf('ending.mp4')
+
+                expect(restartIn(row).length).toBeGreaterThan(0)
+
+                await act(async () => jest.advanceTimersByTimeAsync(RESTART_CLOCK_MS))
+
+                expect(restartIn(row)).toHaveLength(0)
+            } finally {
+                jest.useRealTimers()
+            }
+        })
+
+        it('opens the new run, not the failed one, once the restart has started', async () => {
+            jest.mocked(listJobs).mockResolvedValue(page([failedAgo('recent', 0)]))
+            jest.mocked(restartJob).mockResolvedValueOnce(buildJob({ id: 'job-2', status: JobStatus.Queued }))
+            const { user } = renderTable()
+
+            await waitForLoaded()
+            await user.click(restartIn(await rowOf('recent.mp4'))[0])
+
+            await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/analyses/job-2'))
+            expect(mockPush).toHaveBeenCalledTimes(1)
+        })
     })
 
     it('loads the next page on request and appends it', async () => {

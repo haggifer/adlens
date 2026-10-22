@@ -8,7 +8,6 @@ interface IProps {
     retry: () => void
 }
 
-// Inside the root layout, so the header and footer stay usable while a page has failed.
 export default function RouteError({ error, retry }: IProps) {
     useEffect(() => {
         console.error(error)

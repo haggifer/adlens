@@ -2,7 +2,15 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import {
+    adminAuth,
+    anonymousAuth,
+    initializingAuth,
+    MEMBER_EMAIL,
+    memberAuth,
+    signedOutAuth,
+    unconfirmedAuth,
+} from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { Quota } from 'adlens-shared'
@@ -203,6 +211,12 @@ describe('MobileMenu', () => {
             expect(menu.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
         })
 
+        it('offers no admin page', async () => {
+            const { menu } = await openMenu(memberAuth())
+
+            expect(menu.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument()
+        })
+
         it('signs out and goes home', async () => {
             const auth = memberAuth()
             const { user, menu } = await openMenu(auth)
@@ -219,6 +233,17 @@ describe('MobileMenu', () => {
             await user.click(menu.getByRole('button', { name: /Contact us/ }))
 
             expect(useContactModalStore.getState().isOpen).toBe(true)
+        })
+    })
+
+    describe('for an admin', () => {
+        it('links the admin page right after the account page', async () => {
+            const { menu } = await openMenu(adminAuth())
+            const links = menu.getAllByRole('link')
+            const admin = menu.getByRole('link', { name: /Admin/ })
+
+            expect(admin).toHaveAttribute('href', '/admin')
+            expect(links.indexOf(admin)).toBe(links.indexOf(menu.getByRole('link', { name: /Account/ })) + 1)
         })
     })
 

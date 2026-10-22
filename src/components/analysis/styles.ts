@@ -40,14 +40,12 @@ export const useStyles = createStyles(({ token, css }) => ({
         }
     `,
 
-    // Everything above the workspace, as the page's first row.
     intro: css`
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     `,
 
-    // A page that is loading or couldn't load: its one element centred where the report would be.
     statusPage: css`
         display: flex;
         flex-direction: column;
@@ -174,7 +172,6 @@ export const useStyles = createStyles(({ token, css }) => ({
         letter-spacing: -0.01em;
     `,
 
-    // The running step's icon, switching and fading in its own colour.
     stepIcon: css`
         display: inline-flex;
         align-items: center;

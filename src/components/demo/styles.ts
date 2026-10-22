@@ -3,12 +3,21 @@ import { createStyles } from 'antd-style'
 
 export const useStyles = createStyles(({ token, css }) => ({
     // Only as wide as its tabs, and without antd's grey track: the page's own background shows through, so no band
-    // runs across the page.
+    // runs across the page. Never wider than the column either: the labels come from the demos, so a longer set
+    // scrolls inside the tabs rather than past the page's edge; on a phone the tighter padding fits today's three.
     tabs: css`
         align-self: flex-start;
+        max-width: 100%;
+        overflow-x: auto;
 
         &.ant-segmented {
             background: transparent;
+        }
+
+        @media (max-width: 575.98px) {
+            .ant-segmented-item-label {
+                padding-inline: 0.5rem;
+            }
         }
     `,
 

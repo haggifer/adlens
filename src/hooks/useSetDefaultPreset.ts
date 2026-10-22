@@ -13,8 +13,8 @@ export function useSetDefaultPreset(): UseSetDefaultPresetResult {
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: setDefaultPreset,
-        // Returned, so the mutation settles only once the list has refetched: until then the old list (a deleted row,
-        // the previous default's star) would show again.
+        // Returned, so the mutation settles only once the list has refetched: until then the old list (the previous
+        // default's star) would show again.
         onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRESETS_KEY] }),
         onError: (error) => refreshPresetsWhenGone(queryClient, error),
     })

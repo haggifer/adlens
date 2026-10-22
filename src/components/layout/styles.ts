@@ -1,5 +1,13 @@
 import { createStyles } from 'antd-style'
 
+// Room for History's tag columns beside the video name: about 1200px of content inside the side paddings.
+const MAX_LAYOUT_WIDTH = '1248px'
+
+// Centred on the window (100vw counts the scrollbar) rather than on the space beside the scrollbar, so the header and
+// the page don't move between pages that scroll and pages that don't, or when a modal locks the scroll. In a window
+// narrower than the column it's 0, and the page fills the width.
+const CENTERED_MARGIN_LEFT = `clamp(0px, (100vw - ${MAX_LAYOUT_WIDTH}) / 2, 100% - ${MAX_LAYOUT_WIDTH})`
+
 export const useStyles = createStyles(({ token, css }) => ({
     appShell: css`
         position: relative;
@@ -19,8 +27,8 @@ export const useStyles = createStyles(({ token, css }) => ({
         flex: 1;
         flex-direction: column;
         width: 100%;
-        max-width: 1120px;
-        margin: 0 auto;
+        max-width: ${MAX_LAYOUT_WIDTH};
+        margin: 0 auto 0 ${CENTERED_MARGIN_LEFT};
         padding: 0 var(--main-pad-x);
 
         @media (max-width: 991.98px) {
@@ -42,9 +50,9 @@ export const useStyles = createStyles(({ token, css }) => ({
         align-items: center;
         justify-content: space-between;
         gap: 1.5rem;
-        max-width: 1120px;
+        max-width: ${MAX_LAYOUT_WIDTH};
         height: 64px;
-        margin: 0 auto;
+        margin: 0 auto 0 ${CENTERED_MARGIN_LEFT};
         padding: 0 1.5rem;
 
         @media (max-width: 991.98px) {
@@ -114,8 +122,6 @@ export const useStyles = createStyles(({ token, css }) => ({
     `,
 
     menuButton: css`
-        width: 2.75rem;
-        height: 2.75rem;
         font-size: 1.25rem;
     `,
 
@@ -225,7 +231,8 @@ export const useStyles = createStyles(({ token, css }) => ({
         justify-content: center;
         gap: 0.25rem 0.75rem;
         min-height: var(--footer-h);
-        padding: 0.75rem 1.5rem;
+        /* 100vw - 100% is the scrollbar's width, so the links centre on the window like the header. */
+        padding: 0.75rem 1.5rem 0.75rem calc(1.5rem + 100vw - 100%);
         font-size: 0.85rem;
 
         @media (max-width: 767.98px) {

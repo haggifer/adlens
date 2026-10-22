@@ -2,7 +2,15 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { AccountKind } from '@/auth/types'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
 import { useContactModalStore } from '@/contexts/stores/contactModalStore'
-import { anonymousAuth, initializingAuth, MEMBER_EMAIL, memberAuth, signedOutAuth, unconfirmedAuth } from '@/test/auth'
+import {
+    adminAuth,
+    anonymousAuth,
+    initializingAuth,
+    MEMBER_EMAIL,
+    memberAuth,
+    signedOutAuth,
+    unconfirmedAuth,
+} from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
 import { screen, waitFor } from '@testing-library/react'
 import { AccountMenu } from './AccountMenu'
@@ -250,6 +258,14 @@ describe('AccountMenu', () => {
             })
         })
 
+        it('offers no admin page', async () => {
+            await openMenu()
+
+            await screen.findByRole('menuitem', { name: /Account/ })
+
+            expect(screen.queryByRole('menuitem', { name: /Admin/ })).not.toBeInTheDocument()
+        })
+
         it('opens the account page', async () => {
             const user = await openMenu()
 
@@ -274,6 +290,23 @@ describe('AccountMenu', () => {
 
             expect(auth.signOut).toHaveBeenCalledTimes(1)
             await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        })
+    })
+
+    describe('for an admin', () => {
+        it('opens the admin page, listed above the account page', async () => {
+            const { user } = renderMenu(adminAuth())
+
+            await user.click(screen.getByRole('button', { name: 'Account menu' }))
+
+            const admin = await screen.findByRole('menuitem', { name: /Admin/ })
+            const account = screen.getByRole('menuitem', { name: /Account/ })
+
+            expect(admin.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+            await user.click(admin)
+
+            expect(mockPush).toHaveBeenCalledWith('/admin')
         })
     })
 })

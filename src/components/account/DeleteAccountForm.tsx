@@ -6,7 +6,6 @@ import { type AuthError, describeError, runAuthRequest } from '@/auth/errors'
 import { refreshSession } from '@/auth/session'
 import { Field } from '@/components/utils/Field'
 import { useAuthModalStore } from '@/contexts/stores/authModalStore'
-import { MODAL_WIDTH } from '@/design/theme'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { App, Button, Input } from 'antd'
@@ -20,6 +19,8 @@ const SESSION_EXPIRED = 'SESSION_EXPIRED'
 
 const PASSWORD_INPUT_ID = 'delete-account-password'
 
+export const DELETION_SCOPE = 'Deletes your account, every analysis and every uploaded video, permanently.'
+
 const withPasswordSchema = z.object({ password: z.string().min(1, 'Enter your password') })
 
 const withoutPasswordSchema = z.object({ password: z.string() })
@@ -28,26 +29,31 @@ type DeleteAccountValues = z.infer<typeof withPasswordSchema>
 
 interface IProps {
     hasPassword: boolean
+    onClose: () => void
 }
 
-export function DeleteAccountForm({ hasPassword }: IProps) {
-    const { styles, cx } = useStyles()
+// The deletion modal's content (DeleteAccountSection): submitting it is the confirmation, so nothing asks again.
+export function DeleteAccountForm({ hasPassword, onClose }: IProps) {
+    const { styles } = useStyles()
     const router = useRouter()
     const queryClient = useQueryClient()
     const { signOut } = useAuth()
     const setView = useAuthModalStore((s) => s.setView)
-    const { modal, notification } = App.useApp()
+    const { notification } = App.useApp()
 
     const {
         control,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isSubmitting },
     } = useForm<DeleteAccountValues>({
         resolver: zodResolver(hasPassword ? withPasswordSchema : withoutPasswordSchema),
         defaultValues: { password: '' },
     })
 
+    // The sign-in modal takes over, so this one closes whatever happens next.
     const askToSignInAgain = async () => {
+        onClose()
+
         try {
             await signOut()
         } catch (error) {
@@ -63,6 +69,7 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
         setView('signin')
     }
 
+    // A failure keeps the modal open, so a mistyped password can be corrected.
     const deleteAccount = async ({ password }: DeleteAccountValues) => {
         const error = await runAuthRequest(() => deleteUser(hasPassword ? { password } : {}))
 
@@ -80,25 +87,14 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
         refreshSession()
         queryClient.clear()
         notification.success({ title: 'Your account has been deleted', placement: 'bottomRight' })
+        onClose()
         router.push('/')
     }
 
-    const onSubmit = (values: DeleteAccountValues) => {
-        modal.confirm({
-            title: 'Delete your account?',
-            width: MODAL_WIDTH,
-            content: 'Your analyses and uploaded videos will be deleted permanently. This can’t be undone.',
-            okText: 'Delete my account',
-            okButtonProps: { danger: true },
-            onOk: () => deleteAccount(values),
-        })
-    }
-
     return (
-        <form className={cx(styles.section, styles.dangerSection)} onSubmit={handleSubmit(onSubmit)}>
-            <h2 className={styles.sectionTitle}>Delete account</h2>
+        <form className="d-flex flex-column gap-3" onSubmit={handleSubmit(deleteAccount)}>
             <p className={styles.sectionText}>
-                Deletes your account, every analysis and every uploaded video.
+                {DELETION_SCOPE} This can’t be undone.
                 {hasPassword && ' Enter your password to confirm.'}
             </p>
             {hasPassword && (
@@ -117,8 +113,9 @@ export function DeleteAccountForm({ hasPassword }: IProps) {
                     />
                 </Field>
             )}
-            <div>
-                <Button danger htmlType="submit">
+            <div className="d-flex justify-content-end gap-2 mt-2">
+                <Button onClick={onClose}>Cancel</Button>
+                <Button type="primary" danger htmlType="submit" loading={isSubmitting}>
                     Delete account
                 </Button>
             </div>

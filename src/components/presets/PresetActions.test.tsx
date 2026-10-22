@@ -112,4 +112,22 @@ describe('PresetActions', () => {
 
         expect(await screen.findByText('Save as preset')).toBeInTheDocument()
     })
+
+    it.each([
+        ['nothing is chosen', { platforms: [], placements: [], markets: [] }],
+        ['no field is touched yet', {}],
+    ])('disables only Save while %s', async (_, settings) => {
+        renderActions({ settings })
+
+        // Apply turns on once the presets have loaded; an empty panel can still take one.
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Apply a preset' })).toBeEnabled())
+
+        expect(getSaveButton()).toBeDisabled()
+    })
+
+    it('enables Save once one setting is chosen', () => {
+        renderActions({ settings: { markets: SETTINGS.markets } })
+
+        expect(getSaveButton()).toBeEnabled()
+    })
 })

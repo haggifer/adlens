@@ -21,7 +21,7 @@ import { type FormEvent, useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm, useWatch } from 'react-hook-form'
 import type { z } from 'zod'
 import { describePresetNameIssue, isSameName } from './preset-name'
-import { isSameSettings } from './same-settings'
+import { isEmptySettings } from './same-settings'
 
 const presetFormSchema = savePresetInputSchema.omit({ overwrite: true })
 
@@ -100,8 +100,7 @@ export function PresetForm({ preset, initialSettings, onClose, onSaved }: IProps
     const { presets } = usePresets()
     const { savePreset, isSaving } = useSavePreset()
 
-    // A preset with nothing chosen would only stand for "check everything", which no settings at all already do.
-    const hasNoSettings = isSameSettings(settings, EMPTY_SETTINGS)
+    const hasNoSettings = isEmptySettings(settings)
 
     const askOverwrite = (values: PresetFormValues) => {
         setClashingValues(values)

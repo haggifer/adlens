@@ -118,7 +118,6 @@ const DEFAULT_PRESET: Preset = buildPreset({
     isDefault: true,
 })
 
-// Holds the applied preset the way the workspace does, across the panel's remounts.
 const NO_SETTINGS: AnalysisSettingsInput = { platforms: [], placements: [], markets: [] }
 
 // Holds what the workspace holds: the settings and the preset carried over from the previous video.

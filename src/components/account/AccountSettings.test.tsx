@@ -4,7 +4,7 @@ import type { AuthContextValue } from '@/auth/AuthContext'
 import { describeError } from '@/auth/errors'
 import { initializingAuth, MEMBER_USER, memberAuth } from '@/test/auth'
 import { renderWithProviders } from '@/test/render'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { RequestErrorCode } from 'adlens-shared'
 import { AccountSettings } from './AccountSettings'
 
@@ -31,7 +31,7 @@ const CURRENT_PASSWORD = 'correct horse battery staple'
 
 const NEW_PASSWORD = 'a-new-password-123'
 
-const SECTION_HEADINGS = ['Sign-in methods', 'Change password', 'Other devices', 'Delete account']
+const SECTION_HEADINGS = ['Change password', 'Other devices', 'Delete account']
 
 const renderSettings = (auth: AuthContextValue = memberAuth()) => {
     mockUseAuth.mockReturnValue(auth)
@@ -44,23 +44,26 @@ describe('AccountSettings', () => {
 
     it('offers a user with a password to change it, and asks for it to delete the account', async () => {
         linkAccounts('credential', 'google')
-        const { queryClient } = renderSettings()
+        const { queryClient, user } = renderSettings()
 
-        expect(await screen.findByText('Email and password, Google')).toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Change password' })).toBeInTheDocument()
-        expect(screen.getByLabelText('Password')).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Change password' })).toBeInTheDocument()
         expect(queryClient.getQueryData(['linkedAccounts', MEMBER_USER.id])).toEqual(['credential', 'google'])
+
+        await user.click(screen.getByRole('button', { name: 'Delete account' }))
+
+        expect(within(await screen.findByRole('dialog')).getByLabelText('Password')).toBeInTheDocument()
     })
 
     it('offers a user who signs in with a provider only to set a password, and deletes without one', async () => {
         linkAccounts('github')
-        renderSettings()
+        const { user } = renderSettings()
 
-        expect(await screen.findByText('GitHub')).toBeInTheDocument()
+        expect(await screen.findByRole('button', { name: /email me a link/i })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Change password' })).not.toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /email me a link/i })).toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Delete account' })).toBeInTheDocument()
-        expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Delete account' }))
+
+        expect(within(await screen.findByRole('dialog')).queryByLabelText('Password')).not.toBeInTheDocument()
     })
 
     it('shows placeholders, and no section, until the sign-in methods have loaded', () => {
@@ -84,7 +87,7 @@ describe('AccountSettings', () => {
         linkAccounts('credential')
         const { container } = renderSettings()
 
-        expect(await screen.findByRole('heading', { name: 'Sign-in methods' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Change password' })).toBeInTheDocument()
 
         for (const heading of SECTION_HEADINGS) {
             expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()

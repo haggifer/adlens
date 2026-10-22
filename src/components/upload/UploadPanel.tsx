@@ -3,7 +3,7 @@
 import { LazyVideoPlayer } from '@/components/player/LazyVideoPlayer'
 import { toMediaRatioStyle } from '@/components/utils/vidstack'
 import { toMegabytes } from '@/file-size'
-import { VIDEO_FORMATS_LABEL } from '@/labels'
+import { MAX_DURATION_LABEL, VIDEO_FORMATS_LABEL } from '@/labels'
 import { readFileSnapshot } from '@/storage/file-snapshot'
 import { DeleteOutlined, InboxOutlined, InfoCircleOutlined, PlaySquareOutlined, SwapOutlined } from '@ant-design/icons'
 import { MAX_DURATION_S, MAX_UPLOAD_BYTES } from 'adlens-shared'
@@ -40,8 +40,7 @@ const withReadTimeout = <T,>(read: Promise<T>): Promise<T> =>
         read.then(resolve, reject).finally(() => clearTimeout(timer))
     })
 
-// Read the video's duration and size by loading only its metadata into a throwaway element. Rejected reads (a file
-// the browser can't decode) surface as an error so a doomed upload is stopped client-side.
+// Rejected reads (a file the browser can't decode) surface as an error so a doomed upload is stopped client-side.
 const readVideoMetadata = (file: File): Promise<VideoMetadata> =>
     new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file)
@@ -111,7 +110,7 @@ export function UploadPanel({
                 <span className={styles.reqKey}>Size:</span> up to {MAX_UPLOAD_MB} MB
             </div>
             <div>
-                <span className={styles.reqKey}>Length:</span> up to {MAX_DURATION_S} seconds
+                <span className={styles.reqKey}>Length:</span> up to {MAX_DURATION_LABEL}
             </div>
         </div>
     )
@@ -311,7 +310,7 @@ export function UploadPanel({
                         size="small"
                         icon={<InfoCircleOutlined />}
                         className={styles.reqButton}
-                        aria-label={`Requirements: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_S} seconds`}
+                        aria-label={`Requirements: ${VIDEO_FORMATS_LABEL} · up to ${MAX_UPLOAD_MB} MB · up to ${MAX_DURATION_LABEL}`}
                         onClick={stopAtControl}
                         onKeyDown={stopAtControl}
                     >

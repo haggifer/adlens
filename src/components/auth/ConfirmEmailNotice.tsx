@@ -20,7 +20,6 @@ const resendConfirmation = async (email: string): Promise<void> => {
     }
 }
 
-// "Check your inbox" for a signed-in account whose email isn't confirmed yet.
 export function ConfirmEmailNotice() {
     const { user, isEmailConfirmed } = useAuth()
     const isOtherAddressLink = useAuthModalStore((s) => s.isOtherAddressLink)

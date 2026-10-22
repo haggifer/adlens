@@ -1,4 +1,3 @@
-import { HEADING_FONT_STACK } from '@/fonts'
 import { createStyles } from 'antd-style'
 
 export const useStyles = createStyles(({ token, css }) => ({
@@ -8,15 +7,11 @@ export const useStyles = createStyles(({ token, css }) => ({
         gap: 1.25rem;
         flex: 1;
         padding: 2rem 0;
-    `,
 
-    pageTitle: css`
-        margin: 0;
-        font-family: ${HEADING_FONT_STACK};
-        color: ${token.colorTextHeading};
-        font-size: clamp(1.75rem, 4vw, 2.25rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
+        /* The top of the Examples page (analysis styles' page), so every page's title starts at the same height. */
+        @media (max-width: 991.98px) {
+            padding-top: 1.5rem;
+        }
     `,
 
     videoCell: css`
@@ -28,13 +23,28 @@ export const useStyles = createStyles(({ token, css }) => ({
 
     videoName: css`
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem 0.5rem;
         min-width: 0;
 
         .ant-tag {
             flex-shrink: 0;
             margin: 0;
+        }
+    `,
+
+    tags: css`
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        min-width: 0;
+
+        .ant-tag {
+            max-width: 100%;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     `,
 
@@ -45,9 +55,8 @@ export const useStyles = createStyles(({ token, css }) => ({
     videoLink: css`
         color: ${token.colorText};
         font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        /* File names often have no spaces to break at. */
+        overflow-wrap: anywhere;
     `,
 
     compactMeta: css`

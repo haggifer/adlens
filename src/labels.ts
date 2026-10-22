@@ -1,7 +1,21 @@
 import type { SocialProvider } from '@/auth/types'
-import { JobStatus, Market, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
+import { withPlatformPlacements } from '@/components/upload/platform-placements'
+import { JobStatus, Market, MAX_DURATION_S, Placement, PLACEMENT_PLATFORM, Platform, RulePlatform } from 'adlens-shared'
 
 export const VIDEO_FORMATS_LABEL = 'MP4, M4V, MOV, WebM, 3GP'
+
+// "3 minutes" for whole minutes, "1 minute", or "45 seconds".
+export const formatDuration = (seconds: number): string => {
+    if (seconds < 60 || seconds % 60 !== 0) {
+        return `${seconds} seconds`
+    }
+
+    const minutes = seconds / 60
+
+    return minutes === 1 ? '1 minute' : `${minutes} minutes`
+}
+
+export const MAX_DURATION_LABEL = formatDuration(MAX_DURATION_S)
 
 export const ATTACHMENT_FORMATS_LABEL = 'PNG, JPEG or WebP'
 
@@ -31,7 +45,22 @@ export const RULE_PLATFORM_LABELS: Record<RulePlatform, string> = {
     [RulePlatform.All]: 'All platforms',
 }
 
-const PLACEMENT_LABELS: Record<Placement, string> = {
+// Green, red, cyan and purple are left out: History's status, preset and sample tags use them in the same rows. The one
+// preset left, yellow, is too pale to read, so LinkedIn shares blue with the in-progress statuses in their own column.
+export const PLATFORM_COLORS: Record<Platform, string> = {
+    [Platform.Meta]: 'geekblue',
+    [Platform.TikTok]: 'magenta',
+    [Platform.YouTube]: 'volcano',
+    [Platform.Snapchat]: 'gold',
+    [Platform.Pinterest]: 'lime',
+    [Platform.LinkedIn]: 'blue',
+    [Platform.Amazon]: 'orange',
+}
+
+// An analysis with no placement chosen is checked against every placement of its platforms.
+export const ALL_PLACEMENTS_LABEL = 'All placements'
+
+export const PLACEMENT_LABELS: Record<Placement, string> = {
     [Placement.MetaFeed]: 'Feed',
     [Placement.MetaReels]: 'Reels',
     [Placement.MetaStories]: 'Stories',
@@ -90,6 +119,33 @@ export const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
 
 export const formatPlatforms = (platforms: Platform[]): string =>
     platforms.length ? platforms.map((platform) => PLATFORM_LABELS[platform]).join(', ') : ALL_PLATFORMS_LABEL
+
+// Meta's option label lists its apps, which its placements in brackets would follow.
+const PLATFORM_WITH_PLACEMENTS_LABELS: Record<Platform, string> = { ...PLATFORM_LABELS, [Platform.Meta]: 'Meta' }
+
+// A placement keeps its prefix only where it names something else than the platform: Google (YouTube · Shorts), but
+// Amazon Ads (Sponsored Brands video).
+const formatPlacementOfPlatform = (placement: Placement, platformLabel: string): string =>
+    platformLabel.startsWith(PLACEMENT_PLATFORM[placement])
+        ? PLACEMENT_LABELS[placement]
+        : formatPlacementLabel(placement)
+
+const formatPlatformWithPlacements = (platform: Platform, placements: Placement[]): string => {
+    const label = PLATFORM_WITH_PLACEMENTS_LABELS[platform]
+    const placementLabels = placements
+        .filter((placement) => PLACEMENT_PLATFORM[placement] === platform)
+        .map((placement) => formatPlacementOfPlatform(placement, label))
+
+    return placementLabels.length ? `${label} (${placementLabels.join(', ')})` : label
+}
+
+export const formatPlatformsWithPlacements = (platforms: Platform[], placements: Placement[]): string => {
+    const allPlacements = withPlatformPlacements(platforms, placements)
+
+    return platforms.length
+        ? platforms.map((platform) => formatPlatformWithPlacements(platform, allPlacements)).join(', ')
+        : ALL_PLATFORMS_LABEL
+}
 
 // Rule topics are ids of the form `category:subject` (`deceptive:fake_ui`); the report shows them as words.
 const TOPIC_CATEGORY_LABELS: Record<string, string> = {

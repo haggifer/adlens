@@ -8,7 +8,7 @@ import { useTheme } from 'antd-style'
 import { useState } from 'react'
 import { ApplyPresetPopover } from './ApplyPresetPopover'
 import { PresetModal } from './PresetModal'
-import { isSameSettings } from './same-settings'
+import { isEmptySettings, isSameSettings } from './same-settings'
 
 interface IProps {
     settings: AnalysisSettingsInput
@@ -25,6 +25,7 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
 
     // Shown exactly while the API would count a run towards the preset: its settings, in any order.
     const isSelected = appliedPreset !== null && isSameSettings(settings, appliedPreset.settings)
+    const hasNoSettings = isEmptySettings(settings)
 
     return (
         <div className="d-flex flex-shrink-0 align-items-center gap-1">
@@ -43,13 +44,13 @@ export function PresetActions({ settings, appliedPreset, onApply, onSaved, isDis
                 </Tooltip>
             )}
             <ButtonTooltip title="Save as preset">
-                {/* A disabled button takes no pointer events, so the wrapper carries the tooltip during a run. */}
+                {/* A disabled button takes no pointer events, so the wrapper carries the tooltip while it is off. */}
                 <span className="d-inline-flex">
                     <Button
                         type="text"
                         icon={<SaveOutlined />}
                         aria-label="Save as preset"
-                        disabled={isDisabled}
+                        disabled={isDisabled || hasNoSettings}
                         onClick={() => setIsSaveOpen(true)}
                     />
                 </span>

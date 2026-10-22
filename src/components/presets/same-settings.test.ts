@@ -1,5 +1,5 @@
 import { type AnalysisSettingsInput, Market, Placement, Platform } from 'adlens-shared'
-import { isSameSettings } from './same-settings'
+import { isEmptySettings, isSameSettings } from './same-settings'
 
 const SETTINGS: AnalysisSettingsInput = {
     platforms: [Platform.Meta, Platform.TikTok],
@@ -33,5 +33,20 @@ describe('isSameSettings', () => {
         expect(isSameSettings({}, EMPTY)).toBe(true)
         expect(isSameSettings(EMPTY, { platforms: [] })).toBe(true)
         expect(isSameSettings({ markets: SETTINGS.markets }, SETTINGS)).toBe(false)
+    })
+})
+
+describe('isEmptySettings', () => {
+    it('finds settings empty with nothing chosen, missing fields included', () => {
+        expect(isEmptySettings(EMPTY)).toBe(true)
+        expect(isEmptySettings({})).toBe(true)
+    })
+
+    it.each([
+        ['a platform', { platforms: SETTINGS.platforms }],
+        ['a placement', { placements: SETTINGS.placements }],
+        ['a market', { markets: SETTINGS.markets }],
+    ])('finds settings with %s chosen not empty', (_, settings) => {
+        expect(isEmptySettings(settings)).toBe(false)
     })
 })

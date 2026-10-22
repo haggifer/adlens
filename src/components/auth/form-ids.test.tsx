@@ -30,7 +30,7 @@ describe('auth and account form ids', () => {
                 <ForgotForm />
                 <ChangePasswordForm />
                 <ResetPasswordForm />
-                <DeleteAccountForm hasPassword />
+                <DeleteAccountForm hasPassword onClose={jest.fn()} />
             </>,
         )
 

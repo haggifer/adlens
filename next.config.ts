@@ -5,7 +5,15 @@ import type { NextConfig } from 'next'
 // the browser retry the very first request with the hint; other browsers get it from the client after hydration.
 const SCHEME_HINT = 'Sec-CH-Prefers-Color-Scheme'
 
+const SECURITY_HEADERS = [
+    { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+    { key: 'X-Frame-Options', value: 'DENY' },
+    { key: 'X-Content-Type-Options', value: 'nosniff' },
+    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+]
+
 const nextConfig: NextConfig = {
+    poweredByHeader: false,
     async headers() {
         return [
             {
@@ -13,6 +21,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     { key: 'Accept-CH', value: SCHEME_HINT },
                     { key: 'Critical-CH', value: SCHEME_HINT },
+                    ...SECURITY_HEADERS,
                 ],
             },
         ]

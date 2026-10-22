@@ -18,7 +18,6 @@ const describeDemoRun = ({ job }: Demo): string => {
     return `${length} · checked for ${formatPlatforms(job.settings.platforms)} in ${formatMarkets(job.settings.markets ?? [])}`
 }
 
-// Finished example reports, one per tab, for visitors who haven't run an analysis yet.
 export function DemoView() {
     const { styles } = useStyles()
     const { styles: analysisStyles } = useAnalysisStyles()
@@ -30,7 +29,6 @@ export function DemoView() {
     const demo = demos.find(({ slug }) => slug === selectedSlug) ?? demos[0]
     const tabs = demos.map(({ slug, label }) => ({ value: slug, label }))
 
-    // The page's second row: the report, or what stands in its place.
     const renderBody = () => {
         if (isLoading) {
             return <Spin size="large" className="m-auto" />

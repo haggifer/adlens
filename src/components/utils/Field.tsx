@@ -5,7 +5,6 @@ import { useStyles } from './styles'
 
 interface IProps {
     label: string
-    // The id of the input the label names, so the label is announced with it and clicking it focuses the input.
     htmlFor?: string
     // A requirement shown under the input until an error replaces it.
     hint?: string

@@ -1,6 +1,6 @@
 # AdLens
 
-AI policy checks for video ads. Upload an ad of up to 60 seconds, say where it will run (platforms, placements,
+AI policy checks for video ads. Upload an ad of up to 3 minutes, say where it will run (platforms, placements,
 markets), and AdLens checks it against the platforms' ad policies and creative best practices. Every finding is
 timestamped, cites the policy or guide it comes from, and seeks the replayed video when clicked.
 
@@ -8,8 +8,6 @@ timestamped, cites the policy or guide it comes from, and seeks the replayed vid
 
 [![CI](https://github.com/haggifer/adlens/actions/workflows/ci.yml/badge.svg?branch=init-setup)](https://github.com/haggifer/adlens/actions/workflows/ci.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE.md)
-
-![An example report: the findings next to the replayed video, which a finding's timestamp has seeked to the end card it cites](docs/report.png)
 
 AdLens is three repositories. This one is the web app; start here.
 
@@ -104,7 +102,8 @@ All three variables are `NEXT_PUBLIC_`, so they're inlined at **build** time; se
 | `/analyses/[id]` | Live status of one analysis, then its results next to the replayed video                                                                                                                                                                                              |
 | `/history`       | Every analysis, newest first                                                                                                                                                                                                                                          |
 | `/presets`       | The user's presets (saved analysis settings), by name, with how often each was used: create, edit, delete and pick the default; linked from the navigation for everyone: a visitor without a session sees the empty state, since creating a preset starts the session |
-| `/account`       | Sign-in methods, change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one)                                                                                             |
+| `/account`       | Change or set a password, sign out other devices, delete the account (anonymous visitors get a sign-up prompt, unconfirmed accounts a Confirm email one)                                                                                                              |
+| `/admin`         | Maintainer view of every user's jobs (tokens by kind, cost, AI time) and every user (type, jobs, cost), from `GET /v1/admin/jobs` and `/users`; admins only, linked from their account menu and phone menu                                                            |
 | `/confirm-email` | Landing page of the email confirmation link; confirms for the signed-in account and stays to say so (the tab the user came from updates on its own)                                                                                                                   |
 | `/auth/done`     | Landing page of the Google / GitHub sign-in popup; reports the outcome to the tab that opened it, then closes                                                                                                                                                         |
 | `/terms`         | Terms of Use                                                                                                                                                                                                                                                          |
@@ -282,6 +281,16 @@ Decisions shared with the API (cookie sessions on one domain, the contract packa
   (`POST /v1/contact/uploads`), uploads them straight to storage and sends the message with the draft id in place of a
   token. The API spends a draft on any send, even a refused one, so a retry starts over with a new check, draft and
   uploads.
+- **`/admin` hides itself from everyone but an admin.** The API is the real check: `/v1/admin/*` answers anyone else
+  with the 404 of a route that doesn't exist, and reads the admin flag on every request. The page only avoids an empty
+  shell, and answers the same way: everyone but an admin, signed out included, gets the not-found page
+  (`PrivateRoute isAdminOnly`), so no sign-in prompt shows the page exists; an admin signs in from the header first. An
+  admin read that comes back 404 because the flag was removed meanwhile, or the session expired, also shows not found,
+  and refetches the session so the header notices an expired one. The Admin entry sits in the account menu and the phone
+  menu, never the header, and the page is noindex and out of the sitemap. It reads every job and user once (no
+  pagination yet, fine at today's volume) and offers Reload rather than live updates, which stay per user; the page
+  derives the costs, counts and user types from the raw records, and keeps its tab and filters in component state, so a
+  reload starts on Jobs with no filter.
 
 ## License
 

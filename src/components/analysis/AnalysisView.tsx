@@ -3,10 +3,11 @@
 import { BackButton } from '@/components/utils/BackButton'
 import { useJob } from '@/hooks/useJob'
 import { useJobVideo } from '@/hooks/useJobVideo'
-import { formatPlatforms } from '@/labels'
+import { formatPlatformsWithPlacements } from '@/labels'
 import { JobStatus, RequestErrorCode } from 'adlens-shared'
 import { Button, Result, Spin, Tag } from 'antd'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { AnalysisWorkspace } from './AnalysisWorkspace'
 import { DeleteJobButton } from './DeleteJobButton'
 import { useStyles } from './styles'
@@ -25,9 +26,17 @@ export function AnalysisView({ jobId }: IProps) {
     const hasVideo = Boolean(job?.media) && job?.status !== JobStatus.Error
     const { url, isMissing } = useJobVideo(jobId, hasVideo)
 
-    const platforms = job ? formatPlatforms(job.settings.platforms) : ''
+    const platforms = job ? formatPlatformsWithPlacements(job.settings.platforms, job.settings.placements) : ''
+    const restartedAs = job?.restartedAs
 
-    if (isLoading) {
+    // A restarted run is kept only as a record: its page shows the run that replaced it.
+    useEffect(() => {
+        if (restartedAs) {
+            router.replace(`/analyses/${restartedAs}`)
+        }
+    }, [restartedAs, router])
+
+    if (isLoading || restartedAs) {
         return (
             <div className={styles.statusPage}>
                 <Spin size="large" />
@@ -65,7 +74,7 @@ export function AnalysisView({ jobId }: IProps) {
                     <div className="d-flex flex-column gap-1">
                         <div className="d-flex align-items-center gap-2">
                             <h1 className={styles.pageTitle}>{job.file.name}</h1>
-                            {job.sampleId && <Tag color="processing">Sample ad</Tag>}
+                            {job.sampleId && <Tag color="purple">Sample</Tag>}
                         </div>
                         <p className={styles.pageMeta}>
                             {platforms} · {new Date(job.createdAt).toLocaleString()}

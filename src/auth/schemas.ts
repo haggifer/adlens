@@ -6,7 +6,6 @@ export const NEW_PASSWORD_HINT = `At least ${MIN_PASSWORD_LENGTH} characters`
 
 const newPasswordSchema = z.string().min(MIN_PASSWORD_LENGTH, NEW_PASSWORD_HINT)
 
-// A new password typed twice; the mismatch is reported on `confirm`.
 export const newPasswordFieldsSchema = z
     .object({
         password: newPasswordSchema,

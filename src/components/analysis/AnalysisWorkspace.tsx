@@ -1,6 +1,7 @@
 'use client'
 
 import { LazyVideoPlayer } from '@/components/player/LazyVideoPlayer'
+import { playFrom } from '@/components/player/play-from'
 import { toMediaRatioStyle } from '@/components/utils/vidstack'
 import type { MediaPlayerInstance } from '@vidstack/react'
 import { type Job, JobStatus } from 'adlens-shared'
@@ -20,11 +21,9 @@ interface IProps {
     isDisconnected?: boolean
 }
 
-// The video beside its results (or the run's status): one analysis, wherever it's shown.
 export function AnalysisWorkspace({ job, videoUrl, hasPlayer, isDisconnected }: IProps) {
     const { styles, cx } = useStyles()
 
-    // Vidstack is imperative for seeking; the ref is the player instance, not DOM state.
     const playerRef = useRef<MediaPlayerInstance>(null)
 
     const handleSeek = (seconds: number) => {
@@ -34,16 +33,16 @@ export function AnalysisWorkspace({ job, videoUrl, hasPlayer, isDisconnected }: 
             return
         }
 
-        player.currentTime = seconds
-        void player.play()
-
-        // When the layout is stacked (phones, tablets) the findings sit below the video, often scrolled past it.
+        // When the layout is stacked (phones, tablets) the findings sit below the video, often scrolled past it. First,
+        // so a player that loads once visible starts loading.
         const stage = player.el?.parentElement
         const rect = stage?.getBoundingClientRect()
 
         if (stage && rect && (rect.bottom < 0 || rect.top > window.innerHeight)) {
             stage.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
+
+        playFrom(player, seconds).catch((error: unknown) => console.error(error))
     }
 
     return (

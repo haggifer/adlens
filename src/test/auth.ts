@@ -29,9 +29,11 @@ export const signedOutAuth = (): AuthContextValue => createAuth({})
 export const anonymousAuth = (): AuthContextValue =>
     createAuth({ isSignedIn: true, isAnonymous: true, user: ANONYMOUS_USER, accountKind: AccountKind.Anonymous })
 
-// Signed up with email and password, but hasn't opened the confirmation link yet.
 export const unconfirmedAuth = (): AuthContextValue =>
     createAuth({ isSignedIn: true, user: MEMBER_USER, accountKind: AccountKind.Unconfirmed })
 
 export const memberAuth = (): AuthContextValue =>
     createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER, accountKind: AccountKind.Member })
+
+export const adminAuth = (): AuthContextValue =>
+    createAuth({ isSignedIn: true, isEmailConfirmed: true, user: MEMBER_USER, accountKind: AccountKind.Admin })
