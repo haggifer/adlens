@@ -50,9 +50,6 @@ npm test             # Jest + React Testing Library
   reaches each rule platform and every placement and region in use. Label an option so users can see which rules it
   brings.
 - Public env is parsed once in `src/config.ts`; don't read `process.env` elsewhere.
-- The analysis lab ([adlens-lab](https://github.com/haggifer/adlens-lab)) imports this checkout's source through its `@/`
-  alias: the results view, labels and theme, and `src/components/admin/model-pricing.ts` and `format-duration.ts`. A
-  rename, move or changed export in those files must update the lab in step.
 - An anonymous session counts as signed in (`isSignedIn`), so its history, quota and live updates work. Gate
   account-only UI on `isEmailConfirmed`: an account whose email isn't confirmed yet is limited like an anonymous
   session and is offered Confirm email instead. Never show an anonymous user's email (`AuthContext` gives `null`); an
