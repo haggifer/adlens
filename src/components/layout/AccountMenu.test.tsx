@@ -19,7 +19,7 @@ const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
 const mockIsHoverCapable = jest.fn(() => false)
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({ usePathname: () => '/account', useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 jest.mock('@/hooks/useHoverCapable', () => ({ useHoverCapable: () => mockIsHoverCapable() }))
 
@@ -181,7 +181,7 @@ describe('AccountMenu', () => {
             expect(useAuthModalStore.getState().view).toBe('confirm')
         })
 
-        it('signs out and goes home', async () => {
+        it('signs out and leaves a guarded page for home', async () => {
             const auth = unconfirmedAuth()
             const { user } = renderMenu(auth)
 
@@ -282,7 +282,7 @@ describe('AccountMenu', () => {
             expect(useContactModalStore.getState().isOpen).toBe(true)
         })
 
-        it('signs out and goes home', async () => {
+        it('signs out and leaves a guarded page for home', async () => {
             const auth = memberAuth()
             const user = await openMenu(auth)
 

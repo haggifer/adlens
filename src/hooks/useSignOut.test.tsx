@@ -8,8 +8,9 @@ import { useSignOut } from './useSignOut'
 
 const mockUseAuth = jest.fn<AuthContextValue, []>()
 const mockPush = jest.fn()
+let mockPathname = '/history'
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('next/navigation', () => ({ usePathname: () => mockPathname, useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/auth/AuthContext', () => ({ useAuth: () => mockUseAuth() }))
 
 const Probe = () => {
@@ -29,11 +30,14 @@ const renderProbe = (auth: AuthContextValue) => {
 }
 
 describe('useSignOut', () => {
-    beforeEach(() => mockPush.mockClear())
+    beforeEach(() => {
+        mockPush.mockClear()
+        mockPathname = '/history'
+    })
 
     afterEach(() => jest.restoreAllMocks())
 
-    it('signs out and goes home', async () => {
+    it('signs out and leaves a guarded page for home', async () => {
         const auth = memberAuth()
         const { user } = renderProbe(auth)
 
@@ -41,6 +45,17 @@ describe('useSignOut', () => {
 
         expect(auth.signOut).toHaveBeenCalledTimes(1)
         expect(mockPush).toHaveBeenCalledWith('/')
+    })
+
+    it('signs out and stays on a public page', async () => {
+        mockPathname = '/demo'
+        const auth = memberAuth()
+        const { user } = renderProbe(auth)
+
+        await user.click(screen.getByRole('button', { name: 'Sign out' }))
+
+        expect(auth.signOut).toHaveBeenCalledTimes(1)
+        expect(mockPush).not.toHaveBeenCalled()
     })
 
     it('shows the standard copy and stays put when the API refused the sign-out', async () => {

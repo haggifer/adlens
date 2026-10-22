@@ -2,12 +2,14 @@
 
 import { useAuth } from '@/auth/AuthContext'
 import { type AuthError, describeError } from '@/auth/errors'
+import { isGuardedPath } from '@/auth/guarded-paths'
 import { App } from 'antd'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 // Resolves to whether the session ended, so a caller can keep its own UI (a confirmation) open after a failure.
 export function useSignOut(): () => Promise<boolean> {
     const router = useRouter()
+    const pathname = usePathname()
     const { signOut } = useAuth()
     const { notification } = App.useApp()
 
@@ -21,7 +23,9 @@ export function useSignOut(): () => Promise<boolean> {
             return false
         }
 
-        router.push('/')
+        if (isGuardedPath(pathname)) {
+            router.push('/')
+        }
 
         return true
     }

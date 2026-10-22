@@ -217,7 +217,8 @@ describe('MobileMenu', () => {
             expect(menu.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument()
         })
 
-        it('signs out and goes home', async () => {
+        it('signs out and leaves a guarded page for home', async () => {
+            mockPathname = '/account'
             const auth = memberAuth()
             const { user, menu } = await openMenu(auth)
 
